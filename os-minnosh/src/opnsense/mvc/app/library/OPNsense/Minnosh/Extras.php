@@ -47,9 +47,13 @@ class Extras
         /* counters of the incoming block rule registered by minnosh_firewall_geo() */
         $blocked = (int)($rules[md5('minnosh-geo-in')]['packets'] ?? 0);
         return [
+            /* a source is configured ... */
             'database' => $url !== '',
             'maxmind' => strpos($url, 'download.maxmind.com') !== false,
-            'stats' => is_array($stats) ? $stats : null,
+            /* ... and actually downloaded: only then the alias contains addresses and blocks anything */
+            'ready' => is_array($stats) && (int)($stats['address_count'] ?? 0) > 0,
+            'addresses' => is_array($stats) ? (int)($stats['address_count'] ?? 0) : 0,
+            'updated' => is_array($stats) ? ($stats['timestamp'] ?? null) : null,
             'blocked_packets' => $blocked,
         ];
     }
@@ -65,8 +69,12 @@ class Extras
         $urlChanged = false;
         $current = (string)$aliases->geoip->url;
         if ($licenseKey !== '' && ($current === '' || strpos($current, 'download.maxmind.com') !== false)) {
-            if (!preg_match('/^[A-Za-z0-9_]{6,64}$/', $licenseKey)) {
-                throw new \InvalidArgumentException('invalid MaxMind license key');
+            /*
+             * MaxMind keys: legacy 16 alphanumerics, current ones end in "_mmk". Being strict here
+             * keeps anything else (e.g. a password a browser filled in) out of a download URL.
+             */
+            if (!preg_match('/^([A-Za-z0-9]{16}|[A-Za-z0-9_]{16,60}_mmk)$/', $licenseKey)) {
+                throw new \InvalidArgumentException('This does not look like a MaxMind license key');
             }
             $aliases->geoip->url->setValue(sprintf(Catalog::MAXMIND_URL, $licenseKey));
             $urlChanged = true;

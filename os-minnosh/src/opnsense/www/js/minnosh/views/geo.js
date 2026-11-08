@@ -37,19 +37,32 @@
         render: function () {
             var T = h.T(), g = h.S().draft.geo, st = Q.status || {};
             var html = '<div class="k-stack"><div><h1>' + h.esc(T.geoTitle) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + h.esc(T.geoSub) + '</div></div>';
+            /* honest state: "on" only means something once the country database is loaded */
+            var stateText, stateCls = 'muted';
+            if (!g.enabled) { stateText = T.off; }
+            else if (!st.ready) { stateText = T.geoNotWorking; stateCls = 'k-warn-text'; }
+            else { stateText = T.geoOn(g.countries.length) + ' · ' + T.geoAddresses(h.fmt(st.addresses)); }
+            var keyState = st.database ? (st.maxmind ? (st.ready ? T.geoKeyOk : T.geoKeyPending) : T.geoDbOther) : T.geoDbMissing;
+
             html += '<section class="k-card tight">' +
-                '<div class="k-setting"><div class="k-ibox big' + (g.enabled ? ' on' : '') + '">' + h.icon(ICON, 22) + '</div>' +
-                '<div class="k-setting-text"><b style="font-size:16px">' + h.esc(T.geoEnable) + '</b><span class="muted">' + h.esc(g.enabled ? T.geoOn(g.countries.length) : T.off) + '</span></div>' +
+                '<div class="k-setting"><div class="k-ibox big' + (g.enabled && st.ready ? ' on' : (g.enabled ? ' cut' : '')) + '">' + h.icon(ICON, 22) + '</div>' +
+                '<div class="k-setting-text"><b style="font-size:16px">' + h.esc(T.geoEnable) + '</b><span class="' + stateCls + '">' + h.esc(stateText) + '</span></div>' +
                 h.toggle(g.enabled, 'data-act="geo:enabled"', T.geoEnable) + '</div>' +
-                '<div class="k-setting wrap"><div class="k-setting-text"><b>' + h.esc(T.geoDir) + '</b><span class="muted">' + h.esc(g.direction === 'both' ? T.dirBothDesc : T.dirInDesc) + '</span></div>' +
-                '<div class="k-seg">' + [['in', T.dirIn], ['both', T.dirBoth]].map(function (o) {
+                /* one row: database key first (with where to get one), direction next to it */
+                '<div class="k-geo-row">' +
+                '<div class="k-field k-geo-key"><span>' + h.esc(T.geoDb) + '</span>' +
+                (st.database && !st.maxmind ? '<span class="muted">' + h.esc(T.geoDbOther) + '</span>' :
+                    /* plain text on purpose: password managers fill password fields with saved logins */
+                    '<input type="text" class="mono" name="minnosh-maxmind-license" data-input="geo:key" value="' + h.esc(Q.key) + '" placeholder="' +
+                    h.esc(st.maxmind ? T.geoKeyReplace : T.geoKeyPh) + '" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other">' +
+                    '<span class="muted small">' + h.esc(keyState) + ' · <a href="https://www.maxmind.com/en/geolite2/signup" target="_blank" rel="noopener">' + h.esc(T.geoGetKey) + '</a></span>') +
+                '</div>' +
+                '<div class="k-field"><span>' + h.esc(T.geoDir) + '</span><div class="k-seg">' + [['in', T.dirIn], ['both', T.dirBoth]].map(function (o) {
                     return '<button type="button" class="' + (g.direction === o[0] ? 'on' : '') + '" data-act="geo:dir" data-v="' + o[0] + '">' + h.esc(o[1]) + '</button>';
-                }).join('') + '</div></div>' +
-                '<div class="k-setting wrap"><div class="k-setting-text"><b>' + h.esc(T.geoDb) + '</b><span class="muted">' + h.esc(st.database ? (st.maxmind ? T.geoDbMaxmind : T.geoDbOther) : T.geoDbMissing) + '</span></div>' +
-                (st.database && !st.maxmind ? '' : '<div class="k-addrow" style="min-width:280px"><input type="password" class="mono" data-input="geo:key" value="' + h.esc(Q.key) + '" placeholder="' + h.esc(T.geoKeyPh) + '" autocomplete="off" aria-label="' + h.esc(T.geoKeyPh) + '"></div>') +
+                }).join('') + '</div><span class="muted small">' + h.esc(g.direction === 'both' ? T.dirBothDesc : T.dirInDesc) + '</span></div>' +
                 '</div></section>';
-            if (!st.database) {
-                html += '<div class="k-banner warn" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span>' + h.esc(T.geoNeedKey) + '</span></div>';
+            if (g.enabled && !st.ready) {
+                html += '<div class="k-banner warn" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span>' + h.esc(st.database ? T.geoWaitDb : T.geoNeedKey) + '</span></div>';
             }
 
             var q = Q.search.trim().toLocaleLowerCase(T.locale);
@@ -86,6 +99,11 @@
             }
             if (name === 'key') {
                 Q.key = el.value.trim();
+                /* only what looks like a MaxMind key is offered for Apply (server checks again) */
+                if (Q.key && !/^([A-Za-z0-9]{16}|[A-Za-z0-9_]{16,60}_mmk)$/.test(Q.key)) {
+                    h.S().ui.geoLicense = '';
+                    return 'pending';
+                }
                 /* sent with the next Apply, never stored in the browser */
                 h.S().ui.geoLicense = Q.key;
                 return 'pending';
