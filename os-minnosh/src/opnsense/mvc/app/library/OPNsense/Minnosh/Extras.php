@@ -46,14 +46,21 @@ class Extras
         $rules = json_decode((new Backend())->configdRun('filter rule stats'), true) ?? [];
         /* counters of the incoming block rule registered by minnosh_firewall_geo() */
         $blocked = (int)($rules[md5('minnosh-geo-in')]['packets'] ?? 0);
+        /* without a source in OPNsense, Minnosh installs the free DB-IP Lite data itself */
+        $dbip = null;
+        if ($url === '' && is_file('/usr/local/share/GeoIP/minnosh-dbip.json')) {
+            $dbip = json_decode(file_get_contents('/usr/local/share/GeoIP/minnosh-dbip.json'), true);
+        }
+        $count = $url === '' ? (int)($dbip['address_count'] ?? 0) : (is_array($stats) ? (int)($stats['address_count'] ?? 0) : 0);
         return [
-            /* a source is configured ... */
-            'database' => $url !== '',
+            'source' => $url === '' ? 'dbip' : (strpos($url, 'download.maxmind.com') !== false ? 'maxmind' : 'other'),
+            'database' => $url !== '' || $dbip !== null,
             'maxmind' => strpos($url, 'download.maxmind.com') !== false,
-            /* ... and actually downloaded: only then the alias contains addresses and blocks anything */
-            'ready' => is_array($stats) && (int)($stats['address_count'] ?? 0) > 0,
-            'addresses' => is_array($stats) ? (int)($stats['address_count'] ?? 0) : 0,
-            'updated' => is_array($stats) ? ($stats['timestamp'] ?? null) : null,
+            /* only once addresses are loaded the alias blocks anything */
+            'ready' => $count > 0,
+            'addresses' => $count,
+            'updated' => $url === '' ? ($dbip['timestamp'] ?? null) : (is_array($stats) ? ($stats['timestamp'] ?? null) : null),
+            'month' => $dbip['month'] ?? null,
             'blocked_packets' => $blocked,
         ];
     }

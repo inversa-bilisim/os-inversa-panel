@@ -21,6 +21,12 @@
         return h.api('GET', '/api/minnosh/geo/status').then(function (data) { Q.status = data; });
     }
 
+    /* plain text on purpose: password managers fill password fields with saved logins */
+    function keyInput(placeholder) {
+        return '<input type="text" class="mono" name="minnosh-maxmind-license" data-input="geo:key" value="' + h.esc(Q.key) + '" placeholder="' + h.esc(placeholder) + '"' +
+            ' autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other">';
+    }
+
     function name(code) {
         try {
             return new Intl.DisplayNames([h.T().locale], { type: 'region' }).of(code) || code;
@@ -40,9 +46,25 @@
             /* honest state: "on" only means something once the country database is loaded */
             var stateText, stateCls = 'muted';
             if (!g.enabled) { stateText = T.off; }
-            else if (!st.ready) { stateText = T.geoNotWorking; stateCls = 'k-warn-text'; }
+            else if (!st.ready) { stateText = h.S().saved.geo.enabled ? T.geoDownloading : T.geoNotWorking; stateCls = 'k-warn-text'; }
             else { stateText = T.geoOn(g.countries.length) + ' · ' + T.geoAddresses(h.fmt(st.addresses)); }
-            var keyState = st.database ? (st.maxmind ? (st.ready ? T.geoKeyOk : T.geoKeyPending) : T.geoDbOther) : T.geoDbMissing;
+            if (g.enabled && !st.ready && h.S().saved.geo.enabled && !Q.poll) {
+                /* data is being fetched in the background: look again shortly */
+                Q.poll = setTimeout(function () { Q.poll = null; load().then(function () { h.redraw('main'); }); }, 15000);
+            }
+
+            var source;
+            if (st.source === 'maxmind') {
+                source = '<span class="muted small">' + h.esc(st.ready ? T.geoKeyOk : T.geoKeyPending) + '</span>' + keyInput(T.geoKeyReplace);
+            } else if (st.source === 'other') {
+                source = '<span class="muted small">' + h.esc(T.geoDbOther) + '</span>';
+            } else {
+                source = '<span><b>DB-IP Lite</b> · ' + h.esc(T.geoDbipFree) + '</span>' +
+                    '<span class="muted small">' + h.esc(st.ready ? T.geoDbipLoaded(st.month || '', h.fmt(st.addresses)) : T.geoDbipLater) + ' · ' +
+                    '<a href="https://db-ip.com" target="_blank" rel="noopener">IP Geolocation by DB-IP</a></span>' +
+                    (Q.showKey ? keyInput(T.geoKeyPh) + '<span class="muted small"><a href="https://www.maxmind.com/en/geolite2/signup" target="_blank" rel="noopener">' + h.esc(T.geoGetKey) + '</a></span>'
+                        : '<button type="button" class="k-link small" style="min-height:32px" data-act="geo:showkey">' + h.esc(T.geoUseMaxmind) + '</button>');
+            }
 
             html += '<section class="k-card tight">' +
                 '<div class="k-setting"><div class="k-ibox big' + (g.enabled && st.ready ? ' on' : (g.enabled ? ' cut' : '')) + '">' + h.icon(ICON, 22) + '</div>' +
@@ -50,19 +72,13 @@
                 h.toggle(g.enabled, 'data-act="geo:enabled"', T.geoEnable) + '</div>' +
                 /* one row: database key first (with where to get one), direction next to it */
                 '<div class="k-geo-row">' +
-                '<div class="k-field k-geo-key"><span>' + h.esc(T.geoDb) + '</span>' +
-                (st.database && !st.maxmind ? '<span class="muted">' + h.esc(T.geoDbOther) + '</span>' :
-                    /* plain text on purpose: password managers fill password fields with saved logins */
-                    '<input type="text" class="mono" name="minnosh-maxmind-license" data-input="geo:key" value="' + h.esc(Q.key) + '" placeholder="' +
-                    h.esc(st.maxmind ? T.geoKeyReplace : T.geoKeyPh) + '" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other">' +
-                    '<span class="muted small">' + h.esc(keyState) + ' · <a href="https://www.maxmind.com/en/geolite2/signup" target="_blank" rel="noopener">' + h.esc(T.geoGetKey) + '</a></span>') +
-                '</div>' +
+                '<div class="k-field k-geo-key"><span>' + h.esc(T.geoDb) + '</span>' + source + '</div>' +
                 '<div class="k-field"><span>' + h.esc(T.geoDir) + '</span><div class="k-seg">' + [['in', T.dirIn], ['both', T.dirBoth]].map(function (o) {
                     return '<button type="button" class="' + (g.direction === o[0] ? 'on' : '') + '" data-act="geo:dir" data-v="' + o[0] + '">' + h.esc(o[1]) + '</button>';
                 }).join('') + '</div><span class="muted small">' + h.esc(g.direction === 'both' ? T.dirBothDesc : T.dirInDesc) + '</span></div>' +
                 '</div></section>';
-            if (g.enabled && !st.ready) {
-                html += '<div class="k-banner warn" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span>' + h.esc(st.database ? T.geoWaitDb : T.geoNeedKey) + '</span></div>';
+            if (g.enabled && !st.ready && !h.S().saved.geo.enabled) {
+                html += '<div class="k-banner info" style="margin:0">' + h.icon(h.ICONS.info, 20) + '<span>' + h.esc(T.geoAfterApply) + '</span></div>';
             }
 
             var q = Q.search.trim().toLocaleLowerCase(T.locale);
@@ -86,6 +102,7 @@
             var g = h.S().draft.geo, v = el.getAttribute('data-v');
             switch (name) {
                 case 'enabled': g.enabled = !g.enabled; return 'main';
+                case 'showkey': Q.showKey = true; return 'main';
                 case 'dir': g.direction = v; return 'main';
                 case 'add': g.countries = g.countries.concat([v]); Q.search = ''; return 'main';
                 case 'del': g.countries = g.countries.filter(function (c) { return c !== v; }); return 'main';

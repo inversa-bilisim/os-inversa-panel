@@ -156,6 +156,9 @@ class Integration
         if ($geoUrlChanged) {
             $backend->configdRun('template reload OPNsense/Filter');
             $backend->configdRun('filter update geoip', true);
+        } elseif (!$this->minnosh->geo->enabled->isEmpty() && (string)$aliasMdl->geoip->url === '') {
+            /* no source configured in OPNsense: free DB-IP data (fetched once, then monthly) */
+            $backend->configdpRun('minnosh geoip', ['normal'], true);
         }
         /* firewall: regenerate ruleset (our plugin hook adds the rules) and repopulate alias tables */
         $backend->configdRun('filter reload skip_alias');

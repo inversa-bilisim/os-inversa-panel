@@ -17,7 +17,7 @@ Tasarım taslağı: https://claude.ai/artifact/9HQfR7v4fu2ouPT9Xh73qN
 | Port yönlendirme | Hazır servisler, hedef cihaz seçimi, aç/kapat, sil; UPnP durumu | Güvenlik Duvarı › NAT › Port Forward kuralları (izin kuralı otomatik) |
 | VPN | WireGuard sunucusu, cihaz ekleme (QR kodu + dosya, gizli anahtar bir kez gösterilir), tüm trafik / sadece ev ağı | WireGuard örneği `minnosh` + peer'lar; WAN izin, VPN izin ve NAT otomatik kural olarak |
 | Misafir ağı | Misafir türündeki ağları izole etme, hız sınırı, bağlı misafirler | Erişim tablosu + Trafik Şekillendirici `Minnosh guest …` |
-| Ülke engelleme | Ülke seçimi, yalnız gelen / gelen ve giden, MaxMind anahtarı, engellenen deneme sayısı | GeoIP takma adı `minnosh_geo` + otomatik kural |
+| Ülke engelleme | Ülke seçimi, yalnız gelen / gelen ve giden, engellenen deneme sayısı. Ülke verisi kayıt gerektirmeden **DB-IP Lite**'tan (CC BY 4.0) alınır, ayda bir yenilenir; isteyen kendi MaxMind anahtarını kullanabilir | GeoIP takma adı `minnosh_geo` + otomatik kural; OPNsense'te kaynak ayarlı değilse ülke dosyaları `/usr/local/share/GeoIP/alias` altına yazılır |
 | Ayarlar | Dil, korunan ağlar, engel yanıtı, DNS istatistikleri, **Minnosh'un eklediklerini kaldır** | `OPNsense/Minnosh` modeli |
 
 **Çalışma şekli**
@@ -49,7 +49,7 @@ os-minnosh/                       opnsense/plugins deposundaki bir eklenti klas�
   src/opnsense/www/js/minnosh/views/*.js       net, sched, pf, vpn, guest, geo sekmeleri
   src/opnsense/www/js/minnosh/i18n/{tr,en}.js  dil dosyaları
   src/opnsense/www/css/minnosh/minnosh.css
-  src/opnsense/scripts/OPNsense/Minnosh        hosts.py, killstates.py, dnsbl.sh, schedule.php (her dakika), rollback.php, nettest.py
+  src/opnsense/scripts/OPNsense/Minnosh        hosts.py, killstates.py, dnsbl.sh, schedule.php (her dakika), rollback.php, nettest.py, geoip_dbip.py
   src/opnsense/service/conf/actions.d/actions_minnosh.conf
 tools/deploy.sh, tools/remove.sh             test cihazına kopyalama / kaldırma
 ```
@@ -104,7 +104,7 @@ tools/deploy.sh, tools/remove.sh             test cihazına kopyalama / kaldırm
 - Port atamaları şimdilik görüntülenir; internet portu WAN ayarından, ağ portu ağ eklerken seçilir. Mevcut bir ağın portunu değiştirmek OPNsense menülerinden yapılır.
 - Uygulama engelleme DNS tabanlıdır; "VPN, proxy ve şifreli DNS" kategorisi ile "DNS'i zorla" birlikte açılmalıdır.
 - Engel listesi yenilemesi ağır bir iştir (büyük listelerde ~1 GB bellek); Minnosh aynı anda yalnızca birini çalıştırır, yeni istekler sıraya girer.
-- Ülke engelleme için ücretsiz MaxMind GeoLite2 lisans anahtarı gerekir.
+- Ülke verisi OPNsense'te başka bir GeoIP kaynağı (MaxMind, ipinfo) ayarlıysa o kullanılır; Minnosh DB-IP verisini yalnızca kaynak ayarlı değilken yazar.
 - "Bağlantı" sütunu o anki pf durum sayısıdır, trafik miktarı değildir.
 
 ## Yeni dil eklemek

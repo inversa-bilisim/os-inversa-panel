@@ -229,5 +229,9 @@ function minnosh_firewall_vpn(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping)
  */
 function minnosh_cron()
 {
-    return [['autocron' => ['/usr/local/sbin/configctl -d minnosh schedule', '*']]];
+    return [
+        ['autocron' => ['/usr/local/sbin/configctl -d minnosh schedule', '*']],
+        /* free country database refresh (only acts when country blocking is on and no other source is set) */
+        ['autocron' => ['/usr/local/sbin/configctl -d minnosh geoip normal', '40', '4']],
+    ];
 }
