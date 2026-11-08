@@ -13,8 +13,8 @@ use OPNsense\Minnosh\Minnosh;
 use OPNsense\Minnosh\Vpn;
 
 /**
- * WireGuard road-warrior VPN. Switching it on/off and adding/removing devices act
- * immediately: a new device's private key only exists in the response (shown once as QR).
+ * WireGuard VPN connections (remote access and site to site). All operations act immediately,
+ * like in VPN > WireGuard; they are not part of the pending "Apply" set.
  */
 class VpnController extends ApiControllerBase
 {
@@ -26,66 +26,98 @@ class VpnController extends ApiControllerBase
         return array_merge(['available' => true], (new Vpn())->status(new Minnosh()));
     }
 
-    private function guard()
+    private function guard($post = true)
     {
-        if (!$this->request->isPost()) {
+        if ($post && !$this->request->isPost()) {
             throw new UserException('POST required', 'Minnosh');
         }
         $this->throwReadOnly();
         $this->throwNotFullAdmin();
     }
 
-    public function enableAction()
+    /**
+     * run a change, apply WireGuard + firewall, report validation problems readably
+     */
+    private function change(callable $fn)
     {
-        $this->guard();
         $vpn = new Vpn();
         try {
-            if ($vpn->setEnabled(!empty($this->request->getPost('enabled')))) {
-                $vpn->apply();
-            }
-        } catch (\RuntimeException $e) {
-            return ['status' => 'failed', 'message' => $e->getMessage()];
-        }
-        return ['status' => 'ok'];
-    }
-
-    public function addAction()
-    {
-        $this->guard();
-        $name = trim((string)$this->request->getPost('name'));
-        if (!preg_match('/^[0-9a-zA-Z._\-]{1,64}$/', $name)) {
-            /* WireGuard peer names are restricted; keep what we can */
-            $name = substr(preg_replace('/[^0-9a-zA-Z._\-]+/', '-', iconv('UTF-8', 'ASCII//TRANSLIT', $name) ?: 'device'), 0, 64) ?: 'device';
-        }
-        $vpn = new Vpn();
-        try {
-            $peer = $vpn->addPeer(new Minnosh(), $name);
+            $result = $fn($vpn, new Minnosh());
             $vpn->apply();
-            return array_merge(['status' => 'ok'], $peer);
-        } catch (\RuntimeException $e) {
+            return array_merge(['status' => 'ok'], is_array($result) ? $result : []);
+        } catch (\InvalidArgumentException | \RuntimeException $e) {
             return ['status' => 'failed', 'message' => $e->getMessage()];
         }
     }
 
-    public function toggleAction($uuid = null)
+    public function createAction()
     {
         $this->guard();
-        $vpn = new Vpn();
-        if (!$vpn->setPeerEnabled((string)$uuid, !empty($this->request->getPost('enabled')))) {
-            return ['status' => 'failed'];
-        }
-        $vpn->apply();
-        return ['status' => 'ok'];
+        $req = $this->request->getPost();
+        return $this->change(fn($vpn, $mdl) => ['uuid' => $vpn->create($mdl, is_array($req) ? $req : [])]);
     }
 
-    public function delAction($uuid = null)
+    public function updateAction($uuid = null)
     {
         $this->guard();
-        $vpn = new Vpn();
-        if (!$vpn->removePeer((string)$uuid)) {
+        $req = $this->request->getPost();
+        return $this->change(fn($vpn, $mdl) => $vpn->update($mdl, (string)$uuid, is_array($req) ? $req : []));
+    }
+
+    public function deleteAction($uuid = null)
+    {
+        $this->guard();
+        return $this->change(function ($vpn, $mdl) use ($uuid) {
+            if (!$vpn->delete($mdl, (string)$uuid)) {
+                throw new \InvalidArgumentException('unknown VPN connection');
+            }
+        });
+    }
+
+    public function peeraddAction($conn = null)
+    {
+        $this->guard();
+        $name = trim((string)$this->request->getPost('name')) ?: 'device';
+        return $this->change(fn($vpn, $mdl) => $vpn->addPeer($mdl, (string)$conn, $name));
+    }
+
+    /**
+     * client configuration incl. private key (QR code / .conf): full admins only
+     */
+    public function peerconfigAction($conn = null, $peer = null)
+    {
+        $this->guard(false);
+        $cfg = (new Vpn())->peerConfig(new Minnosh(), (string)$conn, (string)$peer);
+        if ($cfg === null) {
             return ['status' => 'failed'];
         }
-        $vpn->apply();
-        return ['status' => 'ok'];
+        return array_merge(['status' => $cfg['config'] === null ? 'nokey' : 'ok'], $cfg);
+    }
+
+    public function peerrenewAction($conn = null, $peer = null)
+    {
+        $this->guard();
+        return $this->change(fn($vpn, $mdl) => $vpn->renewPeerKey($mdl, (string)$conn, (string)$peer));
+    }
+
+    public function peertoggleAction($conn = null, $peer = null)
+    {
+        $this->guard();
+        $on = !empty($this->request->getPost('enabled'));
+        return $this->change(function ($vpn, $mdl) use ($conn, $peer, $on) {
+            if (!$vpn->setPeerEnabled($mdl, (string)$conn, (string)$peer, $on)) {
+                throw new \InvalidArgumentException('unknown VPN device');
+            }
+        });
+    }
+
+    public function peerdelAction($conn = null, $peer = null)
+    {
+        $this->guard();
+        return $this->change(function ($vpn, $mdl) use ($conn, $peer) {
+            if (!$vpn->removePeer($mdl, (string)$conn, (string)$peer)) {
+                throw new \InvalidArgumentException('unknown VPN device');
+            }
+        });
     }
 }

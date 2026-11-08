@@ -172,56 +172,97 @@ function minnosh_firewall_geo(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping, $pr
 }
 
 /**
- * WireGuard: OPNsense does not open the listen port nor NAT unassigned instances itself.
+ * WireGuard connections. OPNsense neither opens the listen port nor NATs unassigned instances,
+ * and traffic arriving on the "wireguard" interface group is denied unless a rule passes it.
+ *  - remote access: devices reach only the networks chosen for the connection (+ the firewall's
+ *    DNS); "all traffic" additionally reaches the internet (NATed), never unchosen networks
+ *  - site to site:  remote networks <-> chosen local networks, both directions, no NAT
  */
 function minnosh_firewall_vpn(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping)
 {
     if (!class_exists('\OPNsense\Wireguard\Server') || !isset($mapping['wan'])) {
         return;
     }
-    $general = new \OPNsense\Wireguard\General();
-    $own = \OPNsense\Minnosh\Vpn::instance(new \OPNsense\Wireguard\Server());
-    if ($general->enabled->isEmpty() || $own === null || $own->enabled->isEmpty()) {
+    if ((new \OPNsense\Wireguard\General())->enabled->isEmpty()) {
         return;
     }
-    $tunnel = explode(',', (string)$own->tunneladdress)[0];
-    list($addr, $bits) = explode('/', $tunnel);
-    $mask = (~0 << (32 - (int)$bits)) & 0xffffffff;
-    $network = long2ip(ip2long($addr) & $mask) . '/' . $bits;
-
-    $fw->registerFilterRule(100000, [
-        'type' => 'pass',
-        'interface' => 'wan',
-        'direction' => 'in',
-        'ipprotocol' => 'inet',
-        'protocol' => 'udp',
-        'quick' => true,
-        'to' => '(self)',
-        'to_port' => (string)$own->port,
-        'descr' => 'Minnosh: WireGuard VPN',
-        'label' => minnosh_label('vpn-wan'),
-        '#ref' => 'ui/minnosh#vpn',
-    ]);
-    if (isset($mapping['wireguard'])) {
-        $fw->registerFilterRule(100000, [
-            'type' => 'pass',
-            'interface' => 'wireguard',
-            'direction' => 'in',
-            'ipprotocol' => 'inet',
-            'quick' => true,
-            'from' => $network,
-            'descr' => 'Minnosh: traffic from VPN devices',
-            'label' => minnosh_label('vpn-in'),
-            '#ref' => 'ui/minnosh#vpn',
-        ]);
+    $servers = new \OPNsense\Wireguard\Server();
+    \OPNsense\Minnosh\Vpn::migrate($mdl, $servers);
+    $internal = [];
+    foreach ($mdl->getProtectedInterfaces() as $key) {
+        if (isset($mapping[$key])) {
+            $internal[] = $key;
+        }
     }
-    $fw->registerSourceNatRule(200, [
-        'interface' => 'wan',
-        'ipprotocol' => 'inet',
-        'source' => ['network' => $network],
-        'destination' => ['any' => true],
-        'descr' => 'Minnosh: VPN devices to internet',
-    ]);
+    foreach (\OPNsense\Minnosh\Vpn::connections($mdl, $servers) as $cuuid => list($conn, $server)) {
+        if ($server->enabled->isEmpty()) {
+            continue;
+        }
+        $id = substr($cuuid, 0, 8);
+        $name = (string)$server->name;
+        list($addr, $bits) = explode('/', explode(',', (string)$server->tunneladdress)[0]);
+        $mask = (~0 << (32 - (int)$bits)) & 0xffffffff;
+        $tunnel = long2ip(ip2long($addr) & $mask) . '/' . (int)$bits;
+        $chosen = array_values(array_intersect($conn->networks->getValues(), $internal));
+        $base = ['interface' => 'wireguard', 'direction' => 'in', 'ipprotocol' => 'inet', 'quick' => true, '#ref' => 'ui/minnosh#vpn'];
+
+        $fw->registerFilterRule(100000, [
+            'type' => 'pass', 'interface' => 'wan', 'direction' => 'in', 'ipprotocol' => 'inet', 'protocol' => 'udp',
+            'quick' => true, 'to' => '(self)', 'to_port' => (string)$server->port,
+            'descr' => "Minnosh: VPN {$name}", 'label' => minnosh_label("vpn-wan-{$id}"), '#ref' => 'ui/minnosh#vpn',
+        ]);
+        if (!isset($mapping['wireguard'])) {
+            continue;
+        }
+
+        if ((string)$conn->kind === 'site') {
+            $remote = $conn->remote_networks->getValues();
+            if (empty($remote) || empty($chosen)) {
+                continue;
+            }
+            foreach ($chosen as $key) {
+                $fw->registerFilterRule(105000, array_merge($base, [
+                    'type' => 'pass', 'from' => implode(',', $remote), 'to' => $key,
+                    'descr' => "Minnosh: VPN {$name} remote to {$key}", 'label' => minnosh_label("vpn-site-in-{$id}-{$key}"),
+                ]));
+                $fw->registerFilterRule(105000, [
+                    'type' => 'pass', 'interface' => $key, 'direction' => 'in', 'ipprotocol' => 'inet', 'quick' => true,
+                    'from' => $key, 'to' => implode(',', $remote),
+                    'descr' => "Minnosh: VPN {$name} {$key} to remote", 'label' => minnosh_label("vpn-site-out-{$id}-{$key}"),
+                    '#ref' => 'ui/minnosh#vpn',
+                ]);
+            }
+            continue;
+        }
+
+        /* remote access */
+        $fw->registerFilterRule(105000, array_merge($base, [
+            'type' => 'pass', 'protocol' => 'tcp/udp', 'from' => $tunnel, 'to' => '(self)', 'to_port' => '53',
+            'descr' => "Minnosh: VPN {$name} DNS", 'label' => minnosh_label("vpn-dns-{$id}"),
+        ]));
+        foreach ($chosen as $key) {
+            $fw->registerFilterRule(105000, array_merge($base, [
+                'type' => 'pass', 'from' => $tunnel, 'to' => $key,
+                'descr' => "Minnosh: VPN {$name} to {$key}", 'label' => minnosh_label("vpn-net-{$id}-{$key}"),
+            ]));
+        }
+        if ((string)$conn->mode === 'full') {
+            foreach (array_diff($internal, $chosen) as $key) {
+                $fw->registerFilterRule(105000, array_merge($base, [
+                    'type' => 'block', 'from' => $tunnel, 'to' => $key,
+                    'descr' => "Minnosh: VPN {$name} not to {$key}", 'label' => minnosh_label("vpn-deny-{$id}-{$key}"),
+                ]));
+            }
+            $fw->registerFilterRule(106000, array_merge($base, [
+                'type' => 'pass', 'from' => $tunnel,
+                'descr' => "Minnosh: VPN {$name} to internet", 'label' => minnosh_label("vpn-inet-{$id}"),
+            ]));
+            $fw->registerSourceNatRule(200, [
+                'interface' => 'wan', 'ipprotocol' => 'inet', 'source' => ['network' => $tunnel],
+                'destination' => ['any' => true], 'descr' => "Minnosh: VPN {$name} to internet",
+            ]);
+        }
+    }
 }
 
 /**

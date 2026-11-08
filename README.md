@@ -15,7 +15,7 @@ Tasarım taslağı: https://claude.ai/artifact/9HQfR7v4fu2ouPT9Xh73qN
 | Engelleme | Kategoriler, 12 uygulama, izin/engel listeleri, güvenli arama, DNS zorlama | Unbound politikası `Minnosh (managed)`, otomatik rdr kuralı |
 | Zamanlama | Gün/saat aralığında cihazın internetini kesme veya uygulama engelleme; her dakika değerlendirilir | pf tablosu `minnosh_sched`, zamanlama başına Unbound politikası `Minnosh schedule: …` |
 | Port yönlendirme | Hazır servisler, hedef cihaz seçimi, aç/kapat, sil; UPnP durumu | Güvenlik Duvarı › NAT › Port Forward kuralları (izin kuralı otomatik) |
-| VPN | WireGuard sunucusu, cihaz ekleme (QR kodu + dosya, gizli anahtar bir kez gösterilir), tüm trafik / sadece ev ağı | WireGuard örneği `minnosh` + peer'lar; WAN izin, VPN izin ve NAT otomatik kural olarak |
+| VPN | Birden çok WireGuard bağlantısı, her biri kendi UDP portunda: **uzaktan erişim** (cihaz başına QR kodu + `.conf`, istendiği zaman tekrar alınabilir; tüm trafik / yalnızca seçili iç ağlar) ve **siteden siteye** (seçili yerel ağlar ⇄ karşı ağlar; karşı tarafın anahtarı yoksa Minnosh üretip hazır yapılandırma verir). Her bağlantının erişebileceği iç ağlar ayrı seçilir. | Bağlantı başına bir WireGuard örneği (`minnosh-…`) + peer'lar; WAN izni, seçili ağlara izin (tam modda diğer iç ağlara engel), NAT otomatik kural olarak |
 | Misafir ağı | Misafir türündeki ağları izole etme, hız sınırı, bağlı misafirler | Erişim tablosu + Trafik Şekillendirici `Minnosh guest …` |
 | Ülke engelleme | Ülke seçimi, yalnız gelen / gelen ve giden, engellenen deneme sayısı. Ülke verisi kayıt gerektirmeden **DB-IP Lite**'tan (CC BY 4.0) alınır, ayda bir yenilenir; isteyen kendi MaxMind anahtarını kullanabilir | GeoIP takma adı `minnosh_geo` + otomatik kural; OPNsense'te kaynak ayarlı değilse ülke dosyaları `/usr/local/share/GeoIP/alias` altına yazılır |
 | Ayarlar | Dil, korunan ağlar, engel yanıtı, DNS istatistikleri, **Minnosh'un eklediklerini kaldır** | `OPNsense/Minnosh` modeli |
@@ -31,7 +31,7 @@ Minnosh mevcut ayarları okur ve yalnızca kullanıcının Minnosh'tan değişti
 - İlk açılışta hiçbir koruma kendiliğinden açılmaz; panelde "Önerilen korumaları aç" kartı çıkar.
 - Erişim tablosundaki her hücre varsayılan olarak **"OPNsense"** durumundadır: mevcut güvenlik duvarı kuralları geçerlidir. Kural yalnızca kullanıcı bir hücreyi İzinli/Engelli yaptığında eklenir.
 - Minnosh'un anlayamadığı yapılar (çoklu WAN, LAGG/bridge üyesi ağlar, takma ad kullanan port yönlendirmeleri…) **salt okunur** gösterilir.
-- Minnosh yalnızca kendi oluşturduğu ağları silebilir. Kendi WireGuard örneği için boş bir port ve çakışmayan bir tünel ağı seçer; varsa GeoIP adresinin üzerine yazmaz.
+- Minnosh yalnızca kendi oluşturduğu ağları silebilir. Her VPN bağlantısı için boş bir port ve çakışmayan bir tünel ağı seçer (0.2'deki tek `minnosh` örneği ilk açılışta bağlantı olarak devralınır); varsa GeoIP adresinin üzerine yazmaz.
 - Eklediği her kayıt "Minnosh" etiketi taşır. **Ayarlar › Minnosh'un eklediklerini kaldır**, yalnızca bu kayıtları siler ve Minnosh'u kapatır. Port yönlendirmeleri, ağlar ve VPN cihazları kullanıcının bilinçli oluşturduğu şeyler olduğu için kalır.
 - Otomatik güvenlik duvarı kuralları config.xml'e yazılmaz; eklenti kaldırılınca kendiliğinden kaybolur.
 
@@ -67,7 +67,7 @@ tools/deploy.sh, tools/remove.sh             test cihazına kopyalama / kaldırm
 | `POST /api/minnosh/service/cleanup` | Minnosh'un eklediklerini kaldır, Minnosh'u kapat |
 | `GET /api/minnosh/network/get`, `POST …/apply`, `POST …/confirm`, `GET …/test` | Ağ durumu, geri alma korumalı değişiklik, onay, bağlantı testi |
 | `GET /api/minnosh/portforward/list`, `POST …/add`, `…/toggle/{uuid}`, `…/del/{uuid}` | Port yönlendirme |
-| `GET /api/minnosh/vpn/status`, `POST …/enable`, `…/add`, `…/toggle/{uuid}`, `…/del/{uuid}` | WireGuard VPN |
+| `GET /api/minnosh/vpn/status`, `POST …/create`, `…/update/{uuid}`, `…/delete/{uuid}`, `…/peeradd/{conn}`, `GET …/peerconfig/{conn}/{peer}`, `POST …/peerrenew/{conn}/{peer}`, `…/peertoggle/{conn}/{peer}`, `…/peerdel/{conn}/{peer}` | WireGuard VPN bağlantıları ve cihazları |
 | `GET /api/minnosh/geo/status` | GeoIP veritabanı durumu, engellenen deneme sayısı |
 
 ## Proxmox'ta test
