@@ -72,6 +72,19 @@ def state_counts():
     return counts
 
 
+def arp_present():
+    """ addresses with a complete entry in the arp table right now (host discovery may report an old last_seen) """
+    result = set()
+    payload = run_json(['/usr/sbin/arp', '-an', '--libxo', 'json'])
+    try:
+        for row in payload['arp']['arp-cache']:
+            if row.get('mac-address') and row.get('ip-address'):
+                result.add(row['ip-address'])
+    except (KeyError, TypeError):
+        pass
+    return result
+
+
 def own_macs():
     """ MAC addresses of the firewall's own interfaces, these are not "devices" """
     result = set()
@@ -113,9 +126,11 @@ if __name__ == '__main__':
 
     names = lease_hostnames()
     states = state_counts()
+    in_arp = arp_present()
     for mac, host in hosts.items():
         host['hostname'] = names.get(mac, '')
         host['states'] = sum(states.get(ip, 0) for ip in host['ips'])
+        host['in_arp'] = any(ip in in_arp for ip in host['ips'])
         # ipv4 first, it is what people recognise
         host['ips'].sort(key=lambda ip: (':' in ip, ip))
 

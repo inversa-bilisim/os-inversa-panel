@@ -46,7 +46,9 @@ class DevicesController extends ApiControllerBase
                 continue;
             }
             $lastSeen = !empty($host['last_seen']) ? strtotime($host['last_seen']) : false;
-            $online = $source !== 'discovery' || ($lastSeen !== false && $now - $lastSeen < self::ONLINE_WINDOW);
+            /* host discovery only refreshes last_seen on new activity, an idle but present host is still online */
+            $online = $source !== 'discovery' || !empty($host['in_arp']) || !empty($host['states']) ||
+                ($lastSeen !== false && $now - $lastSeen < self::ONLINE_WINDOW);
             $result[$host['mac']] = [
                 'mac' => $host['mac'],
                 'ips' => $host['ips'],

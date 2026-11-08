@@ -36,6 +36,29 @@ class ServiceController extends ApiControllerBase
         ))));
     }
 
+    /**
+     * interface language is a UI preference: store it immediately, nothing to apply
+     */
+    public function languageAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $this->throwReadOnly();
+        $mdl = new Minnosh();
+        $mdl->general->language->setValue((string)$this->request->getPost('language'));
+        $validations = [];
+        foreach ($mdl->performValidation() as $msg) {
+            $validations[$msg->getField()] = $msg->getMessage();
+        }
+        if (!empty($validations)) {
+            return ['status' => 'failed', 'validations' => $validations];
+        }
+        $mdl->serializeToConfig();
+        \OPNsense\Core\Config::getInstance()->save();
+        return ['status' => 'ok'];
+    }
+
     public function applyAction()
     {
         if (!$this->request->isPost()) {

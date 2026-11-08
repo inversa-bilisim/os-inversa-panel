@@ -25,6 +25,8 @@
         info: 'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20zM12 16v-5M12 8h.01',
         warn: 'M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',
         ok: 'M20 6L9 17l-5-5',
+        globe: 'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20',
+        chevron: 'M6 9l6 6 6-6',
         ads: 'M3 11l15-6v14L3 13zM7 12.5V18a2 2 0 0 0 4 0v-4',
         malware: 'M8 9a4 4 0 0 1 8 0v5a4 4 0 0 1-8 0zM12 9v9M3 13h5M16 13h5M4 7l4 3M20 7l-4 3M4 19l4-3M20 19l-4-3',
         adult: 'M3 3l18 18M10.6 6.1A9.7 9.7 0 0 1 12 6c6 0 10 6 10 6a17 17 0 0 1-3.2 3.8M6.6 6.6C3.8 8.4 2 12 2 12s4 6 10 6a9.4 9.4 0 0 0 4.4-1.1M9.9 9.9a3 3 0 0 0 4.2 4.2',
@@ -94,10 +96,16 @@
         });
     }
 
+    /* language of the OPNsense GUI itself, used for "automatic" */
+    function autoLang() {
+        var code = String(root.getAttribute('data-langcode') || 'en').slice(0, 2).toLowerCase();
+        return window.MinnoshI18n[code] ? code : 'en';
+    }
+
     function lang() {
         var pref = S && S.draft ? S.draft.general.language : 'auto';
         if (pref === 'auto') {
-            pref = String(root.getAttribute('data-langcode') || 'en').slice(0, 2).toLowerCase();
+            return autoLang();
         }
         return window.MinnoshI18n[pref] ? pref : 'en';
     }
@@ -168,7 +176,8 @@
 
     function pendingCount() {
         var d = S.draft, s = S.saved, n = 0;
-        ['enabled', 'language', 'dnsstats'].forEach(function (k) { if (d.general[k] !== s.general[k]) { n++; } });
+        /* language is saved immediately (setLanguage), it is never a pending change */
+        ['enabled', 'dnsstats'].forEach(function (k) { if (d.general[k] !== s.general[k]) { n++; } });
         if (sortedJson(d.general.interfaces) !== sortedJson(s.general.interfaces)) { n++; }
         CATS.forEach(function (k) { if (d.filtering[k] !== s.filtering[k]) { n++; } });
         ['apps', 'allowlist', 'denylist'].forEach(function (k) {
@@ -247,12 +256,38 @@
         root.innerHTML =
             '<div id="k-header"></div>' +
             '<nav class="k-tabs" id="k-tabs" aria-label="Minnosh"></nav>' +
-            '<div id="k-banners"></div>' +
-            '<div id="k-main"></div>';
+            '<div id="k-main"></div>' +
+            '<div id="k-toast" class="k-toast-area" aria-live="polite"></div>';
         renderHeader();
         renderTabs();
         renderBanners();
         renderMain();
+    }
+
+    /* language dropdown, shared by header and settings; a UI preference that is saved at once */
+    function langSelect() {
+        var t = T(), pref = S.draft.general.language;
+        var autoName = window.MinnoshI18n[autoLang()].langName;
+        var options = [['auto', t.langAuto + ' (' + autoName + ')']].concat(Object.keys(window.MinnoshI18n).map(function (code) {
+            return [code, window.MinnoshI18n[code].langName];
+        }));
+        return '<label class="k-lang">' + icon(ICONS.globe, 16) +
+            '<select data-input="lang" aria-label="' + esc(t.langLabel) + '">' + options.map(function (o) {
+                return '<option value="' + esc(o[0]) + '"' + (o[0] === pref ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+            }).join('') + '</select>' + icon(ICONS.chevron, 14) + '</label>';
+    }
+
+    function setLanguage(code) {
+        var previous = S.saved.general.language;
+        S.draft.general.language = code;
+        S.saved.general.language = code;
+        render();
+        api('POST', '/api/minnosh/service/language', { language: code }).catch(function (err) {
+            S.draft.general.language = previous;
+            S.saved.general.language = previous;
+            S.ui.notice = { type: 'err', text: T().applyFailed, list: [err && err.errorMessage ? err.errorMessage : ''] };
+            render();
+        });
     }
 
     function protectionLevel(source) {
@@ -262,20 +297,19 @@
     }
 
     function renderHeader() {
-        var t = T(), level = protectionLevel(S.saved), cur = lang();
+        var t = T(), level = protectionLevel(S.saved);
         var pill = level === 'ok' ? ['ok', t.protOn] : (level === 'warn' ? ['warn', t.protPartial] : ['warn', t.protOff]);
-        var langs = Object.keys(window.MinnoshI18n).map(function (code) {
-            return '<button type="button" class="' + (code === cur ? 'on' : '') + '" data-act="lang" data-v="' + esc(code) + '" ' +
-                'aria-pressed="' + (code === cur) + '">' + esc(code.toUpperCase()) + '</button>';
-        }).join('');
         document.getElementById('k-header').innerHTML =
             '<div class="k-header">' +
             '<div class="k-brand"><div class="k-logo">' + icon(ICONS.shield + 'M9 12l2 2 4-4', 24) + '</div>' +
             '<div><div class="k-title">Minnosh</div><div class="muted">' + esc(t.appSub) + '</div></div></div>' +
+            /* pending changes live inside the header so they never push the page down */
+            '<div id="k-pending" class="k-pending-slot"></div>' +
             '<div class="k-head-right">' +
             '<span class="k-pill ' + pill[0] + '"><span class="k-dot ' + pill[0] + '"></span>' + esc(pill[1]) + '</span>' +
-            '<div class="k-seg" role="group" aria-label="' + esc(t.langLabel) + '">' + langs + '</div>' +
+            langSelect() +
             '</div></div>';
+        renderPending();
     }
 
     function renderTabs() {
@@ -294,28 +328,50 @@
     }
 
     function renderBanners() {
-        var t = T(), html = '', n = pendingCount();
+        renderPending();
+        renderToast();
+    }
+
+    function renderPending() {
+        var slot = document.getElementById('k-pending');
+        if (!slot) { return; }
+        var t = T(), n = pendingCount(), html = '';
         if (n > 0 || S.ui.applying) {
-            html += '<div class="k-banner warn k-pending" role="status">' +
-                '<div class="k-pending-text">' + icon(ICONS.info, 20) +
-                '<div><div style="font-weight:600">' + esc(t.pending(n)) + '</div><div class="muted" style="color:inherit">' + esc(t.pendingHint) + '</div></div></div>' +
-                '<div class="k-btns">' +
-                '<button type="button" class="k-btn" data-act="discard"' + (S.ui.applying ? ' disabled' : '') + '>' + esc(t.discard) + '</button>' +
-                '<button type="button" class="k-btn primary" data-act="apply"' + (S.ui.applying ? ' disabled' : '') + '>' +
-                esc(S.ui.applying ? t.applying : t.apply) + '</button>' +
-                '</div></div>';
+            html = '<div class="k-pending-inline" role="status" title="' + esc(t.pendingHint) + '">' + icon(ICONS.info, 18) +
+                '<div class="k-pending-text"><b>' + esc(t.pending(n)) + '</b><span>' + esc(t.pendingHint) + '</span></div>' +
+                '<button type="button" class="k-btn small" data-act="discard"' + (S.ui.applying ? ' disabled' : '') + '>' + esc(t.discard) + '</button>' +
+                '<button type="button" class="k-btn small primary" data-act="apply"' + (S.ui.applying ? ' disabled' : '') + '>' +
+                esc(S.ui.applying ? t.applying : t.apply) + '</button></div>';
         }
-        if (S.ui.notice) {
-            var nt = S.ui.notice;
-            html += '<div class="k-banner ' + nt.type + '" role="status">' + icon(nt.type === 'ok' ? ICONS.ok : ICONS.warn, 20) +
-                '<div style="flex:1 1 auto"><div>' + esc(nt.text) + '</div>' +
-                (nt.list && nt.list.length ? '<ul style="margin:6px 0 0;padding-left:18px">' + nt.list.map(function (m) {
-                    return '<li>' + esc(m) + '</li>';
-                }).join('') + '</ul>' : '') + '</div>' +
-                '<button type="button" class="k-icon-btn" style="background:transparent;color:inherit;width:32px;height:32px" data-act="dismiss" aria-label="' + esc(t.close) + '">' + icon(ICONS.close, 16) + '</button>' +
-                '</div>';
+        slot.innerHTML = html;
+    }
+
+    /* results float in a corner instead of pushing content around */
+    function renderToast() {
+        var area = document.getElementById('k-toast');
+        if (!area) { return; }
+        var t = T(), nt = S.ui.notice;
+        if (S.ui.toastTimer) {
+            clearTimeout(S.ui.toastTimer);
+            S.ui.toastTimer = null;
         }
-        document.getElementById('k-banners').innerHTML = html;
+        if (!nt) {
+            area.innerHTML = '';
+            return;
+        }
+        area.innerHTML = '<div class="k-banner k-toast ' + nt.type + '" role="status">' + icon(nt.type === 'ok' ? ICONS.ok : ICONS.warn, 20) +
+            '<div style="flex:1 1 auto"><div>' + esc(nt.text) + '</div>' +
+            (nt.list && nt.list.length ? '<ul style="margin:6px 0 0;padding-left:18px">' + nt.list.map(function (m) {
+                return '<li>' + esc(m) + '</li>';
+            }).join('') + '</ul>' : '') + '</div>' +
+            '<button type="button" class="k-icon-btn" style="background:transparent;color:inherit;width:32px;height:32px" data-act="dismiss" aria-label="' + esc(t.close) + '">' + icon(ICONS.close, 16) + '</button>' +
+            '</div>';
+        if (nt.type === 'ok' && !(nt.list && nt.list.length)) {
+            S.ui.toastTimer = setTimeout(function () {
+                S.ui.notice = null;
+                renderToast();
+            }, 8000);
+        }
     }
 
     function renderMain() {
@@ -591,19 +647,13 @@
 
     function viewSettings() {
         var t = T(), g = S.draft.general;
-        var langs = [['auto', t.langAuto]].concat(Object.keys(window.MinnoshI18n).map(function (code) {
-            return [code, window.MinnoshI18n[code].langName];
-        }));
         var html = '<div class="k-stack"><h1>' + esc(t.setTitle) + '</h1><section class="k-card tight">';
 
         html += '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.enabledLabel) + '</b><span class="muted">' + esc(t.enabledSub) + '</span></div>' +
             toggle(g.enabled, 'data-act="general" data-v="enabled"', t.enabledLabel) + '</div>';
 
         html += '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.langLabel) + '</b><span class="muted">' + esc(t.langSub) + '</span></div>' +
-            '<div class="k-seg" role="group" aria-label="' + esc(t.langLabel) + '">' + langs.map(function (o) {
-                var on = g.language === o[0];
-                return '<button type="button" class="' + (on ? 'on' : '') + '" data-act="lang" data-v="' + esc(o[0]) + '" aria-pressed="' + on + '">' + esc(o[1]) + '</button>';
-            }).join('') + '</div></div>';
+            langSelect() + '</div>';
 
         html += '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.ifLabel) + '</b><span class="muted">' + esc(t.ifSub) + '</span></div>' +
             '<div class="k-chips">' + (S.options.interfaces || []).map(function (i) {
@@ -690,10 +740,6 @@
                 full = true;
                 if (S.tab === 'devices') { loadHosts().then(refreshView, function () {}); }
                 break;
-            case 'lang':
-                S.draft.general.language = v;
-                full = true;
-                break;
             case 'cat':
                 S.draft.filtering[v] = !S.draft.filtering[v];
                 break;
@@ -776,8 +822,11 @@
     }
 
     function onChange(event) {
-        /* a renamed device: refresh the table once the field is left */
-        if (event.target.getAttribute && event.target.getAttribute('data-input') === 'devname') {
+        var kind = event.target.getAttribute && event.target.getAttribute('data-input');
+        if (kind === 'lang') {
+            setLanguage(event.target.value);
+        } else if (kind === 'devname') {
+            /* a renamed device: refresh the table once the field is left */
             renderMain();
         }
     }
@@ -793,7 +842,7 @@
             hosts: [], source: null, hostsLoaded: false,
             traffic: { last: null, rate: null, hist: [] },
             dns: null,
-            ui: { filter: 'all', search: '', sel: null, allowInput: '', denyInput: '', applying: false, notice: null, listError: { allow: null, deny: null } }
+            ui: { filter: 'all', search: '', sel: null, allowInput: '', denyInput: '', applying: false, notice: null, toastTimer: null, listError: { allow: null, deny: null } }
         };
 
         loadState().then(function () {
