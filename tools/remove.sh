@@ -12,7 +12,8 @@ set -eu
 
 TARGET="${1:?usage: $0 root@<opnsense-ip>}"
 
-ssh "${TARGET}" '
+# root's login shell on OPNsense is csh: run the remote part explicitly with sh
+ssh "${TARGET}" /bin/sh -s <<'REMOTE'
 set -e
 rm -rf /usr/local/opnsense/mvc/app/models/OPNsense/Minnosh \
        /usr/local/opnsense/mvc/app/controllers/OPNsense/Minnosh \
@@ -27,4 +28,4 @@ rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
 service configd restart > /dev/null
 configctl filter reload > /dev/null
 echo "removed"
-'
+REMOTE

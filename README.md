@@ -68,16 +68,18 @@ tools/deploy.sh, tools/remove.sh             test cihazına kopyalama / kaldırm
 ### Kontrol listesi
 - [ ] Cihazlar sekmesinde test istemcisi görünüyor.
 - [ ] İnterneti kes + Uygula: istemci internete çıkamıyor, OPNsense'e (DNS, arayüz) erişebiliyor. **Güvenlik Duvarı › Takma Adlar**'da `minnosh_blocked` içinde istemcinin MAC adresi var.
-- [ ] Reklam kategorisi + Uygula: **Servisler › Unbound DNS › Engel Listeleri**'nde `Minnosh (managed)` politikası var; `doubleclick.net` 0.0.0.0 dönüyor.
-- [ ] TikTok + Uygula: `tiktok.com` engelleniyor.
-- [ ] DNS'i zorla + Uygula: istemci `nslookup example.com 8.8.8.8` yapsa bile cevap OPNsense'ten geliyor.
+- [ ] Reklam kategorisi + Uygula: **Servisler › Unbound DNS › Engel Listeleri**'nde `Minnosh (managed)` politikası var; `ad.ae.doubleclick.net` 0.0.0.0 dönüyor. (hagezi NORMAL listesi kırılmaları önlemek için `doubleclick.net`'in kendisini engellemez.)
+- [ ] TikTok + Uygula: `tiktok.com` engelleniyor. Daha önce sorgulanmış alan adları için engel **1-2 dakika** içinde devreye girer (Unbound'un engel modülü listeyi dakikada bir yeniden okur; ardından DNS önbelleği temizlenir).
+- [ ] DNS'i zorla + Uygula: istemci `dig @8.8.8.8 tiktok.com` yapsa bile cevap OPNsense'ten geliyor (0.0.0.0).
 - [ ] Genel bakış: WAN hızı ve grafik birkaç saniyede bir güncelleniyor; engellenen istek sayısı artıyor.
 - [ ] Dil TR/EN geçişi tüm metinleri değiştiriyor.
 
 ### Sorun giderme
 - Sayfa açılmıyor veya menü görünmüyor: `rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json`
 - API hataları: **Sistem › Günlük Dosyaları › Web GUI**, `/var/log/configd/latest.log`
-- Üretilen kurallar: `pfctl -sr | grep -i minnosh` ve `pfctl -sn | grep -i minnosh`
+- Üretilen kurallar: `pfctl -sr | grep -i minnosh` ve `grep -i minnosh /tmp/rules.debug` (pfctl DNS portunu "domain" diye gösterir)
+- OPNsense'te root'un kabuğu `csh`'dir; SSH ile `sh` komutları çalıştırırken `ssh root@firewall /bin/sh -s <<'EOF' ... EOF` kullanın.
+- Test ağı WAN'ı ev ağının içindeyse (ör. 192.168.1.0/24), yönetim kuralında **reply-to'yu kapatın**; yoksa yanıtlar modem üzerinden döner ve SSH/GUI bağlantıları kopar.
 
 ## Bilinen sınırlar (0.1)
 

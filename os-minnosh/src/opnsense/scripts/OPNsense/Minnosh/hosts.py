@@ -72,8 +72,23 @@ def state_counts():
     return counts
 
 
+def own_macs():
+    """ MAC addresses of the firewall's own interfaces, these are not "devices" """
+    result = set()
+    try:
+        sp = subprocess.run(['/sbin/ifconfig'], capture_output=True, text=True, timeout=20)
+    except (OSError, subprocess.SubprocessError):
+        return result
+    for line in sp.stdout.split('\n'):
+        parts = line.split()
+        if len(parts) > 1 and parts[0] == 'ether':
+            result.add(parts[1].lower())
+    return result
+
+
 if __name__ == '__main__':
     hosts = {}
+    skip = own_macs()
     payload = run_json([LIST_HOSTS, '-v', '-n']) if os.path.isfile(LIST_HOSTS) else None
     source = payload.get('source') if isinstance(payload, dict) else None
     for row in (payload or {}).get('rows', []):
@@ -81,6 +96,8 @@ if __name__ == '__main__':
         if len(row) < 3 or not row[1]:
             continue
         mac = row[1].lower()
+        if mac in skip:
+            continue
         host = hosts.setdefault(mac, {
             'mac': mac,
             'ips': [],

@@ -31,7 +31,18 @@ class DashboardController extends ApiControllerBase
                 $wan[] = $key;
             }
         }
-        return ['time' => $traffic['time'] ?? microtime(true), 'interfaces' => $traffic['interfaces'] ?? [], 'wan' => $wan];
+        /* the one-shot variant returns raw counters ("bytes received"), the stream variant inbytes/outbytes */
+        $interfaces = [];
+        foreach ($traffic['interfaces'] ?? $traffic as $key => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $interfaces[$key] = [
+                'inbytes' => $row['inbytes'] ?? $row['bytes received'] ?? 0,
+                'outbytes' => $row['outbytes'] ?? $row['bytes transmitted'] ?? 0,
+            ];
+        }
+        return ['time' => $traffic['time'] ?? microtime(true), 'interfaces' => $interfaces, 'wan' => $wan];
     }
 
     /**
@@ -51,8 +62,10 @@ class DashboardController extends ApiControllerBase
         $blocked = [];
         foreach ($totals['top_blocked'] ?? [] as $domain => $props) {
             $blocked[] = [
-                'domain' => $domain,
+                'domain' => rtrim($domain, '.'),
                 'total' => $props['total'],
+                /* app and custom domains are reported by Unbound as "Custom" */
+                'custom' => $props['blocklist'] === 'Custom',
                 'list' => $types[$props['blocklist']]['value'] ?? $props['blocklist'],
             ];
         }

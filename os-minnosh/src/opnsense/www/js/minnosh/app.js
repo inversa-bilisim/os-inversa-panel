@@ -424,7 +424,7 @@
         } else {
             blockedRows = dns.top_blocked.slice(0, 6).map(function (b) {
                 return '<div class="k-list-row"><span class="k-grow-text mono">' + esc(b.domain) + '</span>' +
-                    '<span class="k-badge">' + esc(b.list) + '</span>' +
+                    '<span class="k-badge">' + esc(b.custom ? t.customList : b.list) + '</span>' +
                     '<span style="width:56px;text-align:right;font-weight:600;flex:none">' + esc(fmt(b.total)) + '</span></div>';
             }).join('');
         }

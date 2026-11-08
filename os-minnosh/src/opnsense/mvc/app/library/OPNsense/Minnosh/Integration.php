@@ -160,7 +160,8 @@ class Integration
         if ($restartUnbound) {
             $backend->configdRun('unbound restart');
         }
-        $backend->configdRun('unbound dnsbl', true);
+        /* same as "unbound dnsbl" + cache flush, so newly blocked domains stop resolving immediately */
+        $backend->configdRun('minnosh dnsbl', true);
 
         return ['status' => 'ok', 'messages' => $this->messages];
     }

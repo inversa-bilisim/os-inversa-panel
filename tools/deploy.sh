@@ -16,9 +16,10 @@ echo ">> copying files to ${TARGET}"
 tar -C "${SRC}" -cf - . | ssh "${TARGET}" 'tar -C /usr/local -xf -'
 
 echo ">> checking and reloading on ${TARGET}"
-ssh "${TARGET}" '
+# root's login shell on OPNsense is csh: run the remote part explicitly with sh
+ssh "${TARGET}" /bin/sh -s <<'REMOTE'
 set -e
-chmod 0755 /usr/local/opnsense/scripts/OPNsense/Minnosh/*.py
+chmod 0755 /usr/local/opnsense/scripts/OPNsense/Minnosh/*.py /usr/local/opnsense/scripts/OPNsense/Minnosh/*.sh
 for f in $(find /usr/local/opnsense/mvc/app -path "*Minnosh*" -name "*.php") /usr/local/etc/inc/plugins.inc.d/minnosh.inc; do
     php -l "$f" > /dev/null || { echo "syntax error in $f"; exit 1; }
 done
@@ -27,4 +28,4 @@ rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
 # configd must re-read actions_minnosh.conf
 service configd restart > /dev/null
 echo "ok: open https://<firewall>/ui/minnosh"
-'
+REMOTE

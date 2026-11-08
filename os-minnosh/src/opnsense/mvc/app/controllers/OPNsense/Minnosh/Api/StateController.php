@@ -40,7 +40,11 @@ class StateController extends ApiControllerBase
 
         $interfaces = [];
         foreach ($mdl->general->interfaces->getNodeData() as $key => $option) {
-            $interfaces[] = ['key' => $key, 'name' => $option['value'], 'selected' => !empty($option['selected'])];
+            /* protecting the uplink makes no sense, keep it out of the choices */
+            if ($key === 'wan') {
+                continue;
+            }
+            $interfaces[] =['key' => $key, 'name' => $option['value'], 'selected' => !empty($option['selected'])];
         }
 
         $apps = [];
