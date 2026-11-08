@@ -1,0 +1,9 @@
+<acl>
+    <page-minnosh>
+        <name>Minnosh: easy management</name>
+        <patterns>
+            <pattern>ui/minnosh/*</pattern>
+            <pattern>api/minnosh/*</pattern>
+        </patterns>
+    </page-minnosh>
+</acl>

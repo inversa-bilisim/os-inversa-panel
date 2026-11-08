@@ -1,0 +1,30 @@
+#!/bin/sh
+#
+# Copy the plugin sources onto a (test) OPNsense box and reload what is needed.
+#
+#   tools/deploy.sh root@192.168.1.1
+#
+# src/opnsense/* -> /usr/local/opnsense/*, src/etc/* -> /usr/local/etc/*
+# PHP files are syntax checked on the box (php is available there).
+
+set -eu
+
+TARGET="${1:?usage: $0 root@<opnsense-ip>}"
+SRC="$(cd "$(dirname "$0")/../os-minnosh/src" && pwd)"
+
+echo ">> copying files to ${TARGET}"
+tar -C "${SRC}" -cf - . | ssh "${TARGET}" 'tar -C /usr/local -xf -'
+
+echo ">> checking and reloading on ${TARGET}"
+ssh "${TARGET}" '
+set -e
+chmod 0755 /usr/local/opnsense/scripts/OPNsense/Minnosh/*.py
+for f in $(find /usr/local/opnsense/mvc/app -path "*Minnosh*" -name "*.php") /usr/local/etc/inc/plugins.inc.d/minnosh.inc; do
+    php -l "$f" > /dev/null || { echo "syntax error in $f"; exit 1; }
+done
+# menu / ACL caches are rebuilt on next page load
+rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
+# configd must re-read actions_minnosh.conf
+service configd restart > /dev/null
+echo "ok: open https://<firewall>/ui/minnosh"
+'

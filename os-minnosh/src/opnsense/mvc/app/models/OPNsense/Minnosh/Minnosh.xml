@@ -1,0 +1,139 @@
+<model>
+    <mount>//OPNsense/Minnosh</mount>
+    <version>0.1.0</version>
+    <description>Minnosh - easy management</description>
+    <items>
+        <general>
+            <enabled type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </enabled>
+            <language type="OptionField">
+                <Default>auto</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <auto>Automatic</auto>
+                    <tr>Türkçe</tr>
+                    <en>English</en>
+                </OptionValues>
+            </language>
+            <!-- internal networks Minnosh protects (blocking rules and DNS enforcement apply here) -->
+            <interfaces type="InterfaceField">
+                <Multiple>Y</Multiple>
+                <Default>lan</Default>
+                <Required>Y</Required>
+                <filters>
+                    <enable>/^(?!0).*$/</enable>
+                </filters>
+            </interfaces>
+            <!-- turn on Unbound query statistics (needed for the dashboard counters) -->
+            <dnsstats type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </dnsstats>
+        </general>
+        <devices>
+            <device type="ArrayField">
+                <mac type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/</Mask>
+                    <ValidationMessage>Invalid MAC address.</ValidationMessage>
+                    <Constraints>
+                        <check001>
+                            <ValidationMessage>This device already exists.</ValidationMessage>
+                            <type>UniqueConstraint</type>
+                        </check001>
+                    </Constraints>
+                </mac>
+                <name type="TextField">
+                    <Mask>/^[^\x00-\x1f&lt;&gt;"]{0,128}$/</Mask>
+                    <ValidationMessage>Invalid device name.</ValidationMessage>
+                </name>
+                <type type="OptionField">
+                    <Default>unknown</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <phone>Phone</phone>
+                        <tablet>Tablet</tablet>
+                        <laptop>Computer</laptop>
+                        <tv>TV</tv>
+                        <console>Game console</console>
+                        <printer>Printer</printer>
+                        <iot>Smart home</iot>
+                        <server>Server / NAS</server>
+                        <unknown>Other</unknown>
+                    </OptionValues>
+                </type>
+                <blocked type="BooleanField">
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </blocked>
+            </device>
+        </devices>
+        <filtering>
+            <ads type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </ads>
+            <malware type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </malware>
+            <adult type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </adult>
+            <gambling type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </gambling>
+            <bypass type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </bypass>
+            <safesearch type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </safesearch>
+            <forcedns type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </forcedns>
+            <apps type="OptionField">
+                <Multiple>Y</Multiple>
+                <OptionValues>
+                    <tiktok>TikTok</tiktok>
+                    <instagram>Instagram</instagram>
+                    <facebook>Facebook</facebook>
+                    <x>X</x>
+                    <youtube>YouTube</youtube>
+                    <netflix>Netflix</netflix>
+                    <twitch>Twitch</twitch>
+                    <discord>Discord</discord>
+                    <roblox>Roblox</roblox>
+                    <steam>Steam</steam>
+                    <whatsapp>WhatsApp</whatsapp>
+                    <telegram>Telegram</telegram>
+                </OptionValues>
+            </apps>
+            <allowlist type="CSVListField">
+                <Mask>/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i</Mask>
+                <MaskPerItem>Y</MaskPerItem>
+                <ValidationMessage>A valid domain must be specified.</ValidationMessage>
+            </allowlist>
+            <denylist type="CSVListField">
+                <Mask>/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i</Mask>
+                <MaskPerItem>Y</MaskPerItem>
+                <ValidationMessage>A valid domain must be specified.</ValidationMessage>
+            </denylist>
+            <response type="OptionField">
+                <Default>zero</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <zero>0.0.0.0</zero>
+                    <nxdomain>NXDOMAIN</nxdomain>
+                </OptionValues>
+            </response>
+        </filtering>
+    </items>
+</model>

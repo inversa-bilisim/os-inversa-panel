@@ -1,0 +1,5 @@
+<menu>
+    <Minnosh order="11" VisibleName="Minnosh" cssClass="fa fa-shield">
+        <Panel order="10" VisibleName="Panel" url="/ui/minnosh" cssClass="fa fa-dashboard fa-fw"/>
+    </Minnosh>
+</menu>
