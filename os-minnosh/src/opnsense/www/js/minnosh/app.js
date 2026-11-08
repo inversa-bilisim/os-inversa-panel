@@ -174,17 +174,75 @@
         return result;
     }
 
-    function pendingCount() {
-        var d = S.draft, s = S.saved, n = 0;
-        /* language is saved immediately (setLanguage), it is never a pending change */
-        ['enabled', 'dnsstats'].forEach(function (k) { if (d.general[k] !== s.general[k]) { n++; } });
-        if (sortedJson(d.general.interfaces) !== sortedJson(s.general.interfaces)) { n++; }
-        CATS.forEach(function (k) { if (d.filtering[k] !== s.filtering[k]) { n++; } });
-        ['apps', 'allowlist', 'denylist'].forEach(function (k) {
-            if (sortedJson(d.filtering[k]) !== sortedJson(s.filtering[k])) { n++; }
+    function diffList(before, after, callback) {
+        before = before || [];
+        after = after || [];
+        after.forEach(function (v) { if (before.indexOf(v) < 0) { callback(v, true); } });
+        before.forEach(function (v) { if (after.indexOf(v) < 0) { callback(v, false); } });
+    }
+
+    /*
+     * Everything that differs between draft and saved, in words, each with its own revert
+     * (the "Show changes" list, like OpenWrt's). Its length is the pending count.
+     * Language is saved immediately (setLanguage), so it never appears here.
+     */
+    function changeList() {
+        var t = T(), d = S.draft, s = S.saved, out = [];
+        function onOff(v) { return v ? t.on : t.off; }
+        function add(what, from, to, revert) { out.push({ what: what, from: from, to: to, revert: revert }); }
+        var ifName = {}, appName = {};
+        (S.options.interfaces || []).forEach(function (i) { ifName[i.key] = i.name; });
+        (S.options.apps || []).forEach(function (a) { appName[a.key] = a.name; });
+
+        [['enabled', t.enabledLabel], ['dnsstats', t.statsLabel]].forEach(function (g) {
+            if (!!d.general[g[0]] !== !!s.general[g[0]]) {
+                add(g[1], onOff(s.general[g[0]]), onOff(d.general[g[0]]), function () { S.draft.general[g[0]] = s.general[g[0]]; });
+            }
         });
-        if (d.filtering.response !== s.filtering.response) { n++; }
-        return n + Object.keys(changedDevices()).length;
+        diffList(s.general.interfaces, d.general.interfaces, function (key, added) {
+            add(t.ifLabel, added ? '' : (ifName[key] || key), added ? (ifName[key] || key) : '', function () {
+                S.draft.general.interfaces = toggleInList(S.draft.general.interfaces, key);
+            });
+        });
+        CATS.forEach(function (k) {
+            if (!!d.filtering[k] !== !!s.filtering[k]) {
+                add(t.cats[k][0], onOff(s.filtering[k]), onOff(d.filtering[k]), function () { S.draft.filtering[k] = s.filtering[k]; });
+            }
+        });
+        diffList(s.filtering.apps, d.filtering.apps, function (key, added) {
+            add(appName[key] || key, added ? t.allowed : t.blocked, added ? t.blocked : t.allowed, function () {
+                S.draft.filtering.apps = toggleInList(S.draft.filtering.apps, key);
+            });
+        });
+        [['allowlist', t.allowTitle], ['denylist', t.denyTitle]].forEach(function (l) {
+            diffList(s.filtering[l[0]], d.filtering[l[0]], function (domain, added) {
+                add(l[1], added ? '' : domain, added ? domain : '', function () {
+                    S.draft.filtering[l[0]] = toggleInList(S.draft.filtering[l[0]], domain);
+                });
+            });
+        });
+        if (d.filtering.response !== s.filtering.response) {
+            var resp = { zero: '0.0.0.0', nxdomain: 'NXDOMAIN' };
+            add(t.respLabel, resp[s.filtering.response], resp[d.filtering.response], function () { S.draft.filtering.response = s.filtering.response; });
+        }
+        Object.keys(changedDevices()).forEach(function (mac) {
+            var a = devCfg(mac, d), b = devCfg(mac, s), host = hostByMac(mac);
+            var label = b.name || a.name || (host && host.hostname) || mac;
+            if (a.name !== b.name) {
+                add(label + ' · ' + t.dName, b.name || '—', a.name || '—', function () { setDev(mac, { name: b.name }); });
+            }
+            if (a.type !== b.type) {
+                add(label + ' · ' + t.dType, t.types[b.type], t.types[a.type], function () { setDev(mac, { type: b.type }); });
+            }
+            if (!!a.blocked !== !!b.blocked) {
+                add(label + ' · ' + t.dNet, b.blocked ? t.netOff : t.netOn, a.blocked ? t.netOff : t.netOn, function () { setDev(mac, { blocked: !!b.blocked }); });
+            }
+        });
+        return out;
+    }
+
+    function pendingCount() {
+        return changeList().length;
     }
 
     /* ------------------------------------------------------------------ data loading */
@@ -337,13 +395,37 @@
     function renderPending() {
         var slot = document.getElementById('k-pending');
         if (!slot) { return; }
-        var t = T(), n = pendingCount(), nt = S.ui.notice;
+        var t = T(), changes = changeList(), n = changes.length, nt = S.ui.notice;
+        S.ui.changeCache = changes;
+        if (n === 0) {
+            S.ui.showChanges = false;
+        }
         if (n > 0 || S.ui.applying) {
-            slot.innerHTML = '<div class="k-pending-inline" role="status" title="' + esc(t.pendingHint) + '">' + icon(ICONS.info, 18) +
+            var busy = S.ui.applying ? ' disabled' : '';
+            var panel = '';
+            if (S.ui.showChanges) {
+                panel = '<div class="k-changes" role="region" aria-label="' + esc(t.changesTitle) + '">' +
+                    '<div class="k-changes-head">' + esc(t.changesTitle) + '</div><ul>' +
+                    changes.map(function (c, i) {
+                        var diff;
+                        if (c.from === '') {
+                            diff = '<span class="add">+ ' + esc(c.to) + '</span>';
+                        } else if (c.to === '') {
+                            diff = '<span class="del">− ' + esc(c.from) + '</span>';
+                        } else {
+                            diff = '<span class="from">' + esc(c.from) + '</span> → <span class="to">' + esc(c.to) + '</span>';
+                        }
+                        return '<li><div class="k-ch-text"><div class="k-ch-what">' + esc(c.what) + '</div><div class="k-ch-diff">' + diff + '</div></div>' +
+                            '<button type="button" class="k-btn small" data-act="revert" data-i="' + i + '"' + busy + '>' + esc(t.undo) + '</button></li>';
+                    }).join('') + '</ul></div>';
+            }
+            slot.innerHTML = '<div class="k-pending-wrap"><div class="k-pending-inline" role="status">' + icon(ICONS.info, 18) +
                 '<div class="k-pending-text"><b>' + esc(t.pending(n)) + '</b><span>' + esc(t.pendingHint) + '</span></div>' +
-                '<button type="button" class="k-btn small" data-act="discard"' + (S.ui.applying ? ' disabled' : '') + '>' + esc(t.discard) + '</button>' +
-                '<button type="button" class="k-btn small primary" data-act="apply"' + (S.ui.applying ? ' disabled' : '') + '>' +
-                esc(S.ui.applying ? t.applying : t.apply) + '</button></div>';
+                '<button type="button" class="k-btn small ghost" data-act="changes" aria-expanded="' + (S.ui.showChanges ? 'true' : 'false') + '">' +
+                esc(S.ui.showChanges ? t.hideChanges : t.showChanges) + '</button>' +
+                '<button type="button" class="k-btn small" data-act="discard"' + busy + '>' + esc(t.discard) + '</button>' +
+                '<button type="button" class="k-btn small primary" data-act="apply"' + busy + '>' +
+                esc(S.ui.applying ? t.applying : t.apply) + '</button></div>' + panel + '</div>';
             return;
         }
         if (!nt) {
@@ -773,9 +855,19 @@
             case 'discard':
                 S.draft = clone(S.saved);
                 S.ui.notice = null;
+                S.ui.showChanges = false;
                 full = true;
                 break;
+            case 'changes':
+                S.ui.showChanges = !S.ui.showChanges;
+                renderPending();
+                return;
+            case 'revert':
+                var change = (S.ui.changeCache || [])[Number(el.getAttribute('data-i'))];
+                if (change) { change.revert(); }
+                break;
             case 'apply':
+                S.ui.showChanges = false;
                 apply();
                 return;
             case 'dismiss':
@@ -811,6 +903,11 @@
 
     function onKey(event) {
         var el = event.target;
+        if (event.key === 'Escape' && S.ui.showChanges) {
+            S.ui.showChanges = false;
+            renderPending();
+            return;
+        }
         if (event.key === 'Enter' && el.getAttribute && el.getAttribute('data-input') === 'domain') {
             event.preventDefault();
             addDomain(el.getAttribute('data-list'));
@@ -838,7 +935,7 @@
             hosts: [], source: null, hostsLoaded: false,
             traffic: { last: null, rate: null, hist: [] },
             dns: null,
-            ui: { filter: 'all', search: '', sel: null, allowInput: '', denyInput: '', applying: false, notice: null, listError: { allow: null, deny: null } }
+            ui: { filter: 'all', search: '', sel: null, allowInput: '', denyInput: '', applying: false, notice: null, showChanges: false, changeCache: [], listError: { allow: null, deny: null } }
         };
 
         loadState().then(function () {

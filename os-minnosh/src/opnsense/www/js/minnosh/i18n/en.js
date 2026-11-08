@@ -17,6 +17,7 @@ window.MinnoshI18n.en = {
     pending: function (n) { return n === 1 ? '1 unsaved change' : n + ' unsaved changes'; },
     pendingHint: 'Changes are written to the firewall when you press “Apply”.',
     apply: 'Apply', applying: 'Applying…', discard: 'Discard',
+    showChanges: 'Show changes', hideChanges: 'Hide', changesTitle: 'Unsaved changes', undo: 'Revert',
     applied: 'Changes applied. Firewall rules were updated; DNS blocking is refreshing in the background and takes effect within 1-2 minutes.',
     applyFailed: 'Changes could not be applied:',
     validationFailed: 'Some values are invalid:',

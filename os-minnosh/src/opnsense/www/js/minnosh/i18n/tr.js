@@ -17,6 +17,7 @@ window.MinnoshI18n.tr = {
     pending: function (n) { return n + ' kaydedilmemiş değişiklik'; },
     pendingHint: 'Değişiklikler “Uygula”ya bastığınızda güvenlik duvarına yazılır.',
     apply: 'Uygula', applying: 'Uygulanıyor…', discard: 'Vazgeç',
+    showChanges: 'Değişiklikleri göster', hideChanges: 'Gizle', changesTitle: 'Kaydedilmemiş değişiklikler', undo: 'Geri al',
     applied: 'Değişiklikler uygulandı. Güvenlik duvarı kuralları güncellendi; DNS engelleri arka planda yenileniyor ve 1-2 dakika içinde devreye girer.',
     applyFailed: 'Değişiklikler uygulanamadı:',
     validationFailed: 'Bazı değerler geçersiz:',
