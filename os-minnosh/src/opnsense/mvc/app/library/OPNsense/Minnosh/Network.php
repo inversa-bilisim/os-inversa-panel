@@ -87,7 +87,9 @@ class Network
     {
         foreach ((new Dnsmasq())->dhcp_ranges->iterateItems() as $node) {
             if ((string)$node->interface === $key && Util::isIpv4Address((string)$node->start_addr)) {
-                return ['from' => (string)$node->start_addr, 'to' => (string)$node->end_addr];
+                $lease = (string)$node->lease_time;
+                return ['from' => (string)$node->start_addr, 'to' => (string)$node->end_addr,
+                    'lease' => $lease !== '' ? round((int)$lease / 3600, 2) : null];
             }
         }
         return null;
@@ -375,18 +377,25 @@ class Network
         }
         $node->ipaddr = $ip;
         $subnet = (string)$node->subnet ?: '24';
-        $this->setDhcp($key, $ip . '/' . $subnet, !empty($net['dhcp']));
+        $this->setDhcp($key, $ip . '/' . $subnet, !empty($net['dhcp']), $net['dhcp_from'] ?? '', $net['dhcp_to'] ?? '', array_key_exists('lease', $net) ? (string)$net['lease'] : null);
     }
 
     /**
-     * (re)create the IPv4 DHCP range of $key the way the setup wizard does
+     * IPv4 DHCP range of $key: kept (with whatever else was set on it in OPNsense) and only
+     * adjusted. $from/$to empty: keep the current range while it still fits the network,
+     * otherwise the setup wizard's default. $lease: hours, empty = dnsmasq default.
      */
-    private function setDhcp($key, $cidr, $enabled)
+    private function setDhcp($key, $cidr, $enabled, $from = '', $to = '', $lease = null)
     {
         $dnsmasq = new Dnsmasq();
+        $range = null;
         foreach ($dnsmasq->dhcp_ranges->iterateItems() as $uuid => $node) {
             if ($node->interface->isEqual($key) && Util::isIpv4Address($node->start_addr->getValue())) {
-                $dnsmasq->dhcp_ranges->del($uuid);
+                if ($range === null && $enabled) {
+                    $range = $node;
+                } else {
+                    $dnsmasq->dhcp_ranges->del($uuid);
+                }
             }
         }
         if ($enabled) {
@@ -394,21 +403,56 @@ class Network
             $mask = (~0 << (32 - (int)$bits)) & 0xffffffff;
             $base = ip2long($ip) & $mask;
             $size = 1 << (32 - (int)$bits);
+            $inside = function ($addr) use ($mask, $base, $size) {
+                $l = ip2long($addr);
+                return Util::isIpv4Address($addr) && ($l & $mask) === $base && $l !== $base && $l !== $base + $size - 1;
+            };
+            $from = trim((string)$from);
+            $to = trim((string)$to);
+            if ($from !== '' || $to !== '') {
+                if (!$inside($from) || !$inside($to)) {
+                    throw new \InvalidArgumentException("DHCP range must be inside {$cidr}");
+                }
+                if (ip2long($from) > ip2long($to)) {
+                    throw new \InvalidArgumentException('DHCP range: start must not be after end');
+                }
+                if (ip2long($ip) >= ip2long($from) && ip2long($ip) <= ip2long($to)) {
+                    throw new \InvalidArgumentException("DHCP range must not contain the gateway address {$ip}");
+                }
+            } elseif ($range !== null && $inside((string)$range->start_addr) && $inside((string)$range->end_addr)
+                && !(ip2long($ip) >= ip2long((string)$range->start_addr) && ip2long($ip) <= ip2long((string)$range->end_addr))) {
+                $from = (string)$range->start_addr;
+                $to = (string)$range->end_addr;
+            } elseif ((int)$bits === 24) {
+                /* same range people know from the LAN */
+                $from = long2ip($base + 100);
+                $to = long2ip($base + 199);
+            } else {
+                $from = long2ip($base + min(100, (int)($size / 4)));
+                $to = long2ip($base + $size - min(56, (int)($size / 8)) - 1);
+            }
             if (!$dnsmasq->interface->isEmpty() && !in_array($key, explode(',', (string)$dnsmasq->interface))) {
                 $dnsmasq->interface = (string)$dnsmasq->interface . ',' . $key;
             }
             $dnsmasq->enable = '1';
-            $range = $dnsmasq->dhcp_ranges->Add();
-            $range->interface = $key;
-            if ((int)$bits === 24) {
-                /* same range people know from the LAN */
-                $range->start_addr = long2ip($base + 100);
-                $range->end_addr = long2ip($base + 199);
-            } else {
-                $range->start_addr = long2ip($base + min(100, (int)($size / 4)));
-                $range->end_addr = long2ip($base + $size - min(56, (int)($size / 8)) - 1);
+            if ($range === null) {
+                $range = $dnsmasq->dhcp_ranges->Add();
+                $range->interface = $key;
+                $range->description = 'Minnosh';
             }
-            $range->description = 'Minnosh';
+            $range->start_addr = $from;
+            $range->end_addr = $to;
+            if ($lease === null) {
+                /* not asked: leave as is */
+            } elseif ((string)$lease !== '') {
+                $hours = (float)str_replace(',', '.', (string)$lease);
+                if ($hours < 0.25 || $hours > 8760) {
+                    throw new \InvalidArgumentException('lease time must be between 0.25 and 8760 hours');
+                }
+                $range->lease_time = (string)(int)round($hours * 3600);
+            } else {
+                $range->lease_time = '';
+            }
         }
         $dnsmasq->serializeToConfig(false, true);
     }

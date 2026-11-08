@@ -205,7 +205,7 @@
             '<div>' +
             '<div class="k-kv"><span class="muted">' + h.esc(T.netLink) + '</span><span class="mono">' + h.esc(n.mode === 'vlan' ? 'VLAN ' + n.vlan + ' · ' + n.port : n.port + ' · ' + T.untagged) + '</span></div>' +
             '<div class="k-kv"><span class="muted">' + h.esc(T.netAddr) + '</span><span class="mono">' + h.esc(n.ip ? n.ip + '/' + n.subnet : '—') + '</span></div>' +
-            '<div class="k-kv"><span class="muted">DHCP</span><span class="mono">' + h.esc(n.dhcp ? n.dhcp.from + ' – ' + n.dhcp.to : T.off) + '</span></div>' +
+            '<div class="k-kv"><span class="muted">DHCP</span><span class="mono">' + h.esc(n.dhcp ? n.dhcp.from + ' – ' + n.dhcp.to + (n.dhcp.lease != null ? ' · ' + T.leaseShort(n.dhcp.lease) : '') : T.off) + '</span></div>' +
             '</div></section>';
         return html;
     }
@@ -214,7 +214,9 @@
         var T = t(), e = N.edit, n = N.data.networks.filter(function (x) { return x.key === e.key; })[0];
         if (!n) { return ''; }
         var kind = kindOf(n.key);
-        var changed = e.ip !== n.ip || e.dhcp !== !!n.dhcp;
+        var d0 = n.dhcp || {};
+        var changed = e.ip !== n.ip || e.dhcp !== !!n.dhcp ||
+            (e.dhcp && (e.from !== (d0.from || '') || e.to !== (d0.to || '') || e.lease !== (d0.lease == null ? '' : String(d0.lease))));
         return '<section class="k-card k-edit"><h2>' + h.esc(T.edTitle(n.name)) + '</h2>' +
             '<div class="k-field"><span>' + h.esc(T.edType) + '</span><div class="k-chips">' + KINDS.map(function (k) {
                 return '<button type="button" class="k-chip' + (kind === k ? ' on' : '') + '" data-act="net:kind" data-v="' + k + '">' + dot(KIND_COLOR[k]) + h.esc(T.netKinds[k]) + '</button>';
@@ -222,6 +224,11 @@
             '<div class="k-row"><label class="k-field"><span>' + h.esc(T.edGw) + '</span><input type="text" class="mono" data-input="net:edit-ip" value="' + h.esc(e.ip) + '"></label>' +
             '<div class="k-setting" style="border:none;flex:1 1 260px"><div class="k-setting-text"><b>' + h.esc(T.edDhcp) + '</b><span class="muted">' + h.esc(T.edDhcpSub) + '</span></div>' +
             h.toggle(e.dhcp, 'data-act="net:edit-dhcp"', T.edDhcp) + '</div></div>' +
+            (e.dhcp ? '<div class="k-row" style="align-items:flex-end">' +
+                '<label class="k-field" style="flex:0 1 170px"><span>' + h.esc(T.edDhcpFrom) + '</span><input type="text" class="mono" inputmode="decimal" data-input="net:edit-from" value="' + h.esc(e.from) + '" placeholder="' + h.esc(T.edAuto) + '"></label>' +
+                '<label class="k-field" style="flex:0 1 170px"><span>' + h.esc(T.edDhcpTo) + '</span><input type="text" class="mono" inputmode="decimal" data-input="net:edit-to" value="' + h.esc(e.to) + '" placeholder="' + h.esc(T.edAuto) + '"></label>' +
+                '<label class="k-field" style="flex:0 1 150px"><span>' + h.esc(T.edLease) + '</span><input type="text" class="mono" inputmode="decimal" data-input="net:edit-lease" value="' + h.esc(e.lease) + '" placeholder="' + h.esc(T.edLeaseDefault) + '"></label>' +
+                '<span class="muted small" style="flex:1 1 220px;padding-bottom:10px">' + h.esc(T.edDhcpHint) + '</span></div>' : '') +
             (n.key === 'lan' ? '<div class="k-banner warn" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span>' + h.esc(T.lanChangeWarn) + '</span></div>' : '') +
             '<div class="k-row" style="justify-content:space-between;align-items:center">' +
             (n.created ? '<button type="button" class="k-btn" style="color:#9A3B0A;border-color:#F2C99B" data-act="net:delete" data-v="' + n.key + '"' + (N.busy || N.countdown ? ' disabled' : '') + '>' + h.esc(T.edDelete) + '</button>' : '<span class="muted">' + h.esc(T.notCreated) + '</span>') +
@@ -333,14 +340,15 @@
                     return null;
                 case 'edit':
                     var n = N.data.networks.filter(function (x) { return x.key === v; })[0];
-                    N.edit = N.edit && N.edit.key === v ? null : { key: v, ip: n.ip, dhcp: !!n.dhcp };
+                    N.edit = N.edit && N.edit.key === v ? null : { key: v, ip: n.ip, dhcp: !!n.dhcp,
+                        from: n.dhcp ? n.dhcp.from : '', to: n.dhcp ? n.dhcp.to : '', lease: n.dhcp && n.dhcp.lease != null ? String(n.dhcp.lease) : '' };
                     N.add = null;
                     return 'main';
                 case 'edit-dhcp': N.edit.dhcp = !N.edit.dhcp; return 'main';
                 case 'kind': draft().kinds[N.edit.key] = v; return 'main';
                 case 'editapply':
                     var upd = {};
-                    upd[N.edit.key] = { ip: N.edit.ip, dhcp: N.edit.dhcp };
+                    upd[N.edit.key] = { ip: N.edit.ip, dhcp: N.edit.dhcp, dhcp_from: N.edit.from, dhcp_to: N.edit.to, lease: N.edit.lease };
                     netApply({ update: upd });
                     return null;
                 case 'delete':
@@ -379,6 +387,10 @@
                 map[name][0][map[name][1]] = name === 'wan-vlan' ? val.replace(/[^0-9]/g, '').slice(0, 4) : val.trim();
             } else if (name === 'edit-ip' && N.edit) {
                 N.edit.ip = val.trim();
+            } else if ((name === 'edit-from' || name === 'edit-to') && N.edit) {
+                N.edit[name.slice(5)] = val.replace(/[^0-9.]/g, '');
+            } else if (name === 'edit-lease' && N.edit) {
+                N.edit.lease = val.replace(/[^0-9.,]/g, '').replace(',', '.');
             } else if (name === 'add-name' && N.add) {
                 N.add.name = val.toUpperCase().replace(/[^A-Z0-9_]/g, '');
             } else if (name === 'add-vlan' && N.add) {

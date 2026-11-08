@@ -178,6 +178,31 @@
         return result;
     }
 
+    /* fixed addresses: mac => ip, '' = back to automatic */
+    function changedReservations() {
+        var result = {}, d = S.draft.reservations || {}, s = S.saved.reservations || {};
+        Object.keys(Object.assign({}, s, d)).forEach(function (mac) {
+            if ((d[mac] || '') !== (s[mac] || '')) { result[mac] = d[mac] || ''; }
+        });
+        return result;
+    }
+
+    function ipToInt(ip) {
+        var m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(ip || '');
+        if (!m || m.slice(1).some(function (x) { return +x > 255; })) { return null; }
+        return ((+m[1] << 24) >>> 0) + (+m[2] << 16) + (+m[3] << 8) + (+m[4]);
+    }
+
+    /* the DHCP network an address belongs to, or null */
+    function dhcpNetOf(ip) {
+        var n = ipToInt(ip);
+        if (n === null) { return null; }
+        return (S.options.dhcp_networks || []).filter(function (net) {
+            var p = net.cidr.split('/'), bits = +p[1], mask = bits === 0 ? 0 : (~0 << (32 - bits)) >>> 0;
+            return ((n & mask) >>> 0) === ((ipToInt(p[0]) & mask) >>> 0);
+        })[0] || null;
+    }
+
     function diffList(before, after, callback) {
         before = before || [];
         after = after || [];
@@ -242,6 +267,12 @@
                 add(label + ' · ' + t.dNet, b.blocked ? t.netOff : t.netOn, a.blocked ? t.netOff : t.netOn, function () { setDev(mac, { blocked: !!b.blocked }); });
             }
         });
+        Object.keys(changedReservations()).forEach(function (mac) {
+            var host = hostByMac(mac), cfg = devCfg(mac, d);
+            var label = cfg.name || (host && host.hostname) || mac;
+            var before = (s.reservations || {})[mac] || '', after = (d.reservations || {})[mac] || '';
+            add(label + ' · ' + t.dFixedIp, before || t.dIpAuto, after || t.dIpAuto, function () { S.draft.reservations[mac] = before; });
+        });
         /* views add their own pending changes (schedules, access, guest, countries, vpn) */
         Object.keys(VIEWS).forEach(function (key) {
             if (VIEWS[key].changes) {
@@ -265,7 +296,8 @@
                 schedules: data.schedules || [],
                 access: Array.isArray(data.access) ? {} : (data.access || {}),
                 kinds: Array.isArray(data.kinds) ? {} : (data.kinds || {}),
-                guest: data.guest || {}, geo: data.geo || {}, vpn: data.vpn || {}
+                guest: data.guest || {}, geo: data.geo || {}, vpn: data.vpn || {},
+                reservations: Array.isArray(data.reservations) ? {} : (data.reservations || {})
             };
             S.draft = clone(S.saved);
             S.options = data.options;
@@ -633,7 +665,8 @@
                 '<button type="button" class="k-dev-name" data-act="sel" data-mac="' + esc(h.mac) + '" aria-label="' + esc(t.editAria(name)) + '">' +
                 '<span style="min-width:0"><b>' + esc(name) + '</b><span class="muted">' + esc(h.vendor || t.unknownVendor) + '</span></span>' +
                 '<span style="color:#5B6573;flex:none">' + icon(ICONS.pencil, 15) + '</span></button></div></td>' +
-                '<td class="mono">' + esc(h.ips[0] || '—') + (h.ips.length > 1 ? ' <span class="muted">+' + (h.ips.length - 1) + '</span>' : '') + '</td>' +
+                '<td class="mono">' + esc(h.ips[0] || '—') + (h.ips.length > 1 ? ' <span class="muted">+' + (h.ips.length - 1) + '</span>' : '') +
+                    ((S.saved.reservations || {})[h.mac] ? ' <span class="k-badge" title="' + esc(t.dFixedIp + ': ' + S.saved.reservations[h.mac]) + '">' + esc(t.dFixedShort) + '</span>' : '') + '</td>' +
                 '<td class="mono" style="color:#36404D">' + esc(h.mac) + '</td>' +
                 '<td><span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#36404D">' +
                 '<span class="k-dot ' + (h.online ? 'ok' : '') + '"></span>' + esc(status) + '</span></td>' +
@@ -642,6 +675,29 @@
                 toggle(!cut, 'data-act="cut" data-mac="' + esc(h.mac) + '"', t.cutAria(name), cut ? 'cut' : '') + '</div></td>' +
                 '</tr>';
         }).join('');
+    }
+
+    function fixedIpField(h) {
+        var t = T(), mac = h.mac;
+        var val = (S.draft.reservations || {})[mac] || '', saved = (S.saved.reservations || {})[mac] || '';
+        var current = (h.ips || []).filter(function (ip) { return ipToInt(ip) !== null; })[0] || '';
+        var net = dhcpNetOf(val || current), hint;
+        if (val && ipToInt(val) === null) {
+            hint = '<span class="k-warn-text">' + esc(t.dIpInvalid) + '</span>';
+        } else if (val && !dhcpNetOf(val)) {
+            hint = '<span class="k-warn-text">' + esc(t.dIpNoNet) + '</span>';
+        } else if (val && net && ipToInt(val) >= ipToInt(net.from) && ipToInt(val) <= ipToInt(net.to)) {
+            hint = '<span class="muted small">' + esc(t.dIpInRange(net.from, net.to)) + '</span>';
+        } else if (net) {
+            hint = '<span class="muted small">' + esc(t.dIpHint(net.cidr, net.from, net.to)) + '</span>';
+        } else {
+            hint = '<span class="muted small">' + esc(t.dIpAutoHint) + '</span>';
+        }
+        return '<label class="k-field"><span>' + esc(t.dFixedIp) + '</span>' +
+            '<div style="display:flex;gap:8px"><input type="text" class="mono" style="flex:1 1 auto;min-width:0" inputmode="decimal" autocomplete="off" data-input="devip" data-mac="' + esc(mac) + '" value="' + esc(val) + '" placeholder="' + esc(t.dIpAuto) + '">' +
+            (!val && current && dhcpNetOf(current) ? '<button type="button" class="k-btn small" data-act="fixip" data-mac="' + esc(mac) + '" data-v="' + esc(current) + '" title="' + esc(t.dIpPinHint) + '">' + esc(t.dIpPin) + '</button>' : '') +
+            (val ? '<button type="button" class="k-btn small" data-act="fixip" data-mac="' + esc(mac) + '" data-v="">' + esc(t.dIpClear) + '</button>' : '') + '</div>' +
+            hint + (val !== saved || (val && current && val !== current) ? '<span class="muted small">' + esc(t.dIpRenew) + '</span>' : '') + '</label>';
     }
 
     function devicePanel() {
@@ -664,6 +720,7 @@
             '<button type="button" class="k-icon-btn" data-act="sel" data-mac="" aria-label="' + esc(t.close) + '">' + icon(ICONS.close, 18) + '</button></div>' +
             '<label class="k-field"><span>' + esc(t.dName) + '</span>' +
             '<input type="text" maxlength="64" data-input="devname" data-mac="' + esc(h.mac) + '" value="' + esc(cfg.name) + '" placeholder="' + esc(h.hostname || t.unnamed) + '"></label>' +
+            fixedIpField(h) +
             '<div class="k-field"><span>' + esc(t.dType) + '</span><div class="k-types">' +
             TYPES.map(function (type) {
                 var on = cfg.type === type;
@@ -817,6 +874,7 @@
             general: S.draft.general,
             filtering: S.draft.filtering,
             devices: changedDevices(),
+            reservations: changedReservations(),
             schedules: S.draft.schedules,
             access: S.draft.access,
             kinds: S.draft.kinds,
@@ -930,6 +988,9 @@
                 S.draft.filtering.malware = true;
                 saveWelcomed();
                 break;
+            case 'fixip':
+                S.draft.reservations[el.getAttribute('data-mac')] = el.getAttribute('data-v') || '';
+                break;
             case 'welcome-no':
                 saveWelcomed();
                 break;
@@ -993,6 +1054,9 @@
         } else if (kind === 'devname') {
             setDev(el.getAttribute('data-mac'), { name: el.value.replace(/[\x00-\x1f<>"]/g, '') });
             renderBanners();
+        } else if (kind === 'devip') {
+            S.draft.reservations[el.getAttribute('data-mac')] = el.value.replace(/[^0-9.]/g, '');
+            renderBanners();
         } else if (kind === 'domain') {
             S.ui[el.getAttribute('data-list') + 'Input'] = el.value;
         }
@@ -1019,8 +1083,8 @@
         }
         if (kind === 'lang') {
             setLanguage(event.target.value);
-        } else if (kind === 'devname') {
-            /* a renamed device: refresh the table once the field is left */
+        } else if (kind === 'devname' || kind === 'devip') {
+            /* refresh the table / hints once the field is left */
             renderMain();
         }
     }

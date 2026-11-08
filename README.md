@@ -10,8 +10,8 @@ Tasarım taslağı: https://claude.ai/artifact/9HQfR7v4fu2ouPT9Xh73qN
 | Sekme | Ne yapıyor | OPNsense'te nereye yazıyor |
 |---|---|---|
 | Genel bakış | Koruma durumu, çevrimiçi cihazlar, WAN hızı ve grafik, engellenen DNS istekleri, en aktif cihazlar, hızlı koruma anahtarları, ilk açılışta karşılama kartı | Sadece okur |
-| Cihazlar | Cihaz listesi, ad/tür verme, tek tıkla internet kesme | `minnosh_blocked` MAC takma adı + otomatik engel kuralı |
-| Ağ ve İnternet | WAN: DHCP / PPPoE (VLAN etiketli) / sabit IP, IPv6, port; yerel ağ ekleme (VLAN veya ayrı port), adres ve DHCP; üç durumlu ağlar arası erişim tablosu; port görünümü | Arayüzler, VLAN'lar, PPPoE, ağ geçidi, dnsmasq DHCP aralıkları (OPNsense kurulum sihirbazıyla aynı yöntem); erişim kuralları otomatik kural olarak |
+| Cihazlar | Cihaz listesi, ad/tür verme, tek tıkla internet kesme, sabit IP (DHCP rezervasyonu) | `minnosh_blocked` MAC takma adı + otomatik engel kuralı; sabit IP'ler Dnsmasq › Hosts kaydı olarak |
+| Ağ ve İnternet | WAN: DHCP / PPPoE (VLAN etiketli) / sabit IP, IPv6, port; yerel ağ ekleme (VLAN veya ayrı port), adres, DHCP aralığı ve kira süresi; üç durumlu ağlar arası erişim tablosu; port görünümü | Arayüzler, VLAN'lar, PPPoE, ağ geçidi, dnsmasq DHCP aralıkları (OPNsense kurulum sihirbazıyla aynı yöntem); erişim kuralları otomatik kural olarak |
 | Engelleme | Kategoriler, 12 uygulama, izin/engel listeleri, güvenli arama, DNS zorlama | Unbound politikası `Minnosh (managed)`, otomatik rdr kuralı |
 | Zamanlama | Gün/saat aralığında cihazın internetini kesme veya uygulama engelleme; her dakika değerlendirilir | pf tablosu `minnosh_sched`, zamanlama başına Unbound politikası `Minnosh schedule: …` |
 | Port yönlendirme | Hazır servisler, hedef cihaz seçimi, aç/kapat, sil; UPnP durumu | Güvenlik Duvarı › NAT › Port Forward kuralları (izin kuralı otomatik) |

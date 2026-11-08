@@ -9,6 +9,7 @@ namespace OPNsense\Minnosh\Api;
 
 use OPNsense\Base\ApiControllerBase;
 use OPNsense\Minnosh\Catalog;
+use OPNsense\Minnosh\Dhcp;
 use OPNsense\Minnosh\Minnosh;
 
 /**
@@ -75,6 +76,18 @@ class StateController extends ApiControllerBase
             $kinds[(string)$node->interface] = (string)$node->kind;
         }
 
+        $reservations = [];
+        $dhcpNets = [];
+        if (class_exists('\OPNsense\Dnsmasq\Dnsmasq')) {
+            $dnsmasq = new \OPNsense\Dnsmasq\Dnsmasq();
+            foreach (Dhcp::reservations($dnsmasq) as $mac => $r) {
+                $reservations[$mac] = $r['ip'];
+            }
+            foreach (Dhcp::servedNetworks($dnsmasq) as $key => list($cidr, $gw, $from, $to)) {
+                $dhcpNets[] = ['key' => $key, 'cidr' => $cidr, 'gateway' => $gw, 'from' => $from, 'to' => $to];
+            }
+        }
+
         return [
             'general' => [
                 'enabled' => !$mdl->general->enabled->isEmpty(),
@@ -84,6 +97,8 @@ class StateController extends ApiControllerBase
                 'welcomed' => !$mdl->general->welcomed->isEmpty(),
             ],
             'devices' => (object)$devices,
+            /* fixed addresses (Dnsmasq hosts) and the networks they can be in */
+            'reservations' => (object)$reservations,
             'filtering' => $filtering,
             'schedules' => $schedules,
             'access' => (object)$access,
@@ -105,6 +120,7 @@ class StateController extends ApiControllerBase
             'options' => [
                 'interfaces' => $interfaces,
                 'apps' => $apps,
+                'dhcp_networks' => $dhcpNets,
             ],
         ];
     }

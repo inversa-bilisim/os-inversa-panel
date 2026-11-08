@@ -10,6 +10,7 @@ namespace OPNsense\Minnosh\Api;
 use OPNsense\Base\ApiControllerBase;
 use OPNsense\Base\UserException;
 use OPNsense\Minnosh\Catalog;
+use OPNsense\Minnosh\Dhcp;
 use OPNsense\Minnosh\Integration;
 use OPNsense\Minnosh\Minnosh;
 
@@ -300,10 +301,34 @@ class ServiceController extends ApiControllerBase
             return ['status' => 'failed', 'validations' => $validations];
         }
 
+        /* fixed addresses: mac => ip ('' = remove), stored as Dnsmasq hosts */
+        $reservations = $this->request->getPost('reservations');
+        $dhcpChanged = false;
+        if (is_array($reservations) && !empty($reservations) && class_exists('\OPNsense\Dnsmasq\Dnsmasq')) {
+            $dnsmasq = new \OPNsense\Dnsmasq\Dnsmasq();
+            try {
+                foreach ($reservations as $mac => $ip) {
+                    $node = $mdl->getDeviceByMac(strtolower((string)$mac));
+                    $name = $node !== null ? (string)$node->name : '';
+                    $dhcpChanged = Dhcp::set($dnsmasq, (string)$mac, (string)$ip, $name) || $dhcpChanged;
+                }
+            } catch (\InvalidArgumentException $e) {
+                return ['status' => 'failed', 'validations' => ['reservations' => $e->getMessage()]];
+            }
+            $problems = Dhcp::store($dnsmasq);
+            if (!empty($problems)) {
+                return ['status' => 'failed', 'validations' => ['reservations' => implode(' ', $problems)]];
+            }
+        }
+
         try {
-            return (new Integration($mdl))->apply(['geo_license' => trim((string)$this->request->getPost('geo_license'))]);
+            $result = (new Integration($mdl))->apply(['geo_license' => trim((string)$this->request->getPost('geo_license'))]);
         } catch (\Exception $e) {
             throw new UserException($e->getMessage(), 'Minnosh');
         }
+        if ($dhcpChanged) {
+            (new \OPNsense\Core\Backend())->configdRun('dnsmasq restart');
+        }
+        return $result;
     }
 }
