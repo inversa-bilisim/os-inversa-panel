@@ -194,6 +194,14 @@ function minnosh_firewall_vpn(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping)
             $internal[] = $key;
         }
     }
+    /* every internal network (also ones Minnosh doesn't protect): "all traffic" must not leak into them */
+    $allInternal = [];
+    foreach (array_keys($mapping) as $key) {
+        if (preg_match('/^(lan|opt[0-9]+)$/', $key) && $key !== 'wan' && \OPNsense\Minnosh\Vpn::interfaceNetwork($key) !== null
+            && empty($mapping[$key]['gateway'])) {
+            $allInternal[] = $key;
+        }
+    }
     foreach (\OPNsense\Minnosh\Vpn::connections($mdl, $servers) as $cuuid => list($conn, $server)) {
         if ($server->enabled->isEmpty()) {
             continue;
@@ -247,7 +255,14 @@ function minnosh_firewall_vpn(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping)
             ]));
         }
         if ((string)$conn->mode === 'full') {
-            foreach (array_diff($internal, $chosen) as $key) {
+            if (empty($chosen)) {
+                /* internet only: not even the firewall itself (except DNS above) */
+                $fw->registerFilterRule(105000, array_merge($base, [
+                    'type' => 'block', 'from' => $tunnel, 'to' => '(self)',
+                    'descr' => "Minnosh: VPN {$name} not to firewall", 'label' => minnosh_label("vpn-deny-{$id}-self"),
+                ]));
+            }
+            foreach (array_diff($allInternal, $chosen) as $key) {
                 $fw->registerFilterRule(105000, array_merge($base, [
                     'type' => 'block', 'from' => $tunnel, 'to' => $key,
                     'descr' => "Minnosh: VPN {$name} not to {$key}", 'label' => minnosh_label("vpn-deny-{$id}-{$key}"),

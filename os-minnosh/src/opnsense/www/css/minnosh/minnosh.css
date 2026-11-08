@@ -305,6 +305,7 @@
 .minnosh .k-info-box > b { font-size: 13px; margin-bottom: 2px; }
 .minnosh .k-info-box .k-kv:last-child { border-bottom: none; }
 .minnosh .k-info-box .k-kv > span:last-child { display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; }
+.minnosh .k-field > .k-seg { align-self: flex-start; }
 .minnosh .k-vpn-edit { display: flex; flex-direction: column; gap: 14px; padding: 14px 0; border-top: 1px solid var(--k-line-2); border-bottom: 1px solid var(--k-line-2); }
 
 /* country blocking: key and direction side by side */

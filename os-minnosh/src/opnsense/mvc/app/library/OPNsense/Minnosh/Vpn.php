@@ -65,7 +65,7 @@ class Vpn
         return self::cidrNetwork((string)$node->ipaddr . '/' . (string)$node->subnet);
     }
 
-    private static function usedNetworks(Server $servers)
+    private static function usedNetworks(Server $servers, $skipServer = null)
     {
         $used = [];
         foreach (Config::getInstance()->object()->interfaces->children() as $node) {
@@ -73,7 +73,10 @@ class Vpn
                 $used[] = [(string)$node->ipaddr, (int)(string)$node->subnet];
             }
         }
-        foreach ($servers->servers->server->iterateItems() as $node) {
+        foreach ($servers->servers->server->iterateItems() as $uuid => $node) {
+            if ($uuid === $skipServer) {
+                continue;
+            }
             foreach (explode(',', (string)$node->tunneladdress) as $cidr) {
                 if (strpos($cidr, '/') !== false && strpos($cidr, ':') === false) {
                     list($addr, $bits) = explode('/', $cidr);
@@ -105,6 +108,32 @@ class Vpn
             }
         }
         throw new \RuntimeException('no free tunnel network found');
+    }
+
+    /**
+     * user chosen tunnel network ("10.70.0.0/24" or "10.70.0.1/24") -> "first host/bits" for the server;
+     * must be private, big enough and not overlap any interface or other VPN
+     */
+    private static function parseTunnel(Server $servers, $value, $kind, $skipServer = null)
+    {
+        $value = trim((string)$value);
+        if (!preg_match('/^(\d{1,3}(?:\.\d{1,3}){3})\/(\d{1,2})$/', $value, $m) || !filter_var($m[1], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            throw new \InvalidArgumentException("invalid IP block: $value (example: 10.70.0.0/24)");
+        }
+        $bits = (int)$m[2];
+        if ($kind === 'site' ? ($bits < 24 || $bits > 30) : ($bits < 16 || $bits > 29)) {
+            throw new \InvalidArgumentException($kind === 'site' ? 'IP block size must be between /24 and /30' : 'IP block size must be between /16 and /29');
+        }
+        if (filter_var($m[1], FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE) !== false) {
+            throw new \InvalidArgumentException("use a private IP block (10.x, 172.16-31.x or 192.168.x): $value");
+        }
+        $net = explode('/', self::cidrNetwork($value))[0];
+        foreach (self::usedNetworks($servers, $skipServer) as $used) {
+            if (self::overlaps($net, $bits, $used[0], $used[1])) {
+                throw new \InvalidArgumentException("IP block $net/$bits overlaps a network in use (" . self::cidrNetwork($used[0] . '/' . $used[1]) . ')');
+            }
+        }
+        return long2ip(ip2long($net) + 1) . '/' . $bits;
     }
 
     private static function takenPorts(Server $servers)
@@ -258,6 +287,7 @@ class Vpn
                 'enabled' => !$server->enabled->isEmpty() && !$general->enabled->isEmpty(),
                 'port' => (string)$server->port,
                 'tunnel' => $tunnel,
+                'tunnel_net' => self::cidrNetwork($tunnel),
                 'pubkey' => (string)$server->pubkey,
                 'networks' => $conn->networks->getValues(),
                 'mode' => (string)$conn->mode,
@@ -290,6 +320,7 @@ class Vpn
             'networks' => $networks,
             'wan_address' => $wan,
             'next_port' => self::pickPort($servers),
+            'next_tunnel' => ['remote' => self::cidrNetwork(self::pickTunnel($servers, 'remote')), 'site' => self::cidrNetwork(self::pickTunnel($servers, 'site'))],
             'now' => time(),
         ];
     }
@@ -336,8 +367,8 @@ class Vpn
         $tunnel = trim((string)($req['tunnel'] ?? ''));
         if ($tunnel === '') {
             $tunnel = self::pickTunnel($servers, $kind);
-        } elseif (!Util::isSubnet($tunnel) || strpos($tunnel, '/') === false) {
-            throw new \InvalidArgumentException('invalid tunnel address');
+        } else {
+            $tunnel = self::parseTunnel($servers, $tunnel, $kind);
         }
         $networks = self::validNetworks((array)($req['networks'] ?? []));
 
@@ -429,6 +460,33 @@ class Vpn
         if (isset($req['endpoint'])) {
             $conn->endpoint->setValue(trim((string)$req['endpoint']));
         }
+        $result = [];
+        $peerUuids = array_values(array_filter(explode(',', (string)$server->peers)));
+        if (!empty($req['tunnel'])) {
+            $old = explode(',', (string)$server->tunneladdress)[0];
+            $new = self::parseTunnel($servers, $req['tunnel'], (string)$conn->kind, $server->getAttributes()['uuid']);
+            if (self::cidrNetwork($new) !== self::cidrNetwork($old)) {
+                list($ip, $bits) = explode('/', $new);
+                if ((string)$conn->kind === 'remote' && count($peerUuids) > (1 << (32 - (int)$bits)) - 3) {
+                    throw new \InvalidArgumentException('IP block too small for the devices of this connection');
+                }
+                $server->tunneladdress->setValue($new);
+                if ((string)$conn->kind === 'remote') {
+                    $server->peer_dns->setValue($ip);
+                }
+                /* renumber the devices / the other gateway into the new block */
+                $next = ip2long($ip) + 1;
+                foreach ($peerUuids as $puuid) {
+                    $p = $clients->getNodeByReference('clients.client.' . $puuid);
+                    if ($p === null) {
+                        continue;
+                    }
+                    $rest = array_slice(explode(',', (string)$p->tunneladdress), 1);
+                    $p->tunneladdress->setValue(implode(',', array_merge([long2ip($next++) . '/32'], $rest)));
+                }
+                $result['readdressed'] = true;
+            }
+        }
         if ((string)$conn->kind === 'site') {
             $peer = $clients->getNodeByReference('clients.client.' . explode(',', (string)$server->peers)[0]);
             if (isset($req['remote_networks'])) {
@@ -452,6 +510,7 @@ class Vpn
             }
         }
         $this->save([$servers], [$clients], $mdl);
+        return $result;
     }
 
     /**
