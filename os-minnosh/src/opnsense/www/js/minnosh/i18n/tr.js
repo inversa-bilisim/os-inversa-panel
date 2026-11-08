@@ -47,7 +47,7 @@ window.MinnoshI18n.tr = {
     netOn: 'Açık', netOff: 'Kesik', unnamed: 'İsimsiz cihaz', unknownVendor: 'Üretici bilinmiyor',
     cutAria: function (n) { return n + ' için interneti aç / kes'; },
     editAria: function (n) { return n + ' düzenle'; },
-    noResult: 'Eşleşen cihaz yok.', noDevicesYet: 'Henüz cihaz görülmedi.', close: 'Kapat',
+    noResult: 'Eşleşen cihaz yok.', noDevicesYet: 'Henüz cihaz görülmedi.', noActive: 'Şu an açık bağlantısı olan cihaz yok.', close: 'Kapat',
     discoveryHint: 'İpucu: Daha doğru bir cihaz listesi için Arayüzler › Komşular › Keşif Ayarları’ndan host keşfini (Hostwatch) açın.',
     dName: 'Cihaz adı', dType: 'Cihaz türü', dVendor: 'Üretici', dMac: 'MAC adresi', dNetwork: 'Ağ', dIps: 'IP adresleri',
     dHostname: 'DHCP adı', dFirst: 'İlk görülme', dLast: 'Son görülme',

@@ -22,9 +22,11 @@ window.MinnoshI18n.en = {
     validationFailed: 'Some values are invalid:',
     loadFailed: 'Could not load Minnosh data. Please reload the page.',
     statusOk: 'Your network is protected', statusWarn: 'Some protections are off', statusOff: 'Minnosh is disabled',
-    statusLine: function (online, total) { return online + ' devices online · ' + total + ' devices known'; },
+    statusLine: function (online, total) {
+        return (online === 1 ? '1 device online' : online + ' devices online') + ' · ' + (total === 1 ? '1 device known' : total + ' devices known');
+    },
     dnsFilter: 'DNS filter', active: 'Active', inactive: 'Off',
-    kpiOnline: 'Devices online', kpiOnlineSub: function (n) { return 'of ' + n + ' known devices'; },
+    kpiOnline: 'Devices online', kpiOnlineSub: function (n) { return n === 1 ? 'of 1 known device' : 'of ' + n + ' known devices'; },
     kpiBlocked: 'Blocked DNS requests', kpiBlockedSub: function (p) { return p + '% of all requests'; },
     kpiNoStats: 'Statistics off',
     kpiDown: 'Download now', kpiUp: 'Upload now', kpiRateSub: 'Internet (WAN) connection',
@@ -47,7 +49,7 @@ window.MinnoshI18n.en = {
     netOn: 'On', netOff: 'Cut', unnamed: 'Unnamed device', unknownVendor: 'Unknown vendor',
     cutAria: function (n) { return 'Turn internet on / off for ' + n; },
     editAria: function (n) { return 'Edit ' + n; },
-    noResult: 'No matching devices.', noDevicesYet: 'No devices seen yet.', close: 'Close',
+    noResult: 'No matching devices.', noDevicesYet: 'No devices seen yet.', noActive: 'No device has open connections right now.', close: 'Close',
     discoveryHint: 'Tip: for a more accurate device list, enable host discovery (Hostwatch) under Interfaces › Neighbors › Discovery Settings.',
     dName: 'Device name', dType: 'Device type', dVendor: 'Vendor', dMac: 'MAC address', dNetwork: 'Network', dIps: 'IP addresses',
     dHostname: 'DHCP name', dFirst: 'First seen', dLast: 'Last seen',

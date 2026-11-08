@@ -256,8 +256,7 @@
         root.innerHTML =
             '<div id="k-header"></div>' +
             '<nav class="k-tabs" id="k-tabs" aria-label="Minnosh"></nav>' +
-            '<div id="k-main"></div>' +
-            '<div id="k-toast" class="k-toast-area" aria-live="polite"></div>';
+            '<div id="k-main"></div>';
         renderHeader();
         renderTabs();
         renderBanners();
@@ -329,48 +328,45 @@
 
     function renderBanners() {
         renderPending();
-        renderToast();
     }
 
+    /*
+     * One slot in the header shows, in order of priority: pending changes (with Discard/Apply),
+     * or the result of the last apply. Success fades out by itself, errors stay until closed.
+     */
     function renderPending() {
         var slot = document.getElementById('k-pending');
         if (!slot) { return; }
-        var t = T(), n = pendingCount(), html = '';
+        var t = T(), n = pendingCount(), nt = S.ui.notice;
         if (n > 0 || S.ui.applying) {
-            html = '<div class="k-pending-inline" role="status" title="' + esc(t.pendingHint) + '">' + icon(ICONS.info, 18) +
+            slot.innerHTML = '<div class="k-pending-inline" role="status" title="' + esc(t.pendingHint) + '">' + icon(ICONS.info, 18) +
                 '<div class="k-pending-text"><b>' + esc(t.pending(n)) + '</b><span>' + esc(t.pendingHint) + '</span></div>' +
                 '<button type="button" class="k-btn small" data-act="discard"' + (S.ui.applying ? ' disabled' : '') + '>' + esc(t.discard) + '</button>' +
                 '<button type="button" class="k-btn small primary" data-act="apply"' + (S.ui.applying ? ' disabled' : '') + '>' +
                 esc(S.ui.applying ? t.applying : t.apply) + '</button></div>';
-        }
-        slot.innerHTML = html;
-    }
-
-    /* results float in a corner instead of pushing content around */
-    function renderToast() {
-        var area = document.getElementById('k-toast');
-        if (!area) { return; }
-        var t = T(), nt = S.ui.notice;
-        if (S.ui.toastTimer) {
-            clearTimeout(S.ui.toastTimer);
-            S.ui.toastTimer = null;
-        }
-        if (!nt) {
-            area.innerHTML = '';
             return;
         }
-        area.innerHTML = '<div class="k-banner k-toast ' + nt.type + '" role="status">' + icon(nt.type === 'ok' ? ICONS.ok : ICONS.warn, 20) +
-            '<div style="flex:1 1 auto"><div>' + esc(nt.text) + '</div>' +
-            (nt.list && nt.list.length ? '<ul style="margin:6px 0 0;padding-left:18px">' + nt.list.map(function (m) {
-                return '<li>' + esc(m) + '</li>';
-            }).join('') + '</ul>' : '') + '</div>' +
-            '<button type="button" class="k-icon-btn" style="background:transparent;color:inherit;width:32px;height:32px" data-act="dismiss" aria-label="' + esc(t.close) + '">' + icon(ICONS.close, 16) + '</button>' +
+        if (!nt) {
+            slot.innerHTML = '';
+            return;
+        }
+        var list = nt.list && nt.list.length ? '<ul>' + nt.list.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul>' : '';
+        slot.innerHTML = '<div class="k-pending-inline ' + nt.type + '" role="status">' + icon(nt.type === 'ok' ? ICONS.ok : ICONS.warn, 18) +
+            '<div class="k-note" style="flex:1 1 auto">' + esc(nt.text) + list + '</div>' +
+            (nt.type === 'ok' && !list ? '' : '<button type="button" class="k-icon-btn" data-act="dismiss" aria-label="' + esc(t.close) + '">' + icon(ICONS.close, 16) + '</button>') +
             '</div>';
-        if (nt.type === 'ok' && !(nt.list && nt.list.length)) {
-            S.ui.toastTimer = setTimeout(function () {
-                S.ui.notice = null;
-                renderToast();
-            }, 8000);
+        if (nt.type === 'ok' && !list && !nt.timer) {
+            /* fade, then drop the message */
+            nt.timer = setTimeout(function () {
+                var box = slot.querySelector('.k-pending-inline.ok');
+                if (box) { box.classList.add('fade'); }
+                setTimeout(function () {
+                    if (S.ui.notice === nt) {
+                        S.ui.notice = null;
+                        renderPending();
+                    }
+                }, 650);
+            }, 6000);
         }
     }
 
@@ -468,7 +464,7 @@
                     '<span class="k-grow-text" style="font-weight:500">' + esc(devName(h)) + '</span>' +
                     '<span style="flex:none;color:#36404D">' + esc(t.conns(h.states)) + '</span></div>' +
                     '<div class="k-bar"><div style="width:' + Math.max(3, Math.round(h.states / topMax * 100)) + '%"></div></div></div>';
-            }).join('') : '<div class="muted">' + esc(S.hostsLoaded ? t.noDevicesYet : '…') + '</div>') +
+            }).join('') : '<div class="muted">' + esc(!S.hostsLoaded ? '…' : (S.hosts.length ? t.noActive : t.noDevicesYet)) + '</div>') +
             '<button type="button" class="k-link" data-act="tab" data-v="devices">' + esc(t.allDevices) + ' →</button>' +
             '</section></div>';
 
@@ -842,7 +838,7 @@
             hosts: [], source: null, hostsLoaded: false,
             traffic: { last: null, rate: null, hist: [] },
             dns: null,
-            ui: { filter: 'all', search: '', sel: null, allowInput: '', denyInput: '', applying: false, notice: null, toastTimer: null, listError: { allow: null, deny: null } }
+            ui: { filter: 'all', search: '', sel: null, allowInput: '', denyInput: '', applying: false, notice: null, listError: { allow: null, deny: null } }
         };
 
         loadState().then(function () {
