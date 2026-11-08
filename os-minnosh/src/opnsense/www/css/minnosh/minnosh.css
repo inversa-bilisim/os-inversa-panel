@@ -245,3 +245,56 @@
     .minnosh { padding: 12px; }
     .minnosh .k-card { padding: 16px; }
 }
+
+/* ---- v0.2 views ------------------------------------------------------------ */
+.minnosh input[type=password], .minnosh input[type=time] {
+    font-family: inherit; font-size: 14px; color: var(--k-text); background: #fff;
+    min-height: 44px; border: 1px solid var(--k-input); border-radius: 10px; padding: 0 12px; box-shadow: none;
+}
+.minnosh input[type=range] { width: 100%; accent-color: var(--k-accent); min-height: 28px; }
+.minnosh .k-card.dim, .minnosh .k-list-row.dim { opacity: .72; }
+.minnosh .k-welcome { border-color: #C5D5F5; background: var(--k-accent-soft); }
+.minnosh .k-chip.warn.on { border-color: var(--k-warn); background: var(--k-warn-soft); color: #9A3B0A; }
+.minnosh .k-chip[disabled] { opacity: .45; cursor: not-allowed; }
+.minnosh .k-scroll { max-height: 260px; overflow-y: auto; }
+
+/* option cards (connection type, vpn mode) */
+.minnosh .k-opt { flex: 1 1 220px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 72px; padding: 12px 14px; border-radius: 12px; cursor: pointer; text-align: left; border: 1px solid var(--k-input); background: #fff; color: var(--k-text); }
+.minnosh .k-opt b { font-size: 14px; }
+.minnosh .k-opt span { font-size: 13px; color: var(--k-muted); }
+.minnosh .k-opt.on { border-color: var(--k-accent); box-shadow: inset 0 0 0 1px var(--k-accent); background: var(--k-accent-soft); }
+
+/* schedules */
+.minnosh .k-sched-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.minnosh .k-title-input { font-size: 16px !important; font-weight: 600; border-color: transparent !important; background: transparent !important; margin-left: -12px; width: 100%; }
+.minnosh .k-title-input:focus { border-color: var(--k-input) !important; background: #fff !important; }
+.minnosh .k-week { display: flex; flex-direction: column; gap: 6px; background: var(--k-soft); border: 1px solid var(--k-line-2); border-radius: 12px; padding: 12px; }
+.minnosh .k-week-row { display: flex; align-items: center; gap: 10px; }
+.minnosh .k-week-row > span { width: 32px; font-size: 12px; font-weight: 600; color: var(--k-text-2); flex: none; }
+.minnosh .k-week-bar { position: relative; flex: 1 1 auto; height: 16px; border-radius: 4px; background: var(--k-chip); }
+.minnosh .k-week-bar i { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+.minnosh .k-week-axis { display: flex; justify-content: space-between; padding-left: 42px; font-size: 11px; color: var(--k-muted); }
+
+/* network */
+.minnosh .k-net-card { flex: 1 1 260px; }
+.minnosh .k-add-card { flex: 1 1 260px; min-height: 180px; align-items: center; justify-content: center; text-align: center; border-style: dashed; border-color: var(--k-off); background: transparent; cursor: pointer; color: var(--k-text-2); }
+.minnosh .k-edit { border-color: var(--k-accent); box-shadow: 0 0 0 3px #DCE6FB; }
+.minnosh .k-countdown b { display: block; }
+.minnosh table.k-matrix { border-collapse: separate; border-spacing: 6px; margin: 0; }
+.minnosh .k-matrix th { font-size: 13px; font-weight: 700; padding: 4px 8px; white-space: nowrap; text-align: left; }
+.minnosh .k-matrix thead th { text-align: center; }
+.minnosh .k-cell { width: 100%; min-width: 100px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 600; border: 1px solid var(--k-line); background: var(--k-soft); color: var(--k-muted); cursor: pointer; }
+.minnosh .k-cell.self { cursor: default; background: var(--k-bg); }
+.minnosh .k-cell.allow { border-color: #A9D8B8; background: #EAF6EE; color: var(--k-ok-text); }
+.minnosh .k-cell.deny { border-color: var(--k-warn-line); background: var(--k-warn-soft); color: var(--k-warn-text); }
+.minnosh .k-ports { display: flex; flex-wrap: wrap; gap: 10px; background: #262D38; border-radius: 14px; padding: 16px; }
+.minnosh .k-port { flex: 0 0 170px; display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 10px; background: #343C49; color: #C9D1DC; font-size: 12px; }
+.minnosh .k-port b { color: #fff; font-size: 13px; }
+.minnosh .k-port-top { display: flex; justify-content: space-between; align-items: center; }
+.minnosh .k-jack { width: 44px; height: 34px; border-radius: 4px; background: #11161D; border: 2px solid #6B7482; margin: 6px 0; }
+.minnosh .k-jack.up { border-color: var(--k-ok); }
+
+/* vpn */
+.minnosh .k-qr { align-self: center; background: #fff; border: 1px solid var(--k-line); border-radius: 12px; padding: 8px; line-height: 0; }
+.minnosh .k-qr svg { width: 240px; height: 240px; }
+.minnosh .k-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: var(--k-text-2); }

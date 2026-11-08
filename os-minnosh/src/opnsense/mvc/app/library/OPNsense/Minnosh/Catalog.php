@@ -18,6 +18,18 @@ class Catalog
     /* description used to recognise the Unbound blocklist policy Minnosh manages */
     const DNSBL_POLICY = 'Minnosh (managed)';
 
+    /* per-schedule app blocking policies: description prefix + schedule name */
+    const SCHED_POLICY_PREFIX = 'Minnosh schedule: ';
+
+    /* GeoIP alias for country blocking */
+    const GEO_ALIAS = 'minnosh_geo';
+
+    /* traffic shaper objects for the guest speed limit carry this description prefix */
+    const SHAPER_PREFIX = 'Minnosh guest';
+
+    /* MaxMind GeoLite2 country database, the format OPNsense's GeoIP aliases read */
+    const MAXMIND_URL = 'https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=%s&suffix=zip';
+
     /**
      * Minnosh category => Unbound DNSBL type keys (see OPNsense/Unbound/Unbound.xml dnsbl.blocklist.type).
      * Keys missing on the running OPNsense version are skipped at sync time.

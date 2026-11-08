@@ -15,6 +15,12 @@ class IndexController extends \OPNsense\Base\IndexController
         '/js/minnosh/app.js',
         '/js/minnosh/i18n/tr.js',
         '/js/minnosh/i18n/en.js',
+        '/js/minnosh/views/net.js',
+        '/js/minnosh/views/sched.js',
+        '/js/minnosh/views/pf.js',
+        '/js/minnosh/views/vpn.js',
+        '/js/minnosh/views/guest.js',
+        '/js/minnosh/views/geo.js',
     ];
 
     public function indexAction()

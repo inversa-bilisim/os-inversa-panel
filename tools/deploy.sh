@@ -19,13 +19,15 @@ echo ">> checking and reloading on ${TARGET}"
 # root's login shell on OPNsense is csh: run the remote part explicitly with sh
 ssh "${TARGET}" /bin/sh -s <<'REMOTE'
 set -e
-chmod 0755 /usr/local/opnsense/scripts/OPNsense/Minnosh/*.py /usr/local/opnsense/scripts/OPNsense/Minnosh/*.sh
-for f in $(find /usr/local/opnsense/mvc/app -path "*Minnosh*" -name "*.php") /usr/local/etc/inc/plugins.inc.d/minnosh.inc; do
+chmod 0755 /usr/local/opnsense/scripts/OPNsense/Minnosh/*.py /usr/local/opnsense/scripts/OPNsense/Minnosh/*.sh /usr/local/opnsense/scripts/OPNsense/Minnosh/*.php
+for f in $(find /usr/local/opnsense/mvc/app -path "*Minnosh*" -name "*.php") /usr/local/opnsense/scripts/OPNsense/Minnosh/*.php /usr/local/etc/inc/plugins.inc.d/minnosh.inc; do
     php -l "$f" > /dev/null || { echo "syntax error in $f"; exit 1; }
 done
 # menu / ACL caches are rebuilt on next page load
 rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
 # configd must re-read actions_minnosh.conf
 service configd restart > /dev/null
+# pick up minnosh_cron() (schedules run every minute)
+configctl cron restart > /dev/null
 echo "ok: open https://<firewall>/ui/minnosh"
 REMOTE

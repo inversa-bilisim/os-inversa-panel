@@ -38,9 +38,9 @@ class Integration
      * keep alias "minnosh_blocked" (type MAC) in sync with blocked devices
      * @return Alias model with pending changes
      */
-    public function syncAlias()
+    public function syncAlias(?Alias $aliasMdl = null)
     {
-        $aliasMdl = new Alias();
+        $aliasMdl = $aliasMdl ?? new Alias();
         $node = null;
         foreach ($aliasMdl->aliases->alias->iterateItems() as $alias) {
             if ((string)$alias->name === Catalog::BLOCKED_ALIAS) {
@@ -137,23 +137,34 @@ class Integration
      * write all models and apply runtime changes
      * @return array status
      */
-    public function apply()
+    public function apply(array $options = [])
     {
+        /* both aliases (blocked devices, countries) live in one Alias model: use one instance */
         $aliasMdl = $this->syncAlias();
+        list($aliasMdl, $geoUrlChanged) = Extras::syncGeo($this->minnosh, (string)($options['geo_license'] ?? ''), $aliasMdl);
         list($unbound, $restartUnbound) = $this->syncUnbound();
+        $shaper = Extras::syncShaper($this->minnosh);
 
-        foreach ([$this->minnosh, $aliasMdl, $unbound] as $mdl) {
-            $mdl->serializeToConfig();
-        }
+        $this->minnosh->serializeToConfig();
+        $aliasMdl->serializeToConfig();
+        $unbound->serializeToConfig();
+        $shaper->serializeToConfig(false, true);
         Config::getInstance()->save();
 
         $backend = new Backend();
+        Extras::applyShaper();
+        if ($geoUrlChanged) {
+            $backend->configdRun('template reload OPNsense/Filter');
+            $backend->configdRun('filter update geoip', true);
+        }
         /* firewall: regenerate ruleset (our plugin hook adds the rules) and repopulate alias tables */
         $backend->configdRun('filter reload skip_alias');
         $backend->configdRun('template reload OPNsense/Filter');
         $backend->configdRun('filter refresh_aliases');
         /* drop existing connections of blocked devices, otherwise they keep working until timeout */
         $backend->configdRun('minnosh killstates');
+        /* schedules take effect now instead of at the next minute */
+        $backend->configdRun('minnosh schedule');
 
         /* dns: render config, restart only when global switches changed, refresh lists in background */
         $backend->configdRun('template reload OPNsense/Unbound/*');

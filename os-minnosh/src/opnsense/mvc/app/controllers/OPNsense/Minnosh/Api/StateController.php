@@ -52,15 +52,56 @@ class StateController extends ApiControllerBase
             $apps[] = ['key' => $key, 'name' => $option['value']];
         }
 
+        $schedules = [];
+        foreach ($mdl->schedules->schedule->iterateItems() as $uuid => $node) {
+            $schedules[] = [
+                'uuid' => $uuid,
+                'enabled' => !$node->enabled->isEmpty(),
+                'name' => (string)$node->name,
+                'devices' => $node->devices->getValues(),
+                'days' => array_map('intval', $node->days->getValues()),
+                'start' => (string)$node->start,
+                'end' => (string)$node->end,
+                'action' => (string)$node->action,
+                'apps' => $node->apps->getValues(),
+            ];
+        }
+        $access = [];
+        foreach ($mdl->access->rule->iterateItems() as $node) {
+            $access[(string)$node->from . '>' . (string)$node->to] = !$node->allow->isEmpty();
+        }
+        $kinds = [];
+        foreach ($mdl->networks->network->iterateItems() as $node) {
+            $kinds[(string)$node->interface] = (string)$node->kind;
+        }
+
         return [
             'general' => [
                 'enabled' => !$mdl->general->enabled->isEmpty(),
                 'language' => (string)$mdl->general->language,
                 'interfaces' => $mdl->getProtectedInterfaces(),
                 'dnsstats' => !$mdl->general->dnsstats->isEmpty(),
+                'welcomed' => !$mdl->general->welcomed->isEmpty(),
             ],
             'devices' => (object)$devices,
             'filtering' => $filtering,
+            'schedules' => $schedules,
+            'access' => (object)$access,
+            'kinds' => (object)$kinds,
+            'guest' => [
+                'limit' => !$mdl->guest->limit->isEmpty(),
+                'down' => (int)(string)$mdl->guest->down,
+                'up' => (int)(string)$mdl->guest->up,
+            ],
+            'geo' => [
+                'enabled' => !$mdl->geo->enabled->isEmpty(),
+                'direction' => (string)$mdl->geo->direction,
+                'countries' => $mdl->geo->countries->getValues(),
+            ],
+            'vpn' => [
+                'mode' => (string)$mdl->vpn->mode,
+                'endpoint' => (string)$mdl->vpn->endpoint,
+            ],
             'options' => [
                 'interfaces' => $interfaces,
                 'apps' => $apps,

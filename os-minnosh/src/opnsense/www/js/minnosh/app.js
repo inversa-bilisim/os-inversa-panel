@@ -47,7 +47,11 @@
     var CATS = ['ads', 'malware', 'adult', 'gambling', 'bypass', 'safesearch', 'forcedns'];
     var QUICK = ['ads', 'malware', 'adult', 'forcedns'];
     var TYPES = ['phone', 'tablet', 'laptop', 'tv', 'console', 'printer', 'iot', 'server', 'unknown'];
-    var TABS = ['dash', 'devices', 'filter', 'settings'];
+    /* tab order; tabs other than the four core ones come from views/*.js (see register()) */
+    var TAB_ORDER = ['dash', 'devices', 'net', 'filter', 'sched', 'pf', 'vpn', 'guest', 'geo', 'settings'];
+    var CORE_TABS = ['dash', 'devices', 'filter', 'settings'];
+    var TABS = CORE_TABS.slice();
+    var VIEWS = {};
     var TRAFFIC_MS = 5000;
     var HISTORY = 120; /* samples, 10 minutes at 5s */
     var DOMAIN_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
@@ -238,6 +242,12 @@
                 add(label + ' · ' + t.dNet, b.blocked ? t.netOff : t.netOn, a.blocked ? t.netOff : t.netOn, function () { setDev(mac, { blocked: !!b.blocked }); });
             }
         });
+        /* views add their own pending changes (schedules, access, guest, countries, vpn) */
+        Object.keys(VIEWS).forEach(function (key) {
+            if (VIEWS[key].changes) {
+                VIEWS[key].changes(add, d, s);
+            }
+        });
         return out;
     }
 
@@ -250,7 +260,13 @@
     function loadState() {
         return api('GET', '/api/minnosh/state/get').then(function (data) {
             data.devices = Array.isArray(data.devices) ? {} : (data.devices || {});
-            S.saved = { general: data.general, filtering: data.filtering, devices: data.devices };
+            S.saved = {
+                general: data.general, filtering: data.filtering, devices: data.devices,
+                schedules: data.schedules || [],
+                access: Array.isArray(data.access) ? {} : (data.access || {}),
+                kinds: Array.isArray(data.kinds) ? {} : (data.kinds || {}),
+                guest: data.guest || {}, geo: data.geo || {}, vpn: data.vpn || {}
+            };
             S.draft = clone(S.saved);
             S.options = data.options;
         });
@@ -372,14 +388,13 @@
     function renderTabs() {
         var t = T();
         var labels = { dash: [t.tabDash, ICONS.dash], devices: [t.tabDevices, ICONS.devices], filter: [t.tabFilter, ICONS.shield], settings: [t.tabSettings, ICONS.sliders] };
+        Object.keys(VIEWS).forEach(function (key) {
+            labels[key] = [VIEWS[key].label(t), VIEWS[key].icon];
+        });
         var html = TABS.map(function (key) {
             var on = S.tab === key;
             return '<button type="button" class="k-tab' + (on ? ' on' : '') + '" data-act="tab" data-v="' + key + '"' +
                 (on ? ' aria-current="page"' : '') + '>' + icon(labels[key][1]) + '<span>' + esc(labels[key][0]) + '</span></button>';
-        }).join('');
-        html += '<span class="k-tab-sep"></span>';
-        html += t.soonTabs.map(function (label) {
-            return '<button type="button" class="k-tab" disabled><span>' + esc(label) + '</span><span class="k-soon">' + esc(t.soon) + '</span></button>';
         }).join('');
         document.getElementById('k-tabs').innerHTML = html;
     }
@@ -454,7 +469,8 @@
 
     function renderMain() {
         var html = '';
-        if (S.tab === 'devices') { html = viewDevices(); }
+        if (VIEWS[S.tab]) { html = VIEWS[S.tab].render(); }
+        else if (S.tab === 'devices') { html = viewDevices(); }
         else if (S.tab === 'filter') { html = viewFilter(); }
         else if (S.tab === 'settings') { html = viewSettings(); }
         else { html = viewDash(); }
@@ -502,6 +518,16 @@
         );
 
         var html = '<div class="k-stack">';
+        if (!S.draft.general.welcomed) {
+            /* first run, possibly on a long-configured firewall: nothing is switched on unasked */
+            html += '<section class="k-card k-welcome"><div class="k-setting" style="padding:0;border:none;flex-wrap:wrap">' +
+                '<div class="k-ibox big on">' + icon(ICONS.shield + ICONS.check, 24) + '</div>' +
+                '<div class="k-setting-text"><b style="font-size:16px">' + esc(t.welcomeTitle) + '</b>' +
+                '<span class="muted" style="font-size:14px">' + esc(t.welcomeText) + '</span></div>' +
+                '<div class="k-btns"><button type="button" class="k-btn" data-act="welcome-no">' + esc(t.welcomeNo) + '</button>' +
+                '<button type="button" class="k-btn primary" data-act="welcome-yes">' + esc(t.welcomeYes) + '</button></div>' +
+                '</div></section>';
+        }
         html += '<section class="k-card k-status">' +
             '<div class="k-status-main"><div class="k-badge-big ' + (level === 'ok' ? 'ok' : 'warn') + '">' +
             icon(ICONS.shield + (level === 'ok' ? ICONS.check : ICONS.alert), 28) + '</div>' +
@@ -748,7 +774,10 @@
         html += '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.statsLabel) + '</b><span class="muted">' + esc(t.statsSub) + '</span></div>' +
             toggle(g.dnsstats, 'data-act="general" data-v="dnsstats"', t.statsLabel) + '</div>';
 
-        html += '</section><div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.infoNote) + '</span></div></div>';
+        html += '</section><div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.infoNote) + '</span></div>';
+        html += '<section class="k-card tight"><div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.cleanupTitle) + '</b>' +
+            '<span class="muted">' + esc(t.cleanupText) + '</span></div>' +
+            '<button type="button" class="k-btn" style="color:#9A3B0A;border-color:#F2C99B" data-act="cleanup">' + esc(t.cleanupBtn) + '</button></div></section></div>';
         return html;
     }
 
@@ -787,9 +816,17 @@
         api('POST', '/api/minnosh/service/apply', {
             general: S.draft.general,
             filtering: S.draft.filtering,
-            devices: changedDevices()
+            devices: changedDevices(),
+            schedules: S.draft.schedules,
+            access: S.draft.access,
+            kinds: S.draft.kinds,
+            guest: S.draft.guest,
+            geo: S.draft.geo,
+            vpn: S.draft.vpn,
+            geo_license: S.ui.geoLicense || ''
         }).then(function (res) {
             if (res.status === 'ok') {
+                S.ui.geoLicense = '';
                 S.ui.notice = { type: 'ok', text: t.applied, list: res.messages || [] };
                 return loadState().then(loadHosts).then(loadDns);
             }
@@ -817,6 +854,9 @@
                 if (history.replaceState) { history.replaceState(null, '', '#' + S.tab); }
                 full = true;
                 if (S.tab === 'devices') { loadHosts().then(refreshView, function () {}); }
+                if (VIEWS[S.tab] && VIEWS[S.tab].load) {
+                    VIEWS[S.tab].load().then(function () { if (!inputFocused()) { renderMain(); } }, function () {});
+                }
                 break;
             case 'cat':
                 S.draft.filtering[v] = !S.draft.filtering[v];
@@ -873,7 +913,34 @@
             case 'dismiss':
                 S.ui.notice = null;
                 break;
+            case 'cleanup':
+                if (window.confirm(T().cleanupConfirm)) {
+                    api('POST', '/api/minnosh/service/cleanup', {}).then(function () {
+                        S.ui.notice = { type: 'ok', text: T().cleanupDone, list: [] };
+                        return loadState().then(render);
+                    }, function (err) {
+                        S.ui.notice = { type: 'err', text: T().applyFailed, list: [err && err.errorMessage ? err.errorMessage : ''] };
+                        render();
+                    });
+                }
+                return;
+            case 'welcome-yes':
+                /* only prepares the changes: the user still sees them and presses Apply */
+                S.draft.filtering.ads = true;
+                S.draft.filtering.malware = true;
+                S.draft.general.welcomed = true;
+                break;
+            case 'welcome-no':
+                S.draft.general.welcomed = true;
+                S.saved.general.welcomed = true;
+                api('POST', '/api/minnosh/service/apply', { general: { welcomed: true } }).catch(function () {});
+                break;
             default:
+                /* "view:action" belongs to a registered view; it says what to redraw */
+                var parts = act.split(':');
+                if (parts.length === 2 && VIEWS[parts[0]] && VIEWS[parts[0]].act) {
+                    redraw(VIEWS[parts[0]].act(parts[1], el, event));
+                }
                 return;
         }
         if (full) {
@@ -885,9 +952,41 @@
         }
     }
 
+    /* what = 'full' | 'main' | 'pending' | nothing */
+    function redraw(what) {
+        if (what === 'full') {
+            render();
+        } else if (what === 'main') {
+            renderHeader();
+            renderMain();
+        } else if (what === 'pending') {
+            renderPending();
+        } else if (what === 'main-keepfocus') {
+            /* live filtering while typing: redraw, then put the cursor back where it was */
+            var el = document.activeElement, kind = el && el.getAttribute && el.getAttribute('data-input');
+            var pos = el && typeof el.selectionStart === 'number' ? el.selectionStart : null;
+            renderMain();
+            renderPending();
+            var again = kind ? root.querySelector('[data-input="' + kind + '"]') : null;
+            if (again) {
+                again.focus();
+                if (pos !== null && again.setSelectionRange) { again.setSelectionRange(pos, pos); }
+            }
+        }
+    }
+
+    function viewInput(kind, el, type) {
+        var parts = kind.split(':');
+        if (parts.length === 2 && VIEWS[parts[0]] && VIEWS[parts[0]].input) {
+            redraw(VIEWS[parts[0]].input(parts[1], el, type));
+            return true;
+        }
+        return false;
+    }
+
     function onInput(event) {
         var el = event.target, kind = el.getAttribute && el.getAttribute('data-input');
-        if (!kind) {
+        if (!kind || viewInput(kind, el, 'input')) {
             return;
         }
         if (kind === 'search') {
@@ -916,6 +1015,10 @@
 
     function onChange(event) {
         var kind = event.target.getAttribute && event.target.getAttribute('data-input');
+        if (kind && kind.indexOf(':') > 0) {
+            viewInput(kind, event.target, 'change');
+            return;
+        }
         if (kind === 'lang') {
             setLanguage(event.target.value);
         } else if (kind === 'devname') {
@@ -928,6 +1031,7 @@
 
     function start(element) {
         root = element;
+        TABS = TAB_ORDER.filter(function (key) { return CORE_TABS.indexOf(key) >= 0 || VIEWS[key]; });
         var hashTab = String(window.location.hash || '').replace('#', '');
         S = {
             tab: TABS.indexOf(hashTab) >= 0 ? hashTab : 'dash',
@@ -947,6 +1051,9 @@
 
             loadHosts().then(refreshView, function () {});
             loadDns().then(refreshView, function () {});
+            if (VIEWS[S.tab] && VIEWS[S.tab].load) {
+                VIEWS[S.tab].load().then(function () { if (!inputFocused()) { renderMain(); } }, function () {});
+            }
             sampleTraffic().then(function () {}, function () {});
 
             setInterval(function () { sampleTraffic().then(function () { if (S.tab === 'dash') { refreshView(); } }, function () {}); }, TRAFFIC_MS);
@@ -957,5 +1064,26 @@
         });
     }
 
-    window.MinnoshApp = { start: start };
+    /*
+     * Extension point for views/*.js. A view is
+     *   { key, icon, label(t), render(), load()?, act(name, el)?, input(name, el, type)?, changes(add, draft, saved)? }
+     * act/input return what to redraw: 'full' | 'main' | 'pending'.
+     */
+    function register(view) {
+        VIEWS[view.key] = view;
+    }
+
+    var helpers = {
+        esc: esc, icon: icon, toggle: toggle, api: api, fmt: fmt, ago: ago, clone: clone,
+        toggleInList: toggleInList, devName: devName, hostByMac: hostByMac, ICONS: ICONS,
+        T: function () { return T(); },
+        S: function () { return S; },
+        redraw: redraw,
+        notice: function (type, text, list) { S.ui.notice = { type: type, text: text, list: list || [] }; renderPending(); },
+        hosts: function () { return S.hosts; },
+        loadHosts: loadHosts,
+        reloadState: function () { return loadState().then(render); }
+    };
+
+    window.MinnoshApp = { start: start, register: register, h: helpers };
 })();

@@ -59,6 +59,149 @@ class ServiceController extends ApiControllerBase
         return ['status' => 'ok'];
     }
 
+    /**
+     * Remove what Minnosh added behind the scenes (aliases, DNS policies, shaper objects) and switch
+     * Minnosh off, which also removes its automatic firewall rules. Port forwards, networks and VPN
+     * devices are things the user explicitly created and still uses: they stay.
+     */
+    public function cleanupAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $this->throwReadOnly();
+        $this->throwNotFullAdmin();
+
+        $mdl = new Minnosh();
+        $mdl->general->enabled->setValue('0');
+        $aliases = new \OPNsense\Firewall\Alias();
+        foreach (iterator_to_array($aliases->aliases->alias->iterateItems()) as $uuid => $node) {
+            if (in_array((string)$node->name, [Catalog::BLOCKED_ALIAS, Catalog::GEO_ALIAS])) {
+                $aliases->aliases->alias->del($uuid);
+            }
+        }
+        $unbound = new \OPNsense\Unbound\Unbound();
+        foreach (iterator_to_array($unbound->dnsbl->blocklist->iterateItems()) as $uuid => $node) {
+            $descr = (string)$node->description;
+            if ($descr === Catalog::DNSBL_POLICY || strpos($descr, Catalog::SCHED_POLICY_PREFIX) === 0) {
+                $unbound->dnsbl->blocklist->del($uuid);
+            }
+        }
+        $shaper = new \OPNsense\TrafficShaper\TrafficShaper();
+        foreach (['rules' => 'rule', 'pipes' => 'pipe'] as $section => $item) {
+            foreach (iterator_to_array($shaper->$section->$item->iterateItems()) as $uuid => $node) {
+                if (strpos((string)$node->description, Catalog::SHAPER_PREFIX) === 0) {
+                    $shaper->$section->$item->del($uuid);
+                }
+            }
+        }
+        $mdl->serializeToConfig(false, true);
+        $aliases->serializeToConfig(false, true);
+        $unbound->serializeToConfig(false, true);
+        $shaper->serializeToConfig(false, true);
+        \OPNsense\Core\Config::getInstance()->save();
+
+        $backend = new \OPNsense\Core\Backend();
+        $backend->configdRun('filter reload');
+        exec('/sbin/pfctl -t minnosh_sched -T flush > /dev/null 2>&1');
+        \OPNsense\Minnosh\Extras::applyShaper();
+        $backend->configdRun('template reload OPNsense/Unbound/*');
+        $backend->configdRun('minnosh dnsbl', true);
+        return ['status' => 'ok'];
+    }
+
+    /**
+     * schedules, access matrix, network kinds, guest limit, country blocking, vpn preferences
+     */
+    private function applyExtended(Minnosh $mdl)
+    {
+        $schedules = $this->request->getPost('schedules');
+        if (is_array($schedules)) {
+            $keep = [];
+            foreach ($schedules as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                $uuid = (string)($item['uuid'] ?? '');
+                $node = $uuid !== '' ? $mdl->getNodeByReference('schedules.schedule.' . $uuid) : null;
+                if ($node === null) {
+                    $node = $mdl->schedules->schedule->Add();
+                    $uuid = $node->getAttributes()['uuid'];
+                }
+                $keep[] = $uuid;
+                $node->enabled->setValue(self::flag($item['enabled'] ?? true));
+                $node->name->setValue(trim((string)($item['name'] ?? '')));
+                $node->devices->setValue(implode(',', self::stringList($item['devices'] ?? [])));
+                $node->days->setValue(implode(',', array_filter(array_map('intval', (array)($item['days'] ?? [])))));
+                $node->start->setValue((string)($item['start'] ?? ''));
+                $node->end->setValue((string)($item['end'] ?? ''));
+                $node->action->setValue((string)($item['action'] ?? 'cut'));
+                $node->apps->setValue(implode(',', self::stringList($item['apps'] ?? [])));
+            }
+            foreach (array_keys(iterator_to_array($mdl->schedules->schedule->iterateItems())) as $uuid) {
+                if (!in_array($uuid, $keep)) {
+                    $mdl->schedules->schedule->del($uuid);
+                }
+            }
+        }
+
+        $access = $this->request->getPost('access');
+        if (is_array($access)) {
+            foreach (array_keys(iterator_to_array($mdl->access->rule->iterateItems())) as $uuid) {
+                $mdl->access->rule->del($uuid);
+            }
+            foreach ($access as $pair => $allow) {
+                $parts = explode('>', (string)$pair);
+                if (count($parts) === 2) {
+                    $node = $mdl->access->rule->Add();
+                    $node->from->setValue($parts[0]);
+                    $node->to->setValue($parts[1]);
+                    $node->allow->setValue(self::flag($allow));
+                }
+            }
+        }
+
+        $kinds = $this->request->getPost('kinds');
+        if (is_array($kinds)) {
+            foreach ($kinds as $key => $kind) {
+                $found = null;
+                foreach ($mdl->networks->network->iterateItems() as $node) {
+                    if ((string)$node->interface === (string)$key) {
+                        $found = $node;
+                    }
+                }
+                if ($found === null) {
+                    $found = $mdl->networks->network->Add();
+                    $found->interface->setValue((string)$key);
+                }
+                $found->kind->setValue((string)$kind);
+            }
+        }
+
+        foreach (['guest' => ['limit' => 'flag', 'down' => 'int', 'up' => 'int'],
+                  'geo' => ['enabled' => 'flag', 'direction' => 'str'],
+                  'vpn' => ['mode' => 'str', 'endpoint' => 'str']] as $section => $fields) {
+            $data = $this->request->getPost($section);
+            if (!is_array($data)) {
+                continue;
+            }
+            foreach ($fields as $field => $kind) {
+                if (array_key_exists($field, $data)) {
+                    $value = $kind === 'flag' ? self::flag($data[$field]) : ($kind === 'int' ? (string)(int)$data[$field] : trim((string)$data[$field]));
+                    $mdl->$section->$field->setValue($value);
+                }
+            }
+            if ($section === 'geo' && isset($data['countries'])) {
+                $mdl->geo->countries->setValue(implode(',', array_map('strtoupper', self::stringList($data['countries']))));
+            }
+        }
+
+        $general = $this->request->getPost('general');
+        if (is_array($general) && isset($general['welcomed'])) {
+            $mdl->general->welcomed->setValue(self::flag($general['welcomed']));
+        }
+    }
+
     public function applyAction()
     {
         if (!$this->request->isPost()) {
@@ -130,6 +273,8 @@ class ServiceController extends ApiControllerBase
             }
         }
 
+        $this->applyExtended($mdl);
+
         $validations = [];
         foreach ($mdl->performValidation() as $msg) {
             $validations[$msg->getField()] = $msg->getMessage();
@@ -139,7 +284,7 @@ class ServiceController extends ApiControllerBase
         }
 
         try {
-            return (new Integration($mdl))->apply();
+            return (new Integration($mdl))->apply(['geo_license' => trim((string)$this->request->getPost('geo_license'))]);
         } catch (\Exception $e) {
             throw new UserException($e->getMessage(), 'Minnosh');
         }
