@@ -37,6 +37,23 @@ class ServiceController extends ApiControllerBase
     }
 
     /**
+     * the welcome card was answered: remember it right away (whatever else is still pending)
+     */
+    public function welcomedAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $this->throwReadOnly();
+        $mdl = new Minnosh();
+        $mdl->general->welcomed->setValue('1');
+        /* only this flag changes: don't let an unrelated validation problem block it */
+        $mdl->serializeToConfig(false, true);
+        \OPNsense\Core\Config::getInstance()->save();
+        return ['status' => 'ok'];
+    }
+
+    /**
      * interface language is a UI preference: store it immediately, nothing to apply
      */
     public function languageAction()

@@ -928,12 +928,10 @@
                 /* only prepares the changes: the user still sees them and presses Apply */
                 S.draft.filtering.ads = true;
                 S.draft.filtering.malware = true;
-                S.draft.general.welcomed = true;
+                saveWelcomed();
                 break;
             case 'welcome-no':
-                S.draft.general.welcomed = true;
-                S.saved.general.welcomed = true;
-                api('POST', '/api/minnosh/service/apply', { general: { welcomed: true } }).catch(function () {});
+                saveWelcomed();
                 break;
             default:
                 /* "view:action" belongs to a registered view; it says what to redraw */
@@ -1069,6 +1067,18 @@
      *   { key, icon, label(t), render(), load()?, act(name, el)?, input(name, el, type)?, changes(add, draft, saved)? }
      * act/input return what to redraw: 'full' | 'main' | 'pending'.
      */
+    /* the welcome card is answered once, stored immediately (not part of the pending changes) */
+    function saveWelcomed() {
+        S.draft.general.welcomed = true;
+        S.saved.general.welcomed = true;
+        api('POST', '/api/minnosh/service/welcomed', {}).then(function (res) {
+            if (!res || res.status !== 'ok') { throw res; }
+        }).catch(function (err) {
+            S.ui.notice = { type: 'err', text: T().applyFailed, list: [err && err.errorMessage ? err.errorMessage : ''] };
+            renderPending();
+        });
+    }
+
     function register(view) {
         VIEWS[view.key] = view;
     }
