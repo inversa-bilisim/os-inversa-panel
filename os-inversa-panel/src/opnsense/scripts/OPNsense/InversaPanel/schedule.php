@@ -115,29 +115,48 @@ if ($apps_changed) {
             $existing[substr(strrchr((string)$policy->description, '#'), 1)] = $puuid;
         }
     }
+    /*
+     * The state file lives in /var/run and is gone after a reboot, so the first run after boot
+     * always lands here. Compare with what the configuration already holds: saving and refreshing
+     * the blocklists for nothing would compete for memory with Unbound, which loads its lists
+     * at that very moment (on a 4 GB firewall the kernel then killed Unbound).
+     */
+    $dirty = false;
     foreach ($existing as $suuid => $puuid) {
         if (!isset($app_policies[$suuid])) {
             $unbound->dnsbl->blocklist->del($puuid);
+            $dirty = true;
         }
     }
     foreach ($app_policies as $suuid => $want) {
         $policy = isset($existing[$suuid]) ? $unbound->getNodeByReference('dnsbl.blocklist.' . $existing[$suuid]) : null;
         if ($policy === null) {
             $policy = $unbound->dnsbl->blocklist->Add();
+            $dirty = true;
         }
-        $policy->description->setValue(mb_substr(Catalog::SCHED_POLICY_PREFIX . $want['name'], 0, 200) . ' #' . $suuid);
-        /* a policy without source networks would apply to everyone: keep it off instead */
-        $policy->enabled->setValue($want['enabled'] ? '1' : '0');
-        $policy->source_nets->setValue(implode(',', $want['source_nets']));
-        $policy->wildcards->setValue(implode(',', $want['wildcards']));
-        $policy->type->setValue('');
+        $values = [
+            'description' => mb_substr(Catalog::SCHED_POLICY_PREFIX . $want['name'], 0, 200) . ' #' . $suuid,
+            /* a policy without source networks would apply to everyone: keep it off instead */
+            'enabled' => $want['enabled'] ? '1' : '0',
+            'source_nets' => implode(',', $want['source_nets']),
+            'wildcards' => implode(',', $want['wildcards']),
+            'type' => '',
+        ];
+        foreach ($values as $field => $value) {
+            if ((string)$policy->$field !== $value) {
+                $policy->$field->setValue($value);
+                $dirty = true;
+            }
+        }
     }
-    $unbound->serializeToConfig(false, true);
-    Config::getInstance()->save();
-    $backend = new Backend();
-    $backend->configdRun('template reload OPNsense/Unbound/*');
-    /* serialized by dnsbl.sh: never more than one blocklist refresh at a time */
-    $backend->configdRun('inversapanel dnsbl', true);
+    if ($dirty) {
+        $unbound->serializeToConfig(false, true);
+        Config::getInstance()->save();
+        $backend = new Backend();
+        $backend->configdRun('template reload OPNsense/Unbound/*');
+        /* serialized by dnsbl.sh: never more than one blocklist refresh at a time */
+        $backend->configdRun('inversapanel dnsbl', true);
+    }
   } catch (\Exception $e) {
     syslog(LOG_ERR, 'inversapanel: schedule could not update DNS policies: ' . $e->getMessage());
   }
