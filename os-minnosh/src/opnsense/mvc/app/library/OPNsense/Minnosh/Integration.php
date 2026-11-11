@@ -35,27 +35,55 @@ class Integration
     }
 
     /**
-     * keep alias "minnosh_blocked" (type MAC) in sync with blocked devices
+     * create/update ($macs array) or remove ($macs null) a MAC alias
+     */
+    private static function macAlias(Alias $aliasMdl, $name, $descr, $macs)
+    {
+        $node = null;
+        $found = null;
+        foreach ($aliasMdl->aliases->alias->iterateItems() as $uuid => $alias) {
+            if ((string)$alias->name === $name) {
+                $node = $alias;
+                $found = $uuid;
+                break;
+            }
+        }
+        if ($macs === null) {
+            if ($found !== null) {
+                $aliasMdl->aliases->alias->del($found);
+            }
+            return;
+        }
+        if ($node === null) {
+            $node = $aliasMdl->aliases->alias->Add();
+            $node->name->setValue($name);
+            $node->type->setValue('mac');
+            $node->description->setValue($descr);
+        }
+        $node->enabled->setValue('1');
+        $node->content->setValue(implode("\n", $macs));
+    }
+
+    /**
+     * keep the MAC aliases in sync: "minnosh_blocked" (devices cut off) and, only while a network
+     * asks for approval of new devices, "minnosh_approved"
      * @return Alias model with pending changes
      */
     public function syncAlias(?Alias $aliasMdl = null)
     {
         $aliasMdl = $aliasMdl ?? new Alias();
-        $node = null;
-        foreach ($aliasMdl->aliases->alias->iterateItems() as $alias) {
-            if ((string)$alias->name === Catalog::BLOCKED_ALIAS) {
-                $node = $alias;
-                break;
-            }
-        }
-        if ($node === null) {
-            $node = $aliasMdl->aliases->alias->Add();
-            $node->name->setValue(Catalog::BLOCKED_ALIAS);
-            $node->type->setValue('mac');
-            $node->description->setValue('Minnosh: devices without internet access (managed by Minnosh)');
-        }
-        $node->enabled->setValue('1');
-        $node->content->setValue(implode("\n", $this->minnosh->getBlockedMacs()));
+        self::macAlias(
+            $aliasMdl,
+            Catalog::BLOCKED_ALIAS,
+            'Minnosh: devices without internet access (managed by Minnosh)',
+            $this->minnosh->getBlockedMacs()
+        );
+        self::macAlias(
+            $aliasMdl,
+            Catalog::APPROVED_ALIAS,
+            'Minnosh: approved devices on networks where new devices wait for approval (managed by Minnosh)',
+            empty($this->minnosh->getApprovalInterfaces()) ? null : $this->minnosh->getApprovedMacs()
+        );
         return $aliasMdl;
     }
 
@@ -164,8 +192,12 @@ class Integration
         $backend->configdRun('filter reload skip_alias');
         $backend->configdRun('template reload OPNsense/Filter');
         $backend->configdRun('filter refresh_aliases');
-        /* drop existing connections of blocked devices, otherwise they keep working until timeout */
-        $backend->configdRun('minnosh killstates');
+        /*
+         * drop existing connections of blocked devices and of devices that just lost their
+         * approval ($options['kill']), otherwise they keep working until timeout
+         */
+        $kill = array_filter((array)($options['kill'] ?? []), fn($ip) => filter_var($ip, FILTER_VALIDATE_IP));
+        $backend->configdpRun('minnosh killstates', [empty($kill) ? '-' : implode(',', $kill)]);
         /* schedules take effect now instead of at the next minute */
         $backend->configdRun('minnosh schedule');
 

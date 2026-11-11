@@ -42,6 +42,37 @@ class Minnosh extends BaseModel
     }
 
     /**
+     * MAC addresses of approved devices
+     * @return array
+     */
+    public function getApprovedMacs()
+    {
+        $result = [];
+        foreach ($this->devices->device->iterateItems() as $device) {
+            if (!$device->approved->isEmpty()) {
+                $result[] = (string)$device->mac;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * protected networks on which new devices wait for approval
+     * @return array interface keys
+     */
+    public function getApprovalInterfaces()
+    {
+        $protected = $this->getProtectedInterfaces();
+        $result = [];
+        foreach ($this->networks->network->iterateItems() as $node) {
+            if (!$node->approval->isEmpty() && in_array((string)$node->interface, $protected)) {
+                $result[] = (string)$node->interface;
+            }
+        }
+        return array_values(array_unique($result));
+    }
+
+    /**
      * protected interface keys (lan, opt1, ...)
      * @return array
      */

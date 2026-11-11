@@ -15,6 +15,9 @@ class Catalog
     /* name of the firewall alias holding blocked devices (MAC type) */
     const BLOCKED_ALIAS = 'minnosh_blocked';
 
+    /* firewall alias holding approved devices (MAC type); exists only while a network asks for approval */
+    const APPROVED_ALIAS = 'minnosh_approved';
+
     /* description used to recognise the Unbound blocklist policy Minnosh manages */
     const DNSBL_POLICY = 'Minnosh (managed)';
 

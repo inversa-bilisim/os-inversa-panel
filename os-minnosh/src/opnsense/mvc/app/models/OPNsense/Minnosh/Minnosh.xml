@@ -73,6 +73,11 @@
                     <Default>0</Default>
                     <Required>Y</Required>
                 </blocked>
+                <!-- may use networks on which new devices wait for approval (networks.network.approval) -->
+                <approved type="BooleanField">
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </approved>
             </device>
         </devices>
         <filtering>
@@ -163,6 +168,11 @@
                     <Default>0</Default>
                     <Required>Y</Required>
                 </created>
+                <!-- devices on this network reach nothing but the firewall itself until they are approved -->
+                <approval type="BooleanField">
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </approval>
             </network>
         </networks>
         <!-- access between networks: one entry per (from, to) pair; "wan" means the internet -->

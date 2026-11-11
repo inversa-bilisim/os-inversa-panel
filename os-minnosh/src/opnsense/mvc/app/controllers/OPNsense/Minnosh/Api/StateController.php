@@ -27,6 +27,7 @@ class StateController extends ApiControllerBase
                 'name' => (string)$device->name,
                 'type' => (string)$device->type,
                 'blocked' => !$device->blocked->isEmpty(),
+                'approved' => !$device->approved->isEmpty(),
             ];
         }
 
@@ -72,8 +73,12 @@ class StateController extends ApiControllerBase
             $access[(string)$node->from . '>' . (string)$node->to] = !$node->allow->isEmpty();
         }
         $kinds = [];
+        $approval = [];
         foreach ($mdl->networks->network->iterateItems() as $node) {
             $kinds[(string)$node->interface] = (string)$node->kind;
+            if (!$node->approval->isEmpty()) {
+                $approval[(string)$node->interface] = true;
+            }
         }
 
         $reservations = [];
@@ -103,6 +108,8 @@ class StateController extends ApiControllerBase
             'schedules' => $schedules,
             'access' => (object)$access,
             'kinds' => (object)$kinds,
+            /* networks on which new devices wait for approval */
+            'approval' => (object)$approval,
             'guest' => [
                 'limit' => !$mdl->guest->limit->isEmpty(),
                 'down' => (int)(string)$mdl->guest->down,

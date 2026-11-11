@@ -145,7 +145,7 @@
 
     function devCfg(mac, source) {
         var devices = (source || S.draft).devices;
-        return devices[mac] || { name: '', type: 'unknown', blocked: false };
+        return devices[mac] || { name: '', type: 'unknown', blocked: false, approved: false };
     }
 
     function setDev(mac, patch) {
@@ -155,6 +155,24 @@
     function devName(host) {
         var cfg = devCfg(host.mac);
         return cfg.name || host.hostname || T().unnamed;
+    }
+
+    /*
+     * Approval of new devices: on a network that asks for it, a device that is not approved
+     * reaches nothing but the firewall. Whether a network asks for it is taken from the saved
+     * (enforced) state: switching it on approves the devices already there on "Apply", so they
+     * must not show up as waiting while the switch is only a pending change.
+     */
+    function approvalOn(key) {
+        return !!key && !!(S.saved.approval || {})[key];
+    }
+
+    function waiting(host, source) {
+        return approvalOn(host.network_key) && !devCfg(host.mac, source).approved;
+    }
+
+    function waitingCount(source) {
+        return S.hosts.filter(function (h) { return waiting(h, source); }).length;
     }
 
     function hostByMac(mac) {
@@ -171,7 +189,7 @@
         var macs = Object.keys(Object.assign({}, S.saved.devices, S.draft.devices));
         macs.forEach(function (mac) {
             var a = devCfg(mac, S.draft), b = devCfg(mac, S.saved);
-            if (a.name !== b.name || a.type !== b.type || !!a.blocked !== !!b.blocked) {
+            if (a.name !== b.name || a.type !== b.type || !!a.blocked !== !!b.blocked || !!a.approved !== !!b.approved) {
                 result[mac] = a;
             }
         });
@@ -266,6 +284,9 @@
             if (!!a.blocked !== !!b.blocked) {
                 add(label + ' · ' + t.dNet, b.blocked ? t.netOff : t.netOn, a.blocked ? t.netOff : t.netOn, function () { setDev(mac, { blocked: !!b.blocked }); });
             }
+            if (!!a.approved !== !!b.approved) {
+                add(label + ' · ' + t.dApproval, b.approved ? t.apprApproved : t.apprWaiting, a.approved ? t.apprApproved : t.apprWaiting, function () { setDev(mac, { approved: !!b.approved }); });
+            }
         });
         Object.keys(changedReservations()).forEach(function (mac) {
             var host = hostByMac(mac), cfg = devCfg(mac, d);
@@ -296,6 +317,7 @@
                 schedules: data.schedules || [],
                 access: Array.isArray(data.access) ? {} : (data.access || {}),
                 kinds: Array.isArray(data.kinds) ? {} : (data.kinds || {}),
+                approval: Array.isArray(data.approval) ? {} : (data.approval || {}),
                 guest: data.guest || {}, geo: data.geo || {}, vpn: data.vpn || {},
                 reservations: Array.isArray(data.reservations) ? {} : (data.reservations || {})
             };
@@ -309,6 +331,9 @@
             S.hosts = data.devices || [];
             S.source = data.source;
             S.hostsLoaded = true;
+            /* the number on the Devices tab follows the devices waiting for approval */
+            var n = S.draft ? waitingCount() : 0;
+            if (n !== S.ui.waitShown && document.getElementById('k-tabs')) { renderTabs(); }
         });
     }
 
@@ -367,6 +392,7 @@
         renderTabs();
         renderBanners();
         renderMain();
+        syncMenu();
     }
 
     /* language dropdown, shared by header and settings; a UI preference that is saved at once */
@@ -401,17 +427,35 @@
         return f.ads && f.malware ? 'ok' : 'warn';
     }
 
-    function renderHeader() {
-        var t = T(), level = protectionLevel(S.saved);
+    /* the basic protections that are off, by name (why the header does not say "protection on") */
+    function protectionGaps(source) {
+        var t = T();
+        return ['ads', 'malware'].filter(function (k) { return !source.filtering[k]; }).map(function (k) { return t.cats[k][0]; });
+    }
+
+    /* the header pill: says why on hover / keyboard focus, a click goes where it can be changed */
+    function protectionPill() {
+        var t = T(), level = protectionLevel(S.saved), gaps = protectionGaps(S.saved);
         var pill = level === 'ok' ? ['ok', t.protOn] : (level === 'warn' ? ['warn', t.protPartial] : ['warn', t.protOff]);
+        var why = level === 'ok' ? '<span>' + esc(t.protWhyOk) + '</span>' :
+            (level === 'off' ? '<span>' + esc(t.protWhyOff) + '</span>' :
+                '<b>' + esc(t.protWhyTitle) + '</b><ul>' + gaps.map(function (g) { return '<li>' + esc(g) + '</li>'; }).join('') + '</ul>') +
+            '<span class="k-tip-go">' + esc(level === 'off' ? t.protGoSettings : t.protGoFilter) + '</span>';
+        return '<button type="button" class="k-pill k-tip ' + pill[0] + '" data-act="tab" data-v="' + (level === 'off' ? 'settings' : 'filter') + '" aria-describedby="k-prot-why">' +
+            '<span class="k-dot ' + pill[0] + '"></span>' + esc(pill[1]) +
+            '<span class="k-tip-box" id="k-prot-why" role="tooltip">' + why + '</span></button>';
+    }
+
+    function renderHeader() {
+        var t = T();
         document.getElementById('k-header').innerHTML =
             '<div class="k-header">' +
-            '<div class="k-brand"><div class="k-logo">' + icon(ICONS.shield + 'M9 12l2 2 4-4', 24) + '</div>' +
+            '<div class="k-brand"><div class="k-logo" aria-hidden="true"></div>' +
             '<div><div class="k-title">Minnosh</div><div class="muted">' + esc(t.appSub) + '</div></div></div>' +
             /* pending changes live inside the header so they never push the page down */
             '<div id="k-pending" class="k-pending-slot"></div>' +
             '<div class="k-head-right">' +
-            '<span class="k-pill ' + pill[0] + '"><span class="k-dot ' + pill[0] + '"></span>' + esc(pill[1]) + '</span>' +
+            protectionPill() +
             langSelect() +
             '</div></div>';
         renderPending();
@@ -423,10 +467,13 @@
         Object.keys(VIEWS).forEach(function (key) {
             labels[key] = [VIEWS[key].label(t), VIEWS[key].icon];
         });
+        var wait = waitingCount();
+        S.ui.waitShown = wait;
         var html = TABS.map(function (key) {
             var on = S.tab === key;
             return '<button type="button" class="k-tab' + (on ? ' on' : '') + '" data-act="tab" data-v="' + key + '"' +
-                (on ? ' aria-current="page"' : '') + '>' + icon(labels[key][1]) + '<span>' + esc(labels[key][0]) + '</span></button>';
+                (on ? ' aria-current="page"' : '') + '>' + icon(labels[key][1]) + '<span>' + esc(labels[key][0]) + '</span>' +
+                (key === 'devices' && wait ? '<span class="k-count warn" title="' + esc(t.apprBanner(wait)) + '">' + wait + '</span>' : '') + '</button>';
         }).join('');
         document.getElementById('k-tabs').innerHTML = html;
     }
@@ -536,6 +583,16 @@
         };
     }
 
+    /* devices held back until approved: shown on the overview and above the device list */
+    function waitingBanner() {
+        var t = T(), n = waitingCount();
+        if (!n) { return ''; }
+        return '<div class="k-banner warn k-wait" style="margin:0">' + icon(ICONS.warn, 20) +
+            '<div style="flex:1 1 auto"><b>' + esc(t.apprBanner(n)) + '</b><div>' + esc(t.apprBannerSub) + '</div></div>' +
+            (S.tab === 'devices' && S.ui.filter === 'waiting' ? '' :
+                '<button type="button" class="k-btn small" data-act="show-waiting">' + esc(t.apprShow) + '</button>') + '</div>';
+    }
+
     function viewDash() {
         var t = T(), level = protectionLevel(S.saved);
         var online = S.hosts.filter(function (h) { return h.online; }).length;
@@ -560,10 +617,13 @@
                 '<button type="button" class="k-btn primary" data-act="welcome-yes">' + esc(t.welcomeYes) + '</button></div>' +
                 '</div></section>';
         }
+        html += waitingBanner();
         html += '<section class="k-card k-status">' +
             '<div class="k-status-main"><div class="k-badge-big ' + (level === 'ok' ? 'ok' : 'warn') + '">' +
             icon(ICONS.shield + (level === 'ok' ? ICONS.check : ICONS.alert), 28) + '</div>' +
-            '<div><h1>' + esc(statusTitle) + '</h1><div class="muted" style="font-size:14px">' + esc(t.statusLine(online, S.hosts.length)) + '</div></div></div>' +
+            '<div><h1>' + esc(statusTitle) + '</h1>' +
+            (level === 'warn' ? '<div style="font-size:14px;color:var(--k-warn-text)">' + esc(t.statusWhy(protectionGaps(S.saved))) + '</div>' : '') +
+            '<div class="muted" style="font-size:14px">' + esc(t.statusLine(online, S.hosts.length)) + '</div></div></div>' +
             '<div class="k-chips"><span class="k-info"><span class="k-dot ' + (dnsActive ? 'ok' : '') + '"></span>' +
             esc(t.dnsFilter) + ': ' + esc(dnsActive ? t.active : t.inactive) + '</span></div>' +
             '</section>';
@@ -644,11 +704,60 @@
             var cfg = devCfg(h.mac);
             if (S.ui.filter === 'online' && !h.online) { return false; }
             if (S.ui.filter === 'blocked' && !cfg.blocked) { return false; }
+            if (S.ui.filter === 'waiting' && !waiting(h)) { return false; }
             if (!q) { return true; }
             return (devName(h) + ' ' + h.ips.join(' ') + ' ' + h.mac + ' ' + h.vendor + ' ' + h.hostname).toLowerCase().indexOf(q) >= 0;
         }).sort(function (a, b) {
-            return (b.online - a.online) || devName(a).localeCompare(devName(b), T().locale);
+            var byName = devName(a).localeCompare(devName(b), T().locale), sort = S.ui.sort;
+            if (sort && SORTS[sort.col]) {
+                return sort.dir * SORTS[sort.col](a, b) || byName;
+            }
+            return (waiting(b) - waiting(a)) || (b.online - a.online) || byName;
         });
+    }
+
+    /* the address the device uses, if that is an IPv4 address */
+    function hostIp4(h) {
+        return h.ips && h.ips[0] && ipToInt(h.ips[0]) !== null ? h.ips[0] : '';
+    }
+
+    /*
+     * column sorting: what a first click on the heading gives (a second click reverses, a third goes back
+     * to the usual order). Devices without a value always come after the ones that have one.
+     */
+    var SORTS = {
+        name: function (a, b) { return devName(a).localeCompare(devName(b), T().locale); },
+        ip: function (a, b) {
+            var x = hostIp4(a), y = hostIp4(b);
+            if (!x || !y) { return x ? -1 : (y ? 1 : (a.ips[0] || '~').localeCompare(b.ips[0] || '~')); }
+            return ipToInt(x) - ipToInt(y);
+        },
+        mac: function (a, b) { return a.mac.localeCompare(b.mac); },
+        /* online first, then whoever was here last */
+        seen: function (a, b) {
+            return (b.online - a.online) || ((Date.parse(b.last_seen) || 0) - (Date.parse(a.last_seen) || 0));
+        },
+        conns: function (a, b) { return (b.states || 0) - (a.states || 0); },
+        /* the ones that cannot get out first: waiting for approval, internet cut, open */
+        net: function (a, b) {
+            var rank = function (h) { return waiting(h) ? 0 : (devCfg(h.mac).blocked ? 1 : 2); };
+            return rank(a) - rank(b);
+        }
+    };
+    /* which way the values run after the first click, for the arrow: 1 = small to large */
+    var SORT_RUNS = { name: 1, ip: 1, mac: 1, seen: -1, conns: -1, net: 1 };
+
+    function sortHead(col, label) {
+        var t = T(), sort = S.ui.sort, on = sort && sort.col === col, up = on && sort.dir * SORT_RUNS[col] > 0;
+        return '<th' + (on ? ' aria-sort="' + (up ? 'ascending' : 'descending') + '"' : '') + '>' +
+            '<button type="button" class="k-th' + (on ? ' on' : '') + '" data-act="sort" data-v="' + col + '" title="' + esc(t.sortHint) + '">' +
+            esc(label) + '<span class="k-th-arrow" aria-hidden="true">' + (on ? (up ? '▲' : '▼') : '') + '</span></button></th>';
+    }
+
+    /* the device is there, on a network where we hand out addresses, with an address we did not hand out */
+    function selfAddressed(h) {
+        var ip = hostIp4(h);
+        return !!(h.online && h.dhcp === false && ip && dhcpNetOf(ip));
     }
 
     function deviceRows() {
@@ -658,21 +767,27 @@
                 esc(S.hosts.length ? t.noResult : (S.hostsLoaded ? t.noDevicesYet : '…')) + '</td></tr>';
         }
         return rows.map(function (h) {
-            var cfg = devCfg(h.mac), cut = !!cfg.blocked, name = devName(h);
+            var cfg = devCfg(h.mac), cut = !!cfg.blocked, name = devName(h), wait = waiting(h);
             var status = h.online ? t.online : (ago(h.last_seen) || t.offline);
-            return '<tr class="' + (S.ui.sel === h.mac ? 'sel' : (cut ? 'cut' : '')) + '">' +
-                '<td><div class="k-dev"><div class="k-ibox ' + (cut ? 'cut' : 'on') + '">' + icon(ICONS[cfg.type] || ICONS.unknown, 20) + '</div>' +
+            /* a fixed address the device did not pick up yet is shown as such, not as a label on the old address */
+            var fixed = (S.saved.reservations || {})[h.mac] || '', moving = fixed && hostIp4(h) && h.ips[0] !== fixed;
+            return '<tr class="' + (S.ui.sel === h.mac ? 'sel' : (cut || wait ? 'cut' : '')) + '">' +
+                '<td><div class="k-dev"><div class="k-ibox ' + (cut || wait ? 'cut' : 'on') + '">' + icon(ICONS[cfg.type] || ICONS.unknown, 20) + '</div>' +
                 '<button type="button" class="k-dev-name" data-act="sel" data-mac="' + esc(h.mac) + '" aria-label="' + esc(t.editAria(name)) + '">' +
                 '<span style="min-width:0"><b>' + esc(name) + '</b><span class="muted">' + esc(h.vendor || t.unknownVendor) + '</span></span>' +
                 '<span style="color:#5B6573;flex:none">' + icon(ICONS.pencil, 15) + '</span></button></div></td>' +
                 '<td class="mono">' + esc(h.ips[0] || '—') + (h.ips.length > 1 ? ' <span class="muted">+' + (h.ips.length - 1) + '</span>' : '') +
-                    ((S.saved.reservations || {})[h.mac] ? ' <span class="k-badge" title="' + esc(t.dFixedIp + ': ' + S.saved.reservations[h.mac]) + '">' + esc(t.dFixedShort) + '</span>' : '') + '</td>' +
+                    (fixed ? ' <span class="k-badge" title="' + esc(moving ? t.dIpRenew : t.dFixedIp + ': ' + fixed) + '">' + esc(moving ? t.dFixedShort + ' → ' + fixed : t.dFixedShort) + '</span>' : '') +
+                    (selfAddressed(h) ? ' <span class="k-badge" title="' + esc(t.dIpManual(h.ips[0])) + '">' + esc(t.dManualShort) + '</span>' : '') + '</td>' +
                 '<td class="mono" style="color:#36404D">' + esc(h.mac) + '</td>' +
                 '<td><span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#36404D">' +
                 '<span class="k-dot ' + (h.online ? 'ok' : '') + '"></span>' + esc(status) + '</span></td>' +
                 '<td style="font-variant-numeric:tabular-nums">' + esc(fmt(h.states)) + '</td>' +
-                '<td><div class="k-net"><span class="k-net-label' + (cut ? ' cut' : '') + '">' + esc(cut ? t.netOff : t.netOn) + '</span>' +
-                toggle(!cut, 'data-act="cut" data-mac="' + esc(h.mac) + '"', t.cutAria(name), cut ? 'cut' : '') + '</div></td>' +
+                (wait ?
+                    '<td><div class="k-net"><span class="k-net-label cut">' + esc(t.apprWaiting) + '</span>' +
+                    '<button type="button" class="k-btn small primary" data-act="approve" data-mac="' + esc(h.mac) + '" aria-label="' + esc(t.apprApproveAria(name)) + '">' + esc(t.apprApprove) + '</button></div></td>' :
+                    '<td><div class="k-net"><span class="k-net-label' + (cut ? ' cut' : '') + '">' + esc(cut ? t.netOff : t.netOn) + '</span>' +
+                    toggle(!cut, 'data-act="cut" data-mac="' + esc(h.mac) + '"', t.cutAria(name), cut ? 'cut' : '') + '</div></td>') +
                 '</tr>';
         }).join('');
     }
@@ -681,7 +796,11 @@
         var t = T(), mac = h.mac;
         var val = (S.draft.reservations || {})[mac] || '', saved = (S.saved.reservations || {})[mac] || '';
         var current = (h.ips || []).filter(function (ip) { return ipToInt(ip) !== null; })[0] || '';
-        var net = dhcpNetOf(val || current), hint;
+        var net = dhcpNetOf(val || current), hint, self = selfAddressed(h), own = self ? dhcpNetOf(current) : null;
+        /* nothing we set reaches a device that does not ask DHCP: say so, and warn when its address may be handed to someone else */
+        var note = !self ? '' : '<span class="k-note">' + esc(t.dIpManual(current)) + '</span>' +
+            (saved !== current && ipToInt(current) >= ipToInt(own.from) && ipToInt(current) <= ipToInt(own.to) ?
+                '<span class="k-note warn">' + esc(t.dIpManualPool(own.from, own.to)) + '</span>' : '');
         if (val && ipToInt(val) === null) {
             hint = '<span class="k-warn-text">' + esc(t.dIpInvalid) + '</span>';
         } else if (val && !dhcpNetOf(val)) {
@@ -693,17 +812,17 @@
         } else {
             hint = '<span class="muted small">' + esc(t.dIpAutoHint) + '</span>';
         }
-        return '<label class="k-field"><span>' + esc(t.dFixedIp) + '</span>' +
+        return '<label class="k-field"><span>' + esc(t.dFixedIp) + '</span>' + note +
             '<div style="display:flex;gap:8px"><input type="text" class="mono" style="flex:1 1 auto;min-width:0" inputmode="decimal" autocomplete="off" data-input="devip" data-mac="' + esc(mac) + '" value="' + esc(val) + '" placeholder="' + esc(t.dIpAuto) + '">' +
             (!val && current && dhcpNetOf(current) ? '<button type="button" class="k-btn small" data-act="fixip" data-mac="' + esc(mac) + '" data-v="' + esc(current) + '" title="' + esc(t.dIpPinHint) + '">' + esc(t.dIpPin) + '</button>' : '') +
             (val ? '<button type="button" class="k-btn small" data-act="fixip" data-mac="' + esc(mac) + '" data-v="">' + esc(t.dIpClear) + '</button>' : '') + '</div>' +
-            hint + (val !== saved || (val && current && val !== current) ? '<span class="muted small">' + esc(t.dIpRenew) + '</span>' : '') + '</label>';
+            hint + (!self && (val !== saved || (val && current && val !== current)) ? '<span class="muted small">' + esc(t.dIpRenew) + '</span>' : '') + '</label>';
     }
 
     function devicePanel() {
         var t = T(), h = hostByMac(S.ui.sel);
         if (!h) { return ''; }
-        var cfg = devCfg(h.mac), cut = !!cfg.blocked, name = devName(h);
+        var cfg = devCfg(h.mac), cut = !!cfg.blocked, name = devName(h), wait = waiting(h);
         var info = [
             [t.dMac, h.mac],
             [t.dVendor, h.vendor || t.unknownVendor],
@@ -714,10 +833,12 @@
             [t.dLast, h.online ? t.online : (ago(h.last_seen) || '—')]
         ];
         return '<aside class="k-card k-side" aria-label="' + esc(name) + '" style="gap:18px">' +
-            '<div style="display:flex;align-items:center;gap:12px"><div class="k-ibox big ' + (cut ? 'cut' : 'on') + '">' + icon(ICONS[cfg.type] || ICONS.unknown, 24) + '</div>' +
+            '<div style="display:flex;align-items:center;gap:12px"><div class="k-ibox big ' + (cut || wait ? 'cut' : 'on') + '">' + icon(ICONS[cfg.type] || ICONS.unknown, 24) + '</div>' +
             '<div style="flex:1 1 auto;min-width:0"><div style="font-weight:600;font-size:16px">' + esc(name) + '</div>' +
             '<div class="muted">' + esc(h.ips[0] || h.mac) + '</div></div>' +
             '<button type="button" class="k-icon-btn" data-act="sel" data-mac="" aria-label="' + esc(t.close) + '">' + icon(ICONS.close, 18) + '</button></div>' +
+            (wait ? '<div class="k-banner warn" style="margin:0;align-items:center;flex-wrap:wrap">' + icon(ICONS.warn, 20) + '<span style="flex:1 1 180px">' + esc(t.apprPanel) + '</span>' +
+                '<button type="button" class="k-btn small primary" data-act="approve" data-mac="' + esc(h.mac) + '">' + esc(t.apprApprove) + '</button></div>' : '') +
             '<label class="k-field"><span>' + esc(t.dName) + '</span>' +
             '<input type="text" maxlength="64" data-input="devname" data-mac="' + esc(h.mac) + '" value="' + esc(cfg.name) + '" placeholder="' + esc(h.hostname || t.unnamed) + '"></label>' +
             fixedIpField(h) +
@@ -732,6 +853,9 @@
             }).join('') + '</div>' +
             '<div class="k-setting" style="padding:0"><div class="k-setting-text"><b>' + esc(t.dNet) + '</b><span class="muted">' + esc(t.dNetSub) + '</span></div>' +
             toggle(!cut, 'data-act="cut" data-mac="' + esc(h.mac) + '"', t.dNet, cut ? 'cut' : '') + '</div>' +
+            /* only where it means something: the device's network asks for approval */
+            (approvalOn(h.network_key) ? '<div class="k-setting" style="padding:0"><div class="k-setting-text"><b>' + esc(t.dApproval) + '</b><span class="muted">' + esc(t.dApprovalSub) + '</span></div>' +
+                toggle(!!cfg.approved, 'data-act="approval" data-mac="' + esc(h.mac) + '"', t.dApproval) + '</div>' : '') +
             '</aside>';
     }
 
@@ -740,22 +864,26 @@
         var counts = {
             all: S.hosts.length,
             online: S.hosts.filter(function (h) { return h.online; }).length,
-            blocked: S.hosts.filter(function (h) { return devCfg(h.mac).blocked; }).length
+            blocked: S.hosts.filter(function (h) { return devCfg(h.mac).blocked; }).length,
+            waiting: waitingCount()
         };
-        var filters = [['all', t.fAll], ['online', t.fOnline], ['blocked', t.fBlocked]].map(function (f) {
+        var anyApproval = Object.keys(S.saved.approval || {}).some(function (k) { return S.saved.approval[k]; });
+        if (S.ui.filter === 'waiting' && !anyApproval) { S.ui.filter = 'all'; }
+        var filters = [['all', t.fAll], ['online', t.fOnline], ['blocked', t.fBlocked]].concat(anyApproval ? [['waiting', t.fWaiting]] : []).map(function (f) {
             var on = S.ui.filter === f[0];
             return '<button type="button" class="k-chip' + (on ? ' on' : '') + '" data-act="filter" data-v="' + f[0] + '" aria-pressed="' + on + '">' +
                 esc(f[1]) + ' <span class="k-count">' + counts[f[0]] + '</span></button>';
         }).join('');
         return '<div class="k-stack">' +
             '<div><h1>' + esc(t.devTitle) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + esc(t.devSub) + '</div></div>' +
+            waitingBanner() +
             (S.hostsLoaded && S.source !== 'discovery' ? '<div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.discoveryHint) + '</span></div>' : '') +
             '<div class="k-toolbar"><label class="k-search">' + icon(ICONS.search) +
             '<input type="search" data-input="search" value="' + esc(S.ui.search) + '" placeholder="' + esc(t.search) + '" aria-label="' + esc(t.search) + '"></label>' +
             '<div class="k-chips" role="group" aria-label="' + esc(t.devTitle) + '">' + filters + '</div></div>' +
             '<div class="k-row"><div class="k-table-box k-grow"><table class="k-table"><thead><tr>' +
-            '<th>' + esc(t.colDevice) + '</th><th>' + esc(t.colIp) + '</th><th>' + esc(t.colMac) + '</th>' +
-            '<th>' + esc(t.colSeen) + '</th><th>' + esc(t.colConns) + '</th><th>' + esc(t.colNet) + '</th>' +
+            sortHead('name', t.colDevice) + sortHead('ip', t.colIp) + sortHead('mac', t.colMac) +
+            sortHead('seen', t.colSeen) + sortHead('conns', t.colConns) + sortHead('net', t.colNet) +
             '</tr></thead><tbody id="k-devrows">' + deviceRows() + '</tbody></table></div>' +
             devicePanel() + '</div></div>';
     }
@@ -878,6 +1006,7 @@
             schedules: S.draft.schedules,
             access: S.draft.access,
             kinds: S.draft.kinds,
+            approval: S.draft.approval,
             guest: S.draft.guest,
             geo: S.draft.geo,
             vpn: S.draft.vpn,
@@ -885,7 +1014,7 @@
         }).then(function (res) {
             if (res.status === 'ok') {
                 S.ui.geoLicense = '';
-                S.ui.notice = { type: 'ok', text: t.applied, list: res.messages || [] };
+                S.ui.notice = { type: 'ok', text: t.applied, list: (res.messages || []).concat(res.auto_approved ? [t.apprAuto(res.auto_approved)] : []) };
                 return loadState().then(loadHosts).then(loadDns);
             }
             var list = Object.keys(res.validations || {}).map(function (k) { return k + ': ' + res.validations[k]; });
@@ -898,6 +1027,29 @@
         });
     }
 
+    /* switch to a tab and fetch what it shows (the caller redraws) */
+    function openTab(tab) {
+        S.tab = TABS.indexOf(tab) >= 0 ? tab : 'dash';
+        S.ui.sel = null;
+        if (S.tab === 'devices') { loadHosts().then(refreshView, function () {}); }
+        if (VIEWS[S.tab] && VIEWS[S.tab].load) {
+            VIEWS[S.tab].load().then(function () { if (!inputFocused()) { renderMain(); } }, function () {});
+        }
+    }
+
+    /*
+     * OPNsense's side menu has entries for some of our tabs (/ui/minnosh#devices, ...). The server cannot
+     * see the part after "#", so it marks all of them as the current page: mark the one that is open.
+     */
+    function syncMenu() {
+        if (!document.querySelectorAll) { return; }
+        var links = document.querySelectorAll('#mainmenu a[href^="/ui/minnosh#"]');
+        for (var i = 0; i < links.length; i++) {
+            var on = links[i].getAttribute('href').split('#')[1] === S.tab;
+            links[i].classList.toggle('active', on);
+        }
+    }
+
     function onClick(event) {
         var el = event.target.closest('[data-act]');
         if (!el || !root.contains(el) || el.disabled) {
@@ -907,14 +1059,9 @@
         var full = false;
         switch (act) {
             case 'tab':
-                S.tab = TABS.indexOf(v) >= 0 ? v : 'dash';
-                S.ui.sel = null;
+                openTab(v);
                 if (history.replaceState) { history.replaceState(null, '', '#' + S.tab); }
                 full = true;
-                if (S.tab === 'devices') { loadHosts().then(refreshView, function () {}); }
-                if (VIEWS[S.tab] && VIEWS[S.tab].load) {
-                    VIEWS[S.tab].load().then(function () { if (!inputFocused()) { renderMain(); } }, function () {});
-                }
                 break;
             case 'cat':
                 S.draft.filtering[v] = !S.draft.filtering[v];
@@ -932,6 +1079,22 @@
             case 'cut':
                 setDev(mac, { blocked: !devCfg(mac).blocked });
                 break;
+            case 'approve':
+                setDev(mac, { approved: true });
+                break;
+            case 'approval':
+                setDev(mac, { approved: !devCfg(mac).approved });
+                break;
+            case 'show-waiting':
+                S.ui.filter = 'waiting';
+                S.ui.sel = null;
+                if (S.tab !== 'devices') {
+                    S.tab = 'devices';
+                    if (history.replaceState) { history.replaceState(null, '', '#devices'); }
+                    loadHosts().then(refreshView, function () {});
+                }
+                full = true;
+                break;
             case 'sel':
                 S.ui.sel = mac && S.ui.sel !== mac ? mac : null;
                 break;
@@ -940,6 +1103,10 @@
                 break;
             case 'filter':
                 S.ui.filter = v;
+                break;
+            case 'sort':
+                var sort = S.ui.sort;
+                S.ui.sort = !sort || sort.col !== v ? { col: v, dir: 1 } : (sort.dir === 1 ? { col: v, dir: -1 } : null);
                 break;
             case 'general':
                 S.draft.general[v] = !S.draft.general[v];
@@ -1008,6 +1175,7 @@
             renderHeader();
             renderBanners();
             renderMain();
+            if (waitingCount() !== S.ui.waitShown) { renderTabs(); }
         }
     }
 
@@ -1018,6 +1186,7 @@
         } else if (what === 'main') {
             renderHeader();
             renderMain();
+            if (waitingCount() !== S.ui.waitShown) { renderTabs(); }
         } else if (what === 'pending') {
             renderPending();
         } else if (what === 'main-keepfocus') {
@@ -1101,7 +1270,7 @@
             hosts: [], source: null, hostsLoaded: false,
             traffic: { last: null, rate: null, hist: [] },
             dns: null,
-            ui: { filter: 'all', search: '', sel: null, allowInput: '', denyInput: '', applying: false, notice: null, showChanges: false, changeCache: [], listError: { allow: null, deny: null } }
+            ui: { filter: 'all', sort: null, search: '', sel: null, allowInput: '', denyInput: '', applying: false, notice: null, showChanges: false, changeCache: [], listError: { allow: null, deny: null } }
         };
 
         loadState().then(function () {
@@ -1119,7 +1288,23 @@
             sampleTraffic().then(function () {}, function () {});
 
             setInterval(function () { sampleTraffic().then(function () { if (S.tab === 'dash') { refreshView(); } }, function () {}); }, TRAFFIC_MS);
-            setInterval(function () { loadHosts().then(refreshView, function () {}); }, 30000);
+            /* the list makes the firewall ask the devices if they are there: only while somebody is looking */
+            setInterval(function () { if (!document.hidden) { loadHosts().then(refreshView, function () {}); } }, 30000);
+            /* a side menu entry of OPNsense for another tab only changes the part after "#" */
+            if (window.addEventListener) {
+                window.addEventListener('hashchange', function () {
+                    var tab = String(window.location.hash || '').replace('#', '');
+                    if (TABS.indexOf(tab) >= 0 && tab !== S.tab) {
+                        openTab(tab);
+                        render();
+                    }
+                });
+            }
+            if (document.addEventListener) {
+                document.addEventListener('visibilitychange', function () {
+                    if (!document.hidden) { loadHosts().then(refreshView, function () {}); }
+                });
+            }
             setInterval(function () { loadDns().then(function () { if (S.tab === 'dash') { refreshView(); } }, function () {}); }, 60000);
         }, function () {
             root.innerHTML = '<div class="k-banner err">' + esc(window.MinnoshI18n[lang() || 'en'].loadFailed) + '</div>';

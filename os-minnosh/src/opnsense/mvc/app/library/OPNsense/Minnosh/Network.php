@@ -317,7 +317,8 @@ class Network
     }
 
     /**
-     * add a network: own port or VLAN, /24 with gateway address, optional DHCP range
+     * add a network: own port or VLAN, /24 with gateway address, optional DHCP server
+     * (dhcp_from/dhcp_to/lease as in updateNetwork(); empty = defaults)
      * @return string new interface key
      */
     public function addNetwork(array $net, Vlan $vlans)
@@ -356,8 +357,8 @@ class Network
         $node->addChild('enable', '1');
         $node->addChild('ipaddr', $ip);
         $node->addChild('subnet', '24');
-        if (!empty($net['dhcp'])) {
-            $this->setDhcp($key, $ip . '/24', true);
+        if (!empty($net['dhcp']) && $net['dhcp'] !== 'false') {
+            $this->setDhcp($key, $ip . '/24', true, $net['dhcp_from'] ?? '', $net['dhcp_to'] ?? '', (string)($net['lease'] ?? ''));
         }
         return $key;
     }

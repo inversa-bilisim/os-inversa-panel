@@ -7,8 +7,8 @@
  *
  * Changes to the connection and networks are applied with their own button and protected by
  * the firewall-side rollback: unless confirmed within the countdown, OPNsense restores the
- * previous configuration by itself. The access matrix and network kinds are ordinary pending
- * changes (header "Apply").
+ * previous configuration by itself. The access matrix, network kinds and "new devices wait for
+ * approval" are ordinary pending changes (header "Apply").
  */
 (function () {
     'use strict';
@@ -195,6 +195,47 @@
         return html;
     }
 
+    /* the range the firewall picks when none is given (Network::setDhcp) */
+    function defaultRange(ip, bits) {
+        var m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(ip || '');
+        bits = Number(bits) || 24;
+        if (!m || bits < 8 || bits > 30 || m.slice(1).some(function (x) { return +x > 255; })) { return null; }
+        var addr = ((+m[1] << 24) >>> 0) + (+m[2] << 16) + (+m[3] << 8) + (+m[4]);
+        var size = Math.pow(2, 32 - bits), base = addr - (addr % size);
+        function str(n) { return [n >>> 24, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join('.'); }
+        return bits === 24 ? { from: str(base + 100), to: str(base + 199) } :
+            { from: str(base + Math.min(100, Math.floor(size / 4))), to: str(base + size - Math.min(56, Math.floor(size / 8)) - 1) };
+    }
+
+    /*
+     * DHCP server of a network, for the edit ('edit') and the new network ('add') form alike:
+     * the switch sits right at its label, the range and lease time follow in the same box.
+     * o = { ip, dhcp, from, to, lease }
+     */
+    function dhcpBlock(o, pfx, bits) {
+        var T = t(), def = defaultRange(o.ip, bits) || { from: T.edAuto, to: T.edAuto };
+        function field(label, key, placeholder, width) {
+            return '<label class="k-field"><span>' + h.esc(label) + '</span><input type="text" class="mono" style="width:' + width + 'px" inputmode="decimal" autocomplete="off" ' +
+                'data-input="net:' + pfx + '-' + key + '" value="' + h.esc(o[key]) + '" placeholder="' + h.esc(placeholder) + '"></label>';
+        }
+        return '<div class="k-dhcp' + (o.dhcp ? ' on' : '') + '"><div class="k-dhcp-main">' +
+            '<div class="k-dhcp-head">' + h.toggle(o.dhcp, 'data-act="net:' + pfx + '-dhcp"', T.edDhcp) +
+            '<div><b>' + h.esc(T.edDhcp) + '</b><div class="muted">' + h.esc(o.dhcp ? T.edDhcpSub : T.edDhcpOff) + '</div></div></div>' +
+            (o.dhcp ? '<div class="k-dhcp-fields">' + field(T.edDhcpFrom, 'from', def.from, 160) + field(T.edDhcpTo, 'to', def.to, 160) + field(T.edLease, 'lease', T.edLeaseDefault, 130) + '</div>' : '') +
+            '</div>' + (o.dhcp ? '<div class="muted small">' + h.esc(T.edDhcpHint) + '</div>' : '') + '</div>';
+    }
+
+    /* gateway address and DHCP side by side, both only as wide as their content */
+    function addrRow(o, pfx, bits) {
+        return '<div class="k-row k-addr"><label class="k-field"><span>' + h.esc(t().edGw) + '</span>' +
+            '<input type="text" class="mono" style="width:200px" inputmode="decimal" autocomplete="off" data-input="net:' + pfx + '-ip" value="' + h.esc(o.ip) + '"></label>' +
+            dhcpBlock(o, pfx, bits) + '</div>';
+    }
+
+    function approvalOn(key) {
+        return !!(draft().approval || {})[key];
+    }
+
     function netCard(n) {
         var T = t(), kind = kindOf(n.key), editing = N.edit && N.edit.key === n.key;
         var html = '<section class="k-card k-net-card" style="border-top:4px solid ' + KIND_COLOR[kind] + '">' +
@@ -206,6 +247,7 @@
             '<div class="k-kv"><span class="muted">' + h.esc(T.netLink) + '</span><span class="mono">' + h.esc(n.mode === 'vlan' ? 'VLAN ' + n.vlan + ' · ' + n.port : n.port + ' · ' + T.untagged) + '</span></div>' +
             '<div class="k-kv"><span class="muted">' + h.esc(T.netAddr) + '</span><span class="mono">' + h.esc(n.ip ? n.ip + '/' + n.subnet : '—') + '</span></div>' +
             '<div class="k-kv"><span class="muted">DHCP</span><span class="mono">' + h.esc(n.dhcp ? n.dhcp.from + ' – ' + n.dhcp.to + (n.dhcp.lease != null ? ' · ' + T.leaseShort(n.dhcp.lease) : '') : T.off) + '</span></div>' +
+            (approvalOn(n.key) ? '<div class="k-kv"><span class="muted">' + h.esc(T.apprCard) + '</span><span>' + h.esc(T.on) + '</span></div>' : '') +
             '</div></section>';
         return html;
     }
@@ -217,18 +259,19 @@
         var d0 = n.dhcp || {};
         var changed = e.ip !== n.ip || e.dhcp !== !!n.dhcp ||
             (e.dhcp && (e.from !== (d0.from || '') || e.to !== (d0.to || '') || e.lease !== (d0.lease == null ? '' : String(d0.lease))));
+        var prot = (draft().general.interfaces || []).indexOf(n.key) >= 0, appr = approvalOn(n.key);
         return '<section class="k-card k-edit"><h2>' + h.esc(T.edTitle(n.name)) + '</h2>' +
             '<div class="k-field"><span>' + h.esc(T.edType) + '</span><div class="k-chips">' + KINDS.map(function (k) {
                 return '<button type="button" class="k-chip' + (kind === k ? ' on' : '') + '" data-act="net:kind" data-v="' + k + '">' + dot(KIND_COLOR[k]) + h.esc(T.netKinds[k]) + '</button>';
-            }).join('') + '</div><span class="muted">' + h.esc(T.edTypeHint) + '</span></div>' +
-            '<div class="k-row"><label class="k-field"><span>' + h.esc(T.edGw) + '</span><input type="text" class="mono" data-input="net:edit-ip" value="' + h.esc(e.ip) + '"></label>' +
-            '<div class="k-setting" style="border:none;flex:1 1 260px"><div class="k-setting-text"><b>' + h.esc(T.edDhcp) + '</b><span class="muted">' + h.esc(T.edDhcpSub) + '</span></div>' +
-            h.toggle(e.dhcp, 'data-act="net:edit-dhcp"', T.edDhcp) + '</div></div>' +
-            (e.dhcp ? '<div class="k-row" style="align-items:flex-end">' +
-                '<label class="k-field" style="flex:0 1 170px"><span>' + h.esc(T.edDhcpFrom) + '</span><input type="text" class="mono" inputmode="decimal" data-input="net:edit-from" value="' + h.esc(e.from) + '" placeholder="' + h.esc(T.edAuto) + '"></label>' +
-                '<label class="k-field" style="flex:0 1 170px"><span>' + h.esc(T.edDhcpTo) + '</span><input type="text" class="mono" inputmode="decimal" data-input="net:edit-to" value="' + h.esc(e.to) + '" placeholder="' + h.esc(T.edAuto) + '"></label>' +
-                '<label class="k-field" style="flex:0 1 150px"><span>' + h.esc(T.edLease) + '</span><input type="text" class="mono" inputmode="decimal" data-input="net:edit-lease" value="' + h.esc(e.lease) + '" placeholder="' + h.esc(T.edLeaseDefault) + '"></label>' +
-                '<span class="muted small" style="flex:1 1 220px;padding-bottom:10px">' + h.esc(T.edDhcpHint) + '</span></div>' : '') +
+            }).join('') + '</div></div>' +
+            /* new devices wait for approval: a pending change like the type, enforced by a firewall rule */
+            '<div class="k-dhcp' + (appr ? ' on' : '') + '" style="align-self:flex-start"><div class="k-dhcp-head">' +
+            h.toggle(appr, 'data-act="net:approval"' + (prot || appr ? '' : ' disabled'), T.edApproval) +
+            '<div><b>' + h.esc(T.edApproval) + '</b><div class="muted">' + h.esc(prot || appr ? T.edApprovalSub : T.edApprovalNotProtected) + '</div></div></div>' +
+            (appr ? '<div class="muted small">' + h.esc(T.edApprovalNote) + '</div>' : '') + '</div>' +
+            '<span class="muted">' + h.esc(T.edTypeHint) + '</span>' +
+            '<div class="k-sep"></div>' +
+            addrRow(e, 'edit', n.subnet) +
             (n.key === 'lan' ? '<div class="k-banner warn" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span>' + h.esc(T.lanChangeWarn) + '</span></div>' : '') +
             '<div class="k-row" style="justify-content:space-between;align-items:center">' +
             (n.created ? '<button type="button" class="k-btn" style="color:#9A3B0A;border-color:#F2C99B" data-act="net:delete" data-v="' + n.key + '"' + (N.busy || N.countdown ? ' disabled' : '') + '>' + h.esc(T.edDelete) + '</button>' : '<span class="muted">' + h.esc(T.notCreated) + '</span>') +
@@ -250,9 +293,7 @@
             '</div><span class="muted">' + h.esc(a.mode === 'vlan' ? T.edParentFor : T.edPortFor) + '</span>' +
             portChips(a.port, 'add-port', function (p) { return a.mode === 'port' && (p.untagged || p.vlans.length); }) +
             (a.mode === 'vlan' ? '<span class="muted">' + h.esc(T.vlanNote) + '</span>' : '') + '</div>' +
-            '<div class="k-row"><label class="k-field"><span>' + h.esc(T.edGw) + '</span><input type="text" class="mono" data-input="net:add-ip" value="' + h.esc(a.ip) + '"></label>' +
-            '<div class="k-setting" style="border:none;flex:1 1 260px"><div class="k-setting-text"><b>' + h.esc(T.edDhcp) + '</b><span class="muted">' + h.esc(T.edDhcpSub) + '</span></div>' +
-            h.toggle(a.dhcp, 'data-act="net:add-dhcp"', T.edDhcp) + '</div></div>' +
+            addrRow(a, 'add', 24) +
             '<div class="k-row" style="justify-content:flex-end;align-items:center"><span class="muted">' + h.esc(T.netSafety) + '</span>' +
             '<button type="button" class="k-btn" data-act="net:add-cancel">' + h.esc(T.discard) + '</button>' +
             '<button type="button" class="k-btn primary" data-act="net:add-apply"' + (!N.busy && !N.countdown && a.port && a.ip ? '' : ' disabled') + '>' + h.esc(N.busy ? T.applying : T.netCreate) + '</button></div></section>';
@@ -345,6 +386,10 @@
                     N.add = null;
                     return 'main';
                 case 'edit-dhcp': N.edit.dhcp = !N.edit.dhcp; return 'main';
+                case 'approval':
+                    draft().approval = draft().approval || {};
+                    draft().approval[N.edit.key] = !approvalOn(N.edit.key);
+                    return 'main';
                 case 'kind': draft().kinds[N.edit.key] = v; return 'main';
                 case 'editapply':
                     var upd = {};
@@ -360,7 +405,7 @@
                     var tag = 20;
                     while (used.indexOf(tag) >= 0) { tag += 10; }
                     var lanPort = (N.data.networks.filter(function (x) { return x.key === 'lan'; })[0] || {}).port || (N.data.ports[0] || {}).device;
-                    N.add = { name: 'IOT', kind: 'iot', mode: 'vlan', port: lanPort, vlan: String(tag), ip: '192.168.' + tag + '.1', dhcp: true };
+                    N.add = { name: 'IOT', kind: 'iot', mode: 'vlan', port: lanPort, vlan: String(tag), ip: '192.168.' + tag + '.1', dhcp: true, from: '', to: '', lease: '' };
                     N.edit = null;
                     return 'main';
                 case 'add-kind':
@@ -371,7 +416,11 @@
                 case 'add-port': N.add.port = v; return 'main';
                 case 'add-dhcp': N.add.dhcp = !N.add.dhcp; return 'main';
                 case 'add-cancel': N.add = null; return 'main';
-                case 'add-apply': netApply({ add: [N.add] }); return null;
+                case 'add-apply':
+                    var a = N.add;
+                    netApply({ add: [{ name: a.name, kind: a.kind, mode: a.mode, port: a.port, vlan: a.vlan, ip: a.ip,
+                        dhcp: a.dhcp, dhcp_from: a.dhcp ? a.from : '', dhcp_to: a.dhcp ? a.to : '', lease: a.dhcp ? a.lease : '' }] });
+                    return null;
                 case 'cell':
                     /* default (OPNsense rules) -> allowed -> blocked -> default */
                     var acc = draft().access, cur = acc[v];
@@ -387,10 +436,9 @@
                 map[name][0][map[name][1]] = name === 'wan-vlan' ? val.replace(/[^0-9]/g, '').slice(0, 4) : val.trim();
             } else if (name === 'edit-ip' && N.edit) {
                 N.edit.ip = val.trim();
-            } else if ((name === 'edit-from' || name === 'edit-to') && N.edit) {
-                N.edit[name.slice(5)] = val.replace(/[^0-9.]/g, '');
-            } else if (name === 'edit-lease' && N.edit) {
-                N.edit.lease = val.replace(/[^0-9.,]/g, '').replace(',', '.');
+            } else if (/^(edit|add)-(from|to|lease)$/.test(name) && N[name.split('-')[0]]) {
+                var form = N[name.split('-')[0]], key = name.split('-')[1];
+                form[key] = key === 'lease' ? val.replace(/[^0-9.,]/g, '').replace(',', '.') : val.replace(/[^0-9.]/g, '');
             } else if (name === 'add-name' && N.add) {
                 N.add.name = val.toUpperCase().replace(/[^A-Z0-9_]/g, '');
             } else if (name === 'add-vlan' && N.add) {
@@ -413,6 +461,12 @@
                     add(T.accTitle + ' · ' + netName(p[0]) + ' → ' + netName(p[1]), label(s.access[k]), label(d.access[k]), function () {
                         if (s.access[k] === undefined) { delete d.access[k]; } else { d.access[k] = s.access[k]; }
                     });
+                }
+            });
+            Object.keys(Object.assign({}, s.approval, d.approval)).forEach(function (k) {
+                var before = !!(s.approval || {})[k], after = !!(d.approval || {})[k];
+                if (before !== after) {
+                    add(netName(k) + ' · ' + T.edApproval, before ? T.on : T.off, after ? T.on : T.off, function () { d.approval[k] = before; });
                 }
             });
             Object.keys(d.kinds).forEach(function (k) {

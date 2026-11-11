@@ -9,6 +9,7 @@ namespace OPNsense\Minnosh\Api;
 
 use OPNsense\Base\ApiControllerBase;
 use OPNsense\Base\UserException;
+use OPNsense\Minnosh\Approval;
 use OPNsense\Minnosh\Catalog;
 use OPNsense\Minnosh\Dhcp;
 use OPNsense\Minnosh\Integration;
@@ -94,7 +95,7 @@ class ServiceController extends ApiControllerBase
         $mdl->general->enabled->setValue('0');
         $aliases = new \OPNsense\Firewall\Alias();
         foreach (iterator_to_array($aliases->aliases->alias->iterateItems()) as $uuid => $node) {
-            if (in_array((string)$node->name, [Catalog::BLOCKED_ALIAS, Catalog::GEO_ALIAS])) {
+            if (in_array((string)$node->name, [Catalog::BLOCKED_ALIAS, Catalog::APPROVED_ALIAS, Catalog::GEO_ALIAS])) {
                 $aliases->aliases->alias->del($uuid);
             }
         }
@@ -196,6 +197,27 @@ class ServiceController extends ApiControllerBase
             }
         }
 
+        /* approval of new devices per network: key => on/off, networks not mentioned stay as they are */
+        $approval = $this->request->getPost('approval');
+        if (is_array($approval)) {
+            foreach ($approval as $key => $on) {
+                $found = null;
+                foreach ($mdl->networks->network->iterateItems() as $node) {
+                    if ((string)$node->interface === (string)$key) {
+                        $found = $node;
+                    }
+                }
+                if ($found === null) {
+                    if (self::flag($on) === '0') {
+                        continue;
+                    }
+                    $found = $mdl->networks->network->Add();
+                    $found->interface->setValue((string)$key);
+                }
+                $found->approval->setValue(self::flag($on));
+            }
+        }
+
         foreach (['guest' => ['limit' => 'flag', 'down' => 'int', 'up' => 'int'],
                   'geo' => ['enabled' => 'flag', 'direction' => 'str'],
                   'vpn' => ['mode' => 'str', 'endpoint' => 'str']] as $section => $fields) {
@@ -230,6 +252,9 @@ class ServiceController extends ApiControllerBase
         $this->throwNotFullAdmin();
 
         $mdl = new Minnosh();
+        /* approval of new devices: what was held back before this change, to see who is newly held back */
+        $approvalBefore = $mdl->getApprovalInterfaces();
+        $heldBefore = Approval::heldIps($mdl);
 
         $general = $this->request->getPost('general');
         if (is_array($general)) {
@@ -288,10 +313,15 @@ class ServiceController extends ApiControllerBase
                 if (isset($props['blocked'])) {
                     $node->blocked->setValue(self::flag($props['blocked']));
                 }
+                if (isset($props['approved'])) {
+                    $node->approved->setValue(self::flag($props['approved']));
+                }
             }
         }
 
         $this->applyExtended($mdl);
+        /* networks that just started to ask for approval: the devices already there keep working */
+        $autoApproved = Approval::approveExisting($mdl, array_diff($mdl->getApprovalInterfaces(), $approvalBefore));
 
         $validations = [];
         foreach ($mdl->performValidation() as $msg) {
@@ -322,7 +352,11 @@ class ServiceController extends ApiControllerBase
         }
 
         try {
-            $result = (new Integration($mdl))->apply(['geo_license' => trim((string)$this->request->getPost('geo_license'))]);
+            $result = (new Integration($mdl))->apply([
+                'geo_license' => trim((string)$this->request->getPost('geo_license')),
+                'kill' => array_diff(Approval::heldIps($mdl), $heldBefore),
+            ]);
+            $result['auto_approved'] = $autoApproved;
         } catch (\Exception $e) {
             throw new UserException($e->getMessage(), 'Minnosh');
         }

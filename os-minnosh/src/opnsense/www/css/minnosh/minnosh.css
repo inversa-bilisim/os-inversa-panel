@@ -60,12 +60,24 @@
 /* header */
 .minnosh .k-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .minnosh .k-brand { display: flex; align-items: center; gap: 12px; }
-.minnosh .k-logo { width: 44px; height: 44px; border-radius: 12px; background: var(--k-accent); display: flex; align-items: center; justify-content: center; flex: none; color: #fff; }
+/* the mark already is a rounded tile in the accent colour (img/minnosh/logo.png, 128 px for sharp high-density screens) */
+.minnosh .k-logo { width: 44px; height: 44px; flex: none; background: url(../../img/minnosh/logo.png) center / contain no-repeat; }
 .minnosh .k-title { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
 .minnosh .k-head-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .minnosh .k-pill { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 18px; font-size: 13px; font-weight: 600; }
 .minnosh .k-pill.ok { background: var(--k-ok-soft); color: var(--k-ok-text); }
 .minnosh .k-pill.warn { background: #FDE7D3; color: var(--k-warn-text); }
+/* the pill is a button that explains itself */
+.minnosh button.k-pill { border: none; font-family: inherit; cursor: pointer; }
+.minnosh button.k-pill:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
+.minnosh .k-tip { position: relative; }
+.minnosh .k-tip-box { display: none; position: absolute; z-index: 20; top: calc(100% + 8px); right: 0; width: max-content; max-width: min(320px, 80vw); padding: 12px 14px; border-radius: 12px; background: var(--k-text); color: #fff; font-size: 13px; font-weight: 400; line-height: 1.45; text-align: left; white-space: normal; box-shadow: 0 8px 24px rgba(24, 33, 47, .22); cursor: default; }
+.minnosh .k-tip:hover .k-tip-box, .minnosh .k-tip:focus-visible .k-tip-box { display: block; }
+/* keeps the box open while the pointer travels from the pill into it */
+.minnosh .k-tip-box::before { content: ""; position: absolute; left: 0; right: 0; top: -8px; height: 8px; }
+.minnosh .k-tip-box b { display: block; font-weight: 600; }
+.minnosh .k-tip-box ul { margin: 4px 0 0; padding-left: 18px; }
+.minnosh .k-tip-box .k-tip-go { display: block; margin-top: 8px; color: #C9D2DE; }
 .minnosh .k-dot { width: 8px; height: 8px; border-radius: 4px; flex: none; display: inline-block; background: var(--k-off); }
 .minnosh .k-dot.ok { background: var(--k-ok); }
 .minnosh .k-dot.warn { background: var(--k-warn); }
@@ -158,6 +170,9 @@
 .minnosh .k-tag.deny { background: #FDE7D3; color: var(--k-warn-text); }
 .minnosh .k-tag button { width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: inherit; padding: 0; }
 .minnosh .k-badge { font-size: 12px; color: #4A5462; background: var(--k-bg); border-radius: 6px; padding: 2px 8px; flex: none; }
+/* a remark inside a form field */
+.minnosh .k-note, .minnosh .k-field > span.k-note { display: block; padding: 8px 10px; border-radius: 8px; font-size: 13px; font-weight: 400; background: var(--k-accent-soft); border: 1px solid #C5D5F5; color: #1E3A7B; }
+.minnosh .k-note.warn, .minnosh .k-field > span.k-note.warn { background: var(--k-warn-soft); border-color: var(--k-warn-line); color: var(--k-warn-text); }
 .minnosh .k-badge.fixed { font-size: 11px; font-weight: 600; background: var(--k-chip); color: var(--k-text-2); }
 
 /* cards */
@@ -209,6 +224,11 @@
 .minnosh .k-table-box { background: var(--k-card); border: 1px solid var(--k-line); border-radius: 16px; overflow-x: auto; }
 .minnosh table.k-table { width: 100%; min-width: 860px; border-collapse: collapse; margin: 0; }
 .minnosh .k-table th { text-align: left; font-size: 12px; color: var(--k-muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; padding: 14px 12px; border-bottom: 1px solid var(--k-line); }
+/* column headings sort the table */
+.minnosh .k-th { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; margin: -6px -8px; padding: 0 8px; border: none; border-radius: 8px; background: transparent; color: inherit; font: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; }
+.minnosh .k-th:hover, .minnosh .k-th.on { color: var(--k-text); background: var(--k-soft); }
+.minnosh .k-th:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
+.minnosh .k-th-arrow { display: inline-block; width: 10px; font-size: 9px; line-height: 1; color: var(--k-accent); }
 .minnosh .k-table td { padding: 6px 12px; border-bottom: 1px solid var(--k-line-2); vertical-align: middle; }
 .minnosh .k-table th:first-child, .minnosh .k-table td:first-child { padding-left: 20px; }
 .minnosh .k-table th:last-child, .minnosh .k-table td:last-child { padding-right: 20px; text-align: right; }
@@ -281,6 +301,21 @@
 .minnosh .k-add-card { flex: 1 1 260px; min-height: 180px; align-items: center; justify-content: center; text-align: center; border-style: dashed; border-color: var(--k-off); background: transparent; cursor: pointer; color: var(--k-text-2); }
 .minnosh .k-edit { border-color: var(--k-accent); box-shadow: 0 0 0 3px #DCE6FB; }
 .minnosh .k-countdown b { display: block; }
+/* a switch with what it switches right next to it (DHCP server, approval of new devices) */
+.minnosh .k-addr { align-items: flex-start; gap: 16px 24px; }
+.minnosh .k-dhcp { flex: 0 1 auto; min-width: 0; max-width: 100%; display: flex; flex-direction: column; gap: 8px; background: var(--k-soft); border: 1px solid var(--k-line); border-radius: 12px; padding: 10px 16px 12px 10px; }
+.minnosh .k-dhcp.on { border-color: #C5D5F5; background: #F7F9FE; }
+.minnosh .k-dhcp-main { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
+.minnosh .k-dhcp-head { display: flex; align-items: center; gap: 6px; min-height: 44px; margin-right: 8px; }
+.minnosh .k-dhcp-fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; min-width: 0; padding-left: 6px; }
+.minnosh .k-dhcp-head b { font-weight: 600; }
+.minnosh .k-dhcp > .muted { padding-left: 6px; max-width: 760px; }
+.minnosh .k-dhcp .k-field input { max-width: 100%; }
+.minnosh .k-switch[disabled] { opacity: .5; cursor: not-allowed; }
+.minnosh .k-sep { height: 1px; background: var(--k-line-2); }
+.minnosh .k-count.warn { background: var(--k-warn); color: #fff; }
+.minnosh .k-wait { align-items: center; }
+.minnosh .k-wait b { display: block; }
 .minnosh table.k-matrix { border-collapse: separate; border-spacing: 6px; margin: 0; }
 .minnosh .k-matrix th { font-size: 13px; font-weight: 700; padding: 4px 8px; white-space: nowrap; text-align: left; }
 .minnosh .k-matrix thead th { text-align: center; }
@@ -312,3 +347,6 @@
 .minnosh .k-geo-row { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--k-line-2); }
 .minnosh .k-geo-key { flex: 1 1 340px; min-width: 0; max-width: 560px; }
 .minnosh .k-warn-text { color: #9A3B0A; font-weight: 600; font-size: 13px; }
+
+/* OPNsense's own page heading ("Minnosh: Panel") only repeats what the header below already says */
+header.page-content-head { display: none; }

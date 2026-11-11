@@ -29,6 +29,7 @@ function minnosh_firewall(\OPNsense\Firewall\Plugin $fw)
     $mapping = iterator_to_array($fw->getInterfaceMapping());
     $blocked = $mdl->getBlockedMacs();
     $forcedns = !$mdl->filtering->forcedns->isEmpty();
+    $approval = $mdl->getApprovalInterfaces();
 
     /* filled every minute by the schedule job, keeps its contents over filter reloads */
     $fw->registerTable('minnosh_sched', true);
@@ -53,6 +54,18 @@ function minnosh_firewall(\OPNsense\Firewall\Plugin $fw)
                 'from' => '<' . \OPNsense\Minnosh\Catalog::BLOCKED_ALIAS . '>',
                 'descr' => 'Minnosh: internet access cut for device',
                 'label' => minnosh_label('cut-' . $intf),
+            ]));
+        }
+        if (in_array($intf, $approval)) {
+            /*
+             * new devices wait for approval: whoever is not in the alias of approved devices gets
+             * no further than the firewall itself (DHCP, DNS, the GUI to approve one's own device)
+             */
+            $fw->registerFilterRule(100000, array_merge($cut, [
+                'from' => '<' . \OPNsense\Minnosh\Catalog::APPROVED_ALIAS . '>',
+                'from_not' => true,
+                'descr' => 'Minnosh: device waits for approval',
+                'label' => minnosh_label('approval-' . $intf),
             ]));
         }
         $fw->registerFilterRule(100000, array_merge($cut, [
