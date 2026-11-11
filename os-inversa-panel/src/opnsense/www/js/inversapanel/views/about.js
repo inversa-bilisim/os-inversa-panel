@@ -67,7 +67,8 @@
             var link = function (url, text) { return '<a href="' + h.esc(url) + '" target="_blank" rel="noopener">' + h.esc(text) + '</a>'; };
             var kv = function (k, v) { return '<div class="k-kv"><span class="muted">' + h.esc(k) + '</span><span>' + v + '</span></div>'; };
             return '<div class="k-stack"><div><h1>' + h.esc(T.tabAbout) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + h.esc(T.aboutSub) + '</div></div>' +
-                '<div class="k-about">' +
+                /* two columns: the product and what it is built on, the company and support beside them */
+                '<div class="k-about"><div class="k-about-left">' +
                 '<section class="k-card k-about-main"><div class="k-about-brand"><div class="k-logo k-about-logo" aria-hidden="true"></div>' +
                 '<div><div class="k-about-name">Inversa Panel</div><div class="muted">' + h.esc(T.appSub) + '</div></div></div>' +
                 '<div>' + kv(T.aboutVersion, '<b>' + h.esc(d.version || '…') + '</b>') +
@@ -76,17 +77,17 @@
                 kv(T.aboutSource, link(REPO, 'github.com/inversa-bilisim/os-inversa-panel')) + '</div>' +
                 '<div class="muted small">© 2026 Inversa Bilişim</div></section>' +
 
+                '<section class="k-card k-about-parts"><h2>' + h.esc(T.aboutBuiltOn) + '</h2><div class="muted" style="font-size:14px">' + h.esc(T.aboutBuiltOnSub) + '</div><div>' +
+                PARTS.map(function (p) {
+                    return '<div class="k-list-row"><span class="k-about-part">' + link(p[1], p[0]) + '</span><span class="muted">' + h.esc(T[p[2]]) + '</span></div>';
+                }).join('') + '</div></section></div>' +
+
                 '<section class="k-card"><h2>Inversa Bilişim</h2><div class="muted" style="font-size:14px">' + h.esc(T.aboutCompany) + '</div>' +
                 '<div>' + kv(T.aboutMail, '<span class="mono">' + h.esc(MAIL) + '</span>') +
                 kv(T.aboutIssues, link(REPO + '/issues', T.aboutIssuesLink)) + '</div>' +
                 '<div class="k-about-support"><div><b>' + h.esc(T.aboutSupport) + '</b><span class="muted">' + h.esc(T.aboutSupportSub) + '</span></div>' +
                 '<button type="button" class="k-btn" data-act="about:copy">' + h.icon(A.copied ? h.ICONS.ok : COPY, 16) + h.esc(A.copied ? T.aboutCopied : T.aboutCopy) + '</button></div>' +
-                '<pre class="k-about-pre">' + h.esc(supportText()) + '</pre></section>' +
-
-                '<section class="k-card k-about-parts"><h2>' + h.esc(T.aboutBuiltOn) + '</h2><div class="muted" style="font-size:14px">' + h.esc(T.aboutBuiltOnSub) + '</div><div>' +
-                PARTS.map(function (p) {
-                    return '<div class="k-list-row"><span class="k-about-part">' + link(p[1], p[0]) + '</span><span class="muted">' + h.esc(T[p[2]]) + '</span></div>';
-                }).join('') + '</div></section></div></div>';
+                '<pre class="k-about-pre">' + h.esc(supportText()) + '</pre></section>' + '</div></div>';
         },
         act: function (name) {
             if (name === 'copy') { copy(supportText()); }
