@@ -5,6 +5,18 @@ Hedef sürüm: **OPNsense 26.7** (26.7.8 üzerinde geliştiriliyor).
 
 Tasarım taslağı: https://claude.ai/artifact/9HQfR7v4fu2ouPT9Xh73qN
 
+## Bellek gereksinimi
+
+**DNS engelleme kullanılacaksa en az 8 GB RAM önerilir; 4 GB yetmez.**
+
+Engelleme, OPNsense'in kendi DNS sunucusu Unbound üzerinden çalışır ve Unbound engel listelerinin tamamını bellekte tutar. Bellek ihtiyacını Inversa Panel değil, açılan kategorilerin listeleri belirler:
+
+- "Reklam ve izleyiciler", "Zararlı yazılım ve oltalama" ve "Kumar ve bahis" birlikte açıkken (yaklaşık 2,2 milyon alan adı) Unbound tek başına **1,6 GB** kullanır. En büyük pay "Zararlı yazılım ve oltalama" listesindedir (yaklaşık 1,5 milyon alan adı).
+- Listeler yenilenirken buna geçici olarak **yaklaşık 1 GB** daha eklenir.
+- Takas alanı olmayan 4 GB'lık bir test kurulumunda yenileme, Unbound'un yeniden başlamasıyla çakıştığında bellek tükendi: bir seferinde Unbound durdu (DNS kesildi), bir seferinde güvenlik duvarı tamamen yanıt vermez oldu.
+
+Engelleme kategorileri kapalıyken eklentinin kayda değer bir bellek ihtiyacı yoktur.
+
 ## Sürüm 0.2'de neler var
 
 | Sekme | Ne yapıyor | OPNsense'te nereye yazıyor |
@@ -103,7 +115,7 @@ tools/deploy.sh, tools/remove.sh             test cihazına kopyalama / kaldırm
 - **Gerçek cihazla test edilmedi:** PPPoE (test ortamında PPPoE sunucusu yok), WireGuard el sıkışması (telefonla), UPnP. Yapılandırma üretimi, arayüz ve kurallar doğrulandı.
 - Port atamaları şimdilik görüntülenir; internet portu WAN ayarından, ağ portu ağ eklerken seçilir. Mevcut bir ağın portunu değiştirmek OPNsense menülerinden yapılır.
 - Uygulama engelleme DNS tabanlıdır; "VPN, proxy ve şifreli DNS" kategorisi ile "DNS'i zorla" birlikte açılmalıdır.
-- Engel listesi yenilemesi ağır bir iştir (büyük listelerde ~1 GB bellek); Inversa Panel aynı anda yalnızca birini çalıştırır, yeni istekler sıraya girer.
+- Engel listesi yenilemesi ağır bir iştir (büyük listelerde ~1 GB bellek, Unbound'un kendi kullanımına ek olarak; bkz. [Bellek gereksinimi](#bellek-gereksinimi)); Inversa Panel aynı anda yalnızca birini çalıştırır, yeni istekler sıraya girer.
 - Ülke verisi OPNsense'te başka bir GeoIP kaynağı (MaxMind, ipinfo) ayarlıysa o kullanılır; Inversa Panel DB-IP verisini yalnızca kaynak ayarlı değilken yazar.
 - "Bağlantı" sütunu o anki pf durum sayısıdır, trafik miktarı değildir.
 - **Yeni cihaz onayı** güvenlik duvarında uygulanır: onaysız cihaz internete ve diğer ağlara çıkamaz, yalnızca güvenlik duvarının kendisine (DHCP, DNS, yönetim arayüzü) erişir. Aynı anahtara (switch) ya da Wi-Fi'ye bağlı cihazların birbirine doğrudan erişimi güvenlik duvarından geçmediği için engellenemez (erişim noktasında istemci yalıtımı veya 802.1X gerekir). Onay MAC adresine göredir (MAC taklit edilebilir); adresler OPNsense'in MAC takma adı mekanizmasıyla dakikada bir yenilenir, bu yüzden onaylı bir cihaz yeni bir IP aldığında erişimi en geç bir dakika içinde açılır. Onay ilk açıldığında o ana kadar görülen cihazlar onaylı sayılır.
