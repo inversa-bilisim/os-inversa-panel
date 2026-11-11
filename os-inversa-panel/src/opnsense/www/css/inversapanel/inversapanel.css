@@ -418,9 +418,35 @@
 .inversapanel .k-dns-modes { display: flex; flex-wrap: wrap; gap: 10px; }
 .inversapanel .k-dns-modes .k-opt { flex: 1 1 180px; }
 
-/* countries: the licence key field (or the link that opens it) in the row of the country database */
-.inversapanel .k-geo-key { flex: 0 1 340px; min-width: 0; align-items: flex-end; }
-.inversapanel .k-geo-key input { width: 100%; }
+/* compact cards (countries, attack protection): lower rows, smaller controls */
+.inversapanel .k-compact { padding: 12px 20px; gap: 8px; }
+.inversapanel .k-compact .k-setting { padding: 6px 0; gap: 12px; }
+.inversapanel .k-compact .k-setting-text b { font-size: 14px; }
+.inversapanel .k-compact .k-ibox { width: 34px; height: 34px; }
+.inversapanel .k-compact .k-switch { height: 34px; width: 50px; }
+.inversapanel .k-compact .k-seg button { min-height: 34px; padding: 0 12px; font-size: 13px; }
+.inversapanel .k-compact .k-btn.small { min-height: 32px; }
+.inversapanel .k-chips.k-small { gap: 4px; }
+.inversapanel .k-chips.k-small .k-chip { min-height: 30px; padding: 0 8px; gap: 6px; font-size: 13px; border-radius: 8px; }
+.inversapanel .k-chips.k-small .k-tag { font-size: 13px; }
+.inversapanel .k-chips.k-small .k-tag button { width: 24px; height: 24px; }
+/* countries: the database line, the counter beside the settings, the search beside the heading */
+.inversapanel .k-geo-db { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; padding-top: 6px; }
+.inversapanel .k-geo-key { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.inversapanel .k-geo-key input { width: 260px; max-width: 100%; min-height: 34px; }
+.inversapanel .k-geo-count { flex: 0 1 260px; justify-content: center; }
+.inversapanel .k-geo-count .k-kpi-value { font-size: 28px; }
+.inversapanel .k-geo-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.inversapanel .k-geo-head .k-search { margin-left: auto; width: 260px; max-width: 100%; min-height: 34px; }
+.inversapanel .k-geo-head .k-search input { min-height: 30px; }
+/* attack protection: one alert per line */
+.inversapanel .k-alert { display: flex; align-items: center; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--k-line-2); min-width: 0; }
+.inversapanel .k-alert:last-child { border-bottom: none; }
+.inversapanel .k-alert-dev { flex: 0 1 150px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.inversapanel .k-alert-addr { flex: 0 1 260px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inversapanel .k-alert-msg { flex: 1 1 200px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--k-text-2); }
+.inversapanel .k-alert .k-pill { min-height: 24px; font-size: 12px; padding: 0 10px; flex: none; }
+.inversapanel .k-alert-time { flex: 0 0 96px; text-align: right; }
 .inversapanel .k-warn-text { color: #9A3B0A; font-weight: 600; font-size: 13px; }
 
 /* OPNsense's own page heading ("Inversa Panel: Panel") only repeats what the header below already says */

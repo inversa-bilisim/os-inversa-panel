@@ -60,7 +60,7 @@
         ['net', ['net', 'nets', 'ports', 'dns', 'pf']],
         ['vpn', ['vpn']],
         ['devices', ['devices', 'sched']],
-        ['security', ['filter', 'lists', 'geo', 'ips']],
+        ['security', ['filter', 'ips', 'geo', 'lists']],
         ['settings', ['settings']]
     ];
     /* addresses of menu entries that no longer exist */

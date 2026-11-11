@@ -92,31 +92,28 @@
             } else {
                 var line = stateLine(T, d, saved, st);
                 var working = d.enabled && saved.enabled && st.running;
-                html += '<section class="k-card tight">' +
-                    '<div class="k-setting"><div class="k-ibox big' + (working ? ' on' : (d.enabled && saved.enabled ? ' cut' : '')) + '">' + h.icon(ICON, 22) + '</div>' +
-                    '<div class="k-setting-text"><b style="font-size:16px">' + h.esc(T.ipsEnable) + '</b><span class="' + line[1] + '">' + h.esc(line[0]) + '</span></div>' +
-                    (line[2] ? '<button type="button" class="k-btn small" data-act="ips:start"' + (Q.starting ? ' disabled' : '') + '>' + h.esc(line[2] === 'retry' ? T.ipsRetry : T.ipsStart) + '</button>' : '') +
-                    h.toggle(d.enabled, 'data-act="ips:enabled"', T.ipsEnable) + '</div>';
-
                 /* what to do with a match; blocking is only offered where it can work */
                 var canBlock = st.block && st.block.available;
-                html += '<div class="k-geo-row"><div class="k-field"><span>' + h.esc(T.ipsMode) + '</span><div class="k-seg">' +
-                    [['detect', T.ipsDetect], ['block', T.ipsBlock]].map(function (o) {
+                html += '<div class="k-row stretch"><section class="k-card k-half k-compact">' +
+                    '<div class="k-setting"><div class="k-ibox' + (working ? ' on' : (d.enabled && saved.enabled ? ' cut' : '')) + '">' + h.icon(ICON, 20) + '</div>' +
+                    '<div class="k-setting-text"><b>' + h.esc(T.ipsEnable) + '</b><span class="' + line[1] + '">' + h.esc(line[0]) + '</span></div>' +
+                    (line[2] ? '<button type="button" class="k-btn small" data-act="ips:start"' + (Q.starting ? ' disabled' : '') + '>' + h.esc(line[2] === 'retry' ? T.ipsRetry : T.ipsStart) + '</button>' : '') +
+                    h.toggle(d.enabled, 'data-act="ips:enabled"', T.ipsEnable) + '</div>' +
+                    '<div class="k-setting wrap"><div class="k-setting-text"><b>' + h.esc(T.ipsMode) + '</b><span class="muted">' + h.esc(d.mode === 'block' ? T.ipsBlockDesc : T.ipsDetectDesc) + '</span>' +
+                    (!canBlock ? '<span class="k-warn-text">' + h.esc(T.ipsBlockNo[(st.block || {}).reason || 'device'] || T.ipsBlockNo.device) + '</span>' : '') + '</div>' +
+                    '<div class="k-seg">' + [['detect', T.ipsDetect], ['block', T.ipsBlock]].map(function (o) {
                         var off = o[0] === 'block' && !canBlock && d.mode !== 'block';
                         return '<button type="button" class="' + (d.mode === o[0] ? 'on' : '') + '" data-act="ips:mode" data-v="' + o[0] + '"' + (off ? ' disabled style="opacity:.45;cursor:not-allowed"' : '') + '>' + h.esc(o[1]) + '</button>';
-                    }).join('') + '</div>' +
-                    '<span class="muted small">' + h.esc(d.mode === 'block' ? T.ipsBlockDesc : T.ipsDetectDesc) + '</span>' +
-                    (!canBlock ? '<span class="k-warn-text">' + h.esc(T.ipsBlockNo[(st.block || {}).reason || 'device'] || T.ipsBlockNo.device) + '</span>' : '') +
-                    '</div>' +
-                    '<div class="k-field"><span>' + h.esc(T.ipsWhere) + '</span><span class="mono">' + h.esc((st.devices || []).join(', ') || '—') + '</span>' +
-                    '<span class="muted small">' + h.esc(T.ipsWhereHint) + '</span></div></div></section>';
+                    }).join('') + '</div></div>' +
+                    '<div class="k-setting wrap"><div class="k-setting-text"><b>' + h.esc(T.ipsWhere) + '</b><span class="muted">' + h.esc(T.ipsWhereHint) + '</span></div>' +
+                    '<span class="mono">' + h.esc((st.devices || []).join(', ') || '—') + '</span></div></section>';
 
-                html += '<section class="k-card tight"><div class="k-card-head" style="padding:16px 0 4px"><h2>' + h.esc(T.ipsGroups) + '</h2><span class="muted">' + h.esc(T.ipsGroupsSub) + '</span></div>' +
+                html += '<section class="k-card k-half k-compact"><div class="k-card-head"><h2>' + h.esc(T.ipsGroups) + '</h2><span class="muted small">' + h.esc(T.ipsGroupsSub) + '</span></div><div>' +
                     GROUPS.map(function (g) {
                         var on = d.groups.indexOf(g) >= 0;
-                        return '<div class="k-setting"><div class="k-setting-text"><b>' + h.esc(T.ipsG[g][0]) + '</b><span class="muted">' + h.esc(T.ipsG[g][1]) + '</span></div>' +
+                        return '<div class="k-setting" title="' + h.esc(T.ipsG[g][1]) + '"><div class="k-setting-text"><b>' + h.esc(T.ipsG[g][0]) + '</b></div>' +
                             h.toggle(on, 'data-act="ips:group" data-v="' + g + '"', T.ipsG[g][0]) + '</div>';
-                    }).join('') + '</section>';
+                    }).join('') + '</div></section></div>';
             }
 
             /* alerts: also shown for an intrusion detection Inversa Panel does not manage */
@@ -126,20 +123,20 @@
                 var recent = (st.alerts || []).filter(function (a) { return Date.parse(a.time) >= day; });
                 var blocked = recent.filter(function (a) { return a.blocked; }).length;
                 var rows = grouped(st.alerts || []).slice(0, 40);
-                html += '<section class="k-card"><div class="k-card-head"><h2>' + h.esc(T.ipsAlerts) + '</h2><span class="muted">' +
+                html += '<section class="k-card k-compact"><div class="k-card-head"><h2>' + h.esc(T.ipsAlerts) + '</h2><span class="muted small">' +
                     h.esc(T.ips24h(h.fmt(recent.length) + (st.more && recent.length === st.alerts.length ? '+' : ''), h.fmt(blocked))) + '</span></div>' +
-                    (rows.length ? rows.map(function (r) {
-                        return '<div class="k-list-row" style="align-items:flex-start"><span class="k-dot ' + (r.blocked ? 'ok' : 'warn') + '" style="margin-top:7px"></span>' +
-                            '<div style="flex:1 1 auto;min-width:0"><div><b>' + h.esc(r.device || r.remote) + '</b>' +
-                            (r.device ? ' <span class="muted mono small">' + h.esc(r.local) + ' ⇄ ' + h.esc(r.remote) + (r.port ? ':' + r.port : '') + '</span>' : '') + '</div>' +
-                            '<div class="muted small" style="overflow-wrap:anywhere">' + h.esc(r.msg) + '</div></div>' +
-                            '<div style="flex:none;text-align:right"><span class="k-pill ' + (r.blocked ? 'ok' : 'warn') + '" style="min-height:26px;font-size:12px">' + h.esc(r.blocked ? T.ipsBlocked : T.ipsAlerted) + (r.count > 1 ? ' ×' + h.fmt(r.count) : '') + '</span>' +
-                            '<div class="muted small" style="margin-top:4px">' + h.esc(h.ago(r.time)) + '</div></div></div>';
-                    }).join('') : '<div class="muted" style="padding:8px 0">' + h.esc(T.ipsAlertsNone) + '</div>') +
+                    (rows.length ? '<div>' + rows.map(function (r) {
+                        return '<div class="k-alert"><span class="k-dot ' + (r.blocked ? 'ok' : 'warn') + '"></span>' +
+                            '<b class="k-alert-dev">' + h.esc(r.device || r.remote) + '</b>' +
+                            '<span class="muted mono small k-alert-addr">' + (r.device ? h.esc(r.local) + ' ⇄ ' + h.esc(r.remote) + (r.port ? ':' + r.port : '') : '') + '</span>' +
+                            '<span class="k-alert-msg small" title="' + h.esc(r.msg) + '">' + h.esc(r.msg) + '</span>' +
+                            '<span class="k-pill ' + (r.blocked ? 'ok' : 'warn') + '">' + h.esc(r.blocked ? T.ipsBlocked : T.ipsAlerted) + (r.count > 1 ? ' ×' + h.fmt(r.count) : '') + '</span>' +
+                            '<span class="muted small k-alert-time">' + h.esc(h.ago(r.time)) + '</span></div>';
+                    }).join('') + '</div>' : '<div class="muted" style="padding:8px 0">' + h.esc(T.ipsAlertsNone) + '</div>') +
                     '</section>';
             }
             if (!st.foreign) {
-                html += '<div class="k-banner info" style="margin:0">' + h.icon(h.ICONS.info, 20) + '<span>' + h.esc(T.ipsNote) + '</span></div>';
+                html += '<div class="muted small">' + h.esc(T.ipsNote) + '</div>';
             }
             return html + '</div>';
         },

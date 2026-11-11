@@ -82,40 +82,41 @@
                 return '<div class="k-setting wrap"><div class="k-setting-text"><b>' + h.esc(title) + '</b><span class="muted">' + sub + '</span></div>' + control + '</div>';
             }
 
-            html += '<section class="k-card tight">' +
-                '<div class="k-setting"><div class="k-ibox big' + (working ? ' on' : (g.enabled ? ' cut' : '')) + '">' + h.icon(ICON, 22) + '</div>' +
-                '<div class="k-setting-text"><b style="font-size:16px">' + h.esc(T.geoEnable) + '</b><span class="' + stateCls + '">' + h.esc(stateText) + '</span></div>' +
+            /* what was refused is shown while the restriction is on (the counter is the rule's own) */
+            var counter = sv.enabled ? '<section class="k-card k-side k-compact k-geo-count"><div class="muted">' + h.esc(T.geoStats) + '</div>' +
+                '<div class="k-kpi-value">' + h.esc(h.fmt(st.blocked_packets || 0)) + '</div><div class="muted small">' + h.esc(T.geoStatsHint) + '</div></section>' : '';
+            html += '<div class="k-row stretch"><section class="k-card k-grow k-compact">' +
+                '<div class="k-setting"><div class="k-ibox' + (working ? ' on' : (g.enabled ? ' cut' : '')) + '">' + h.icon(ICON, 20) + '</div>' +
+                '<div class="k-setting-text"><b>' + h.esc(T.geoEnable) + '</b><span class="' + stateCls + '">' + h.esc(stateText) + '</span></div>' +
                 h.toggle(g.enabled, 'data-act="geo:enabled"', T.geoEnable) + '</div>' +
                 row(T.geoMode, h.esc(allow ? T.geoModeAllowDesc : T.geoModeBlockDesc), seg('mode', allow ? 'allow' : 'block', [['block', T.geoModeBlock], ['allow', T.geoModeAllow]])) +
                 /* letting only some countries in is about what comes in; going out stays open */
                 (allow ? '' : row(T.geoDir, h.esc(g.direction === 'both' ? T.dirBothDesc : T.dirInDesc), seg('dir', g.direction, [['in', T.dirIn], ['both', T.dirBoth]]))) +
                 row(T.geoVpn, h.esc(T.geoVpnSub), h.toggle(!!g.vpnexempt, 'data-act="geo:vpnexempt"', T.geoVpn)) +
-                row(T.geoDb, h.esc(dbText) + (st.source === 'maxmind' || st.source === 'other' ? '' :
-                    ' · <a href="https://db-ip.com" target="_blank" rel="noopener">IP Geolocation by DB-IP</a>'),
-                    dbControl ? '<div class="k-field k-geo-key">' + dbControl + '</div>' : '') +
-                '</section>';
+                '<div class="k-geo-db"><span class="muted small"><b>' + h.esc(T.geoDb) + ':</b> ' + h.esc(dbText) + (st.source === 'maxmind' || st.source === 'other' ? '' :
+                    ' · <a href="https://db-ip.com" target="_blank" rel="noopener">IP Geolocation by DB-IP</a>') + '</span>' +
+                (dbControl ? '<span class="k-geo-key">' + dbControl + '</span>' : '') + '</div>' +
+                '</section>' + counter + '</div>';
             if (g.enabled && allow) {
-                html += '<div class="k-banner info" style="margin:0">' + h.icon(h.ICONS.info, 20) + '<span>' + h.esc(T.geoAllowSafety) + '</span></div>';
+                html += '<div class="muted small">' + h.esc(T.geoAllowSafety) + '</div>';
             }
             if (g.enabled && !st.ready && !sv.enabled) {
-                html += '<div class="k-banner info" style="margin:0">' + h.icon(h.ICONS.info, 20) + '<span>' + h.esc(T.geoAfterApply) + '</span></div>';
+                html += '<div class="muted small">' + h.esc(T.geoAfterApply) + '</div>';
             }
 
             var q = Q.search.trim().toLocaleLowerCase(T.locale);
             var avail = CODES.filter(function (c) {
                 return list.indexOf(c) < 0 && (!q || (c + ' ' + name(c)).toLocaleLowerCase(T.locale).indexOf(q) >= 0);
             }).sort(function (a, b) { return name(a).localeCompare(name(b), T.locale); });
-            html += '<div class="k-row"><section class="k-card k-grow"><div class="k-card-head"><h2>' + h.esc(allow ? T.geoAllowed : T.geoBlocked) + '</h2><span class="muted">' + h.esc(T.geoCount(list.length)) + '</span></div>' +
-                (list.length ? '<div class="k-chips">' + list.map(function (c) {
+            html += '<section class="k-card k-compact"><div class="k-geo-head"><h2>' + h.esc(allow ? T.geoAllowed : T.geoBlocked) + '</h2><span class="muted small">' + h.esc(T.geoCount(list.length)) + '</span>' +
+                '<label class="k-search">' + h.icon(h.ICONS.search, 16) + '<input type="search" data-input="geo:search" value="' + h.esc(Q.search) + '" placeholder="' + h.esc(T.geoSearch) + '" aria-label="' + h.esc(T.geoSearch) + '"></label></div>' +
+                (list.length ? '<div class="k-chips k-small">' + list.map(function (c) {
                     return '<span class="k-tag ' + (allow ? 'allow' : 'deny') + '"><b class="mono small">' + c + '</b>&nbsp;' + h.esc(name(c)) +
                         '<button type="button" data-act="geo:del" data-v="' + c + '" aria-label="' + h.esc(T.removeAria(name(c))) + '">' + h.icon(h.ICONS.close, 14) + '</button></span>';
                 }).join('') + '</div>' : '<div class="muted">' + h.esc(allow ? T.geoAllowPick : T.geoBlockPick) + '</div>') +
-                '<label class="k-search" style="max-width:none">' + h.icon(h.ICONS.search) + '<input type="search" data-input="geo:search" value="' + h.esc(Q.search) + '" placeholder="' + h.esc(T.geoSearch) + '" aria-label="' + h.esc(T.geoSearch) + '"></label>' +
-                '<div class="k-chips k-scroll">' + avail.slice(0, 80).map(function (c) {
+                '<div class="k-chips k-small k-scroll">' + avail.map(function (c) {
                     return '<button type="button" class="k-chip" data-act="geo:add" data-v="' + c + '"><b class="mono small">' + c + '</b>' + h.esc(name(c)) + '</button>';
-                }).join('') + '</div></section>' +
-                '<section class="k-card k-side"><div class="muted">' + h.esc(T.geoStats) + '</div><div class="k-kpi-value">' + h.esc(h.fmt(st.blocked_packets || 0)) + '</div>' +
-                '<div class="muted small">' + h.esc(T.geoStatsHint) + '</div></section></div>';
+                }).join('') + '</div></section>';
             return html + '</div>';
         },
         act: function (name, el) {
