@@ -1201,6 +1201,11 @@
             blocked: pool.filter(function (h) { return devCfg(h.mac).blocked; }).length,
             waiting: pool.filter(function (h) { return waiting(h); }).length
         };
+        /* the networks to choose from: the main one first, then by name */
+        var nets = (S.options.interfaces || []).filter(function (i) { return i.selected || S.hosts.some(function (h) { return h.network_key === i.key; }); })
+            .sort(function (a, b) { return (b.key === 'lan') - (a.key === 'lan') || a.name.localeCompare(b.name, t.locale); });
+        if (net && !nets.some(function (i) { return i.key === net.key; })) { S.ui.net = net = null; pool = S.hosts; }
+        var shown = filteredHosts().length;
         var anyApproval = Object.keys(S.saved.approval || {}).some(function (k) { return S.saved.approval[k]; });
         if (S.ui.filter === 'waiting' && !anyApproval) { S.ui.filter = 'all'; }
         var filters = [['all', t.fAll], ['online', t.fOnline], ['blocked', t.fBlocked]].concat(anyApproval ? [['waiting', t.fWaiting]] : []).map(function (f) {
@@ -1212,11 +1217,19 @@
             '<div><h1>' + esc(t.devTitle) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + esc(t.devSub) + '</div></div>' +
             waitingBanner() +
             (S.hostsLoaded && S.source !== 'discovery' ? '<div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.discoveryHint) + '</span></div>' : '') +
-            '<div class="k-toolbar"><label class="k-search">' + icon(ICONS.search) +
+            '<div class="k-filterbar"><label class="k-search">' + icon(ICONS.search) +
             '<input type="search" data-input="search" value="' + esc(S.ui.search) + '" placeholder="' + esc(t.search) + '" aria-label="' + esc(t.search) + '"></label>' +
-            '<div class="k-chips" role="group" aria-label="' + esc(t.devTitle) + '">' +
-            (net ? '<span class="k-tag k-netfilter">' + esc(t.fNetwork(net.name)) + '<button type="button" data-act="net-clear" aria-label="' + esc(t.fNetworkClear) + '" title="' + esc(t.fNetworkClear) + '">' + icon(ICONS.close, 14) + '</button></span>' : '') +
-            filters + '</div></div>' +
+            (nets.length > 1 ? '<div class="k-fgroup"><span class="k-flabel">' + esc(t.colNetwork) + '</span><div class="k-chips" role="group" aria-label="' + esc(t.colNetwork) + '">' +
+                '<button type="button" class="k-chip' + (net ? '' : ' on') + '" data-act="netfilter" data-v="" aria-pressed="' + !net + '">' + esc(t.fAll) + '</button>' +
+                nets.map(function (i) {
+                    var on = !!net && net.key === i.key;
+                    return '<button type="button" class="k-chip' + (on ? ' on' : '') + '" data-act="netfilter" data-v="' + esc(i.key) + '" data-n="' + esc(i.name) + '" aria-pressed="' + on + '">' +
+                        '<span class="k-dot" style="background:' + esc(i.color || '') + '"></span>' + esc(i.name) +
+                        ' <span class="k-count">' + S.hosts.filter(function (h) { return h.network_key === i.key; }).length + '</span></button>';
+                }).join('') + '</div></div>' : '') +
+            '<div class="k-fgroup"><span class="k-flabel">' + esc(t.colSeen) + '</span><div class="k-chips" role="group" aria-label="' + esc(t.colSeen) + '">' + filters + '</div></div>' +
+            '<div class="k-fsum"><span class="muted">' + esc(t.fShown(shown, S.hosts.length)) + '</span>' +
+            (net || S.ui.filter !== 'all' || S.ui.search ? '<button type="button" class="k-link small" data-act="filter-reset">' + esc(t.fReset) + '</button>' : '') + '</div></div>' +
             '<div class="k-row"><div class="k-table-box k-grow"><table class="k-table"><thead><tr>' +
             sortHead('name', t.colDevice) + sortHead('network', t.colNetwork) + sortHead('ip', t.colIp) + sortHead('mac', t.colMac) +
             sortHead('seen', t.colSeen) + sortHead('conns', t.colConns) + sortHead('net', t.colNet) +
@@ -1458,8 +1471,14 @@
                 loadHosts().then(refreshView, function () {});
                 full = true;
                 break;
-            case 'net-clear':
+            case 'netfilter':
+                S.ui.net = v ? { key: v, name: el.getAttribute('data-n') || v.toUpperCase() } : null;
+                S.ui.sel = null;
+                break;
+            case 'filter-reset':
                 S.ui.net = null;
+                S.ui.filter = 'all';
+                S.ui.search = '';
                 break;
             case 'show-waiting':
                 S.ui.filter = 'waiting';

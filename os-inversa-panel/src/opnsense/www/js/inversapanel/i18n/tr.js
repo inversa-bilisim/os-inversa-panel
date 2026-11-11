@@ -78,7 +78,7 @@ window.InversaPanelI18n.tr = {
     devTitle: 'Cihazlar',
     devSub: 'Korunan ağlarda görülen cihazlar. Düzenlemek için cihazın adına tıklayın. İnterneti kesilen cihaz güvenlik duvarına (DNS, DHCP) erişmeye devam eder.',
     search: 'Ad, ağ, IP veya MAC ara', fAll: 'Tümü', fOnline: 'Çevrimiçi', fBlocked: 'İnterneti kesik', fWaiting: 'Onay bekleyen',
-    fNetwork: function (n) { return 'Ağ: ' + n; }, fNetworkClear: 'Ağ filtresini kaldır', fNetworkShow: 'Bu ağdaki cihazları göster',
+    fShown: function (n, all) { return n === all ? all + ' cihaz' : all + ' cihazdan ' + n + ' tanesi'; }, fReset: 'Filtreleri temizle', fNetworkShow: 'Bu ağdaki cihazları göster',
     sortHint: 'Sıralamak için tıklayın',
     colDevice: 'Cihaz', colNetwork: 'Ağ', colIp: 'IP adresi', colMac: 'MAC adresi', colSeen: 'Durum', colConns: 'Bağlantı', colNet: 'İnternet',
     online: 'Çevrimiçi', offline: 'Çevrimdışı',

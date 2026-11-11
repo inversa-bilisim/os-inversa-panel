@@ -594,5 +594,13 @@ header.page-content-head { display: none; }
 .inversapanel button.k-devlink { border: none; background: transparent; padding: 0; font: inherit; color: var(--k-accent); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .inversapanel button.k-badge.k-devlink { padding: 2px 8px; background: var(--k-accent-soft); text-decoration: none; font-size: 12px; }
 .inversapanel button.k-devlink:hover { color: #163A94; }
-.inversapanel .k-tag.k-netfilter { min-height: 44px; padding-left: 12px; font-size: 14px; font-weight: 600; background: var(--k-accent-soft); color: var(--k-accent); border: 1px solid var(--k-accent); border-radius: 10px; }
+/* device list: search, network, state in one bar */
+.inversapanel .k-filterbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; background: var(--k-card); border: 1px solid var(--k-line); border-radius: 16px; padding: 10px 14px; }
+.inversapanel .k-filterbar .k-search { flex: 1 1 220px; width: auto; max-width: 340px; min-height: 36px; background: var(--k-soft); }
+.inversapanel .k-filterbar .k-search input { min-height: 34px; background: transparent; }
+.inversapanel .k-fgroup { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.inversapanel .k-flabel { font-size: 12px; font-weight: 600; color: var(--k-muted); text-transform: uppercase; letter-spacing: .04em; flex: none; }
+.inversapanel .k-filterbar .k-chip { min-height: 36px; padding: 0 10px; font-size: 13px; gap: 6px; }
+.inversapanel .k-fsum { display: flex; align-items: center; gap: 12px; margin-left: auto; white-space: nowrap; }
+.inversapanel .k-fsum .k-link { min-height: 32px; align-self: center; }
 
