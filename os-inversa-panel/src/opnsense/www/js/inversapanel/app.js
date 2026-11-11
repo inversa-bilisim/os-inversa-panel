@@ -26,6 +26,8 @@
         warn: 'M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',
         ok: 'M20 6L9 17l-5-5',
         globe: 'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20',
+        net: 'M10 3h4v4h-4zM3 17h4v4H3zM17 17h4v4h-4zM12 7v5M5 17v-2a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v2',
+        lock: 'M5 11h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zM8 11V7a4 4 0 0 1 8 0v4',
         chevron: 'M6 9l6 6 6-6',
         ads: 'M3 11l15-6v14L3 13zM7 12.5V18a2 2 0 0 0 4 0v-4',
         malware: 'M8 9a4 4 0 0 1 8 0v5a4 4 0 0 1-8 0zM12 9v9M3 13h5M16 13h5M4 7l4 3M20 7l-4 3M4 19l4-3M20 19l-4-3',
@@ -47,10 +49,21 @@
     var CATS = ['ads', 'malware', 'adult', 'gambling', 'bypass', 'safesearch', 'forcedns'];
     var QUICK = ['ads', 'malware', 'adult', 'forcedns'];
     var TYPES = ['phone', 'tablet', 'laptop', 'tv', 'console', 'printer', 'iot', 'server', 'unknown'];
-    /* tab order; tabs other than the four core ones come from views/*.js (see register()) */
-    var TAB_ORDER = ['dash', 'devices', 'net', 'filter', 'ips', 'sched', 'pf', 'vpn', 'guest', 'geo', 'settings'];
-    var CORE_TABS = ['dash', 'devices', 'filter', 'settings'];
-    var TABS = CORE_TABS.slice();
+    /*
+     * The menu: each entry opens one or more pages; with more than one, the pages show as sub tabs
+     * below the menu. A page is one of the core ones in this file or a view from views/*.js (see
+     * register()); pages whose view is not loaded are left out. S.tab always holds a page.
+     * Every page has its own address (#geo, #sched, ...), a menu entry's key opens its first page.
+     */
+    var MENU = [
+        ['dash', ['dash']],
+        ['devices', ['devices', 'sched']],
+        ['net', ['net', 'nets', 'guest', 'ports', 'dns']],
+        ['security', ['filter', 'lists', 'geo', 'ips']],
+        ['remote', ['vpn', 'pf']],
+        ['settings', ['settings']]
+    ];
+    var CORE_PAGES = ['dash', 'devices', 'filter', 'lists', 'settings'];
     var VIEWS = {};
     var TRAFFIC_MS = 5000;
     var HISTORY = 120; /* samples, 10 minutes at 5s */
@@ -134,6 +147,30 @@
         if (sec < 3600) { return t.agoMin(Math.round(sec / 60)); }
         if (sec < 86400) { return t.agoHour(Math.round(sec / 3600)); }
         return t.agoDay(Math.round(sec / 86400));
+    }
+
+    /* the pages of a menu entry that exist here */
+    function pagesOf(group) {
+        for (var i = 0; i < MENU.length; i++) {
+            if (MENU[i][0] === group) {
+                return MENU[i][1].filter(function (key) { return CORE_PAGES.indexOf(key) >= 0 || !!VIEWS[key]; });
+            }
+        }
+        return [];
+    }
+
+    /* the menu entry a page belongs to */
+    function groupOf(page) {
+        for (var i = 0; i < MENU.length; i++) {
+            if (MENU[i][1].indexOf(page) >= 0) { return MENU[i][0]; }
+        }
+        return 'dash';
+    }
+
+    /* the page for an address: a page's own key, or a menu entry's key (its first page) */
+    function pageFor(key) {
+        if (pagesOf(groupOf(key)).indexOf(key) >= 0) { return key; }
+        return pagesOf(key)[0] || 'dash';
     }
 
     function inputFocused() {
@@ -388,9 +425,11 @@
         root.innerHTML =
             '<div id="k-header"></div>' +
             '<nav class="k-tabs" id="k-tabs" aria-label="Inversa Panel"></nav>' +
+            '<div id="k-subtabs"></div>' +
             '<div id="k-main"></div>';
         renderHeader();
         renderTabs();
+        renderSubtabs();
         renderBanners();
         renderMain();
         syncMenu();
@@ -464,19 +503,31 @@
 
     function renderTabs() {
         var t = T();
-        var labels = { dash: [t.tabDash, ICONS.dash], devices: [t.tabDevices, ICONS.devices], filter: [t.tabFilter, ICONS.shield], settings: [t.tabSettings, ICONS.sliders] };
-        Object.keys(VIEWS).forEach(function (key) {
-            labels[key] = [VIEWS[key].label(t), VIEWS[key].icon];
-        });
-        var wait = waitingCount();
+        var labels = {
+            dash: [t.tabDash, ICONS.dash], devices: [t.tabDevices, ICONS.devices], net: [t.tabNet, ICONS.net],
+            security: [t.tabSecurity, ICONS.shield], remote: [t.tabRemote, ICONS.lock], settings: [t.tabSettings, ICONS.sliders]
+        };
+        var wait = waitingCount(), current = groupOf(S.tab);
         S.ui.waitShown = wait;
-        var html = TABS.map(function (key) {
-            var on = S.tab === key;
+        var html = MENU.filter(function (m) { return pagesOf(m[0]).length; }).map(function (m) {
+            var key = m[0], on = current === key;
             return '<button type="button" class="k-tab' + (on ? ' on' : '') + '" data-act="tab" data-v="' + key + '"' +
                 (on ? ' aria-current="page"' : '') + '>' + icon(labels[key][1]) + '<span>' + esc(labels[key][0]) + '</span>' +
                 (key === 'devices' && wait ? '<span class="k-count warn" title="' + esc(t.apprBanner(wait)) + '">' + wait + '</span>' : '') + '</button>';
         }).join('');
         document.getElementById('k-tabs').innerHTML = html;
+    }
+
+    /* the pages of the open menu entry, when it has more than one */
+    function renderSubtabs() {
+        var t = T(), pages = pagesOf(groupOf(S.tab));
+        var core = { devices: t.tabDevices, filter: t.subFilter, lists: t.subLists };
+        document.getElementById('k-subtabs').innerHTML = pages.length < 2 ? '' :
+            '<div class="k-subtabs" role="group" aria-label="' + esc(t.subtabsAria) + '">' + pages.map(function (key) {
+                var on = S.tab === key;
+                return '<button type="button" class="k-chip' + (on ? ' on' : '') + '" data-act="tab" data-v="' + key + '"' +
+                    (on ? ' aria-current="page"' : '') + '>' + esc(VIEWS[key] ? VIEWS[key].label(t) : core[key]) + '</button>';
+            }).join('') + '</div>';
     }
 
     function renderBanners() {
@@ -552,6 +603,7 @@
         if (VIEWS[S.tab]) { html = VIEWS[S.tab].render(); }
         else if (S.tab === 'devices') { html = viewDevices(); }
         else if (S.tab === 'filter') { html = viewFilter(); }
+        else if (S.tab === 'lists') { html = viewLists(); }
         else if (S.tab === 'settings') { html = viewSettings(); }
         else { html = viewDash(); }
         document.getElementById('k-main').innerHTML = html;
@@ -915,22 +967,29 @@
                     '<span class="k-app-text"><b>' + esc(app.name) + '</b><span>' + esc(on ? t.blocked : t.allowed) + '</span></span></button>';
             }).join('') + '</div></section></div>';
 
-        html += '<section class="k-card"><h2>' + esc(t.listsTitle) + '</h2><div class="k-row" style="gap:24px">' +
+        return html + '</div>';
+    }
+
+    /* allow list and block list: domains that are never / always blocked */
+    function viewLists() {
+        var t = T(), f = S.draft.filtering;
+        return '<div class="k-stack">' +
+            '<div><h1>' + esc(t.listsTitle) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + esc(t.listsSub) + '</div></div>' +
+            '<div class="k-row stretch">' +
             [['allowlist', 'allow', t.allowTitle, t.allowDesc], ['denylist', 'deny', t.denyTitle, t.denyDesc]].map(function (l) {
                 var err = S.ui.listError[l[1]];
-                return '<div class="k-half" style="display:flex;flex-direction:column;gap:10px">' +
-                    '<div style="font-weight:600">' + esc(l[2]) + '</div><div class="muted">' + esc(l[3]) + '</div>' +
+                return '<section class="k-card k-half" style="gap:10px">' +
+                    '<div><h2>' + esc(l[2]) + '</h2><div class="muted">' + esc(l[3]) + '</div></div>' +
                     '<div class="k-addrow"><input type="text" class="mono" data-input="domain" data-list="' + l[1] + '" ' +
                     'value="' + esc(S.ui[l[1] + 'Input']) + '" placeholder="ornek.com" aria-label="' + esc(l[2]) + '">' +
                     '<button type="button" class="k-btn soft" data-act="list-add" data-list="' + l[1] + '">' + esc(t.add) + '</button></div>' +
                     (err ? '<div class="small" style="color:#9A3B0A;font-weight:500">' + esc(err) + '</div>' : '') +
-                    '<div class="k-chips">' + (f[l[0]] || []).map(function (domain) {
+                    ((f[l[0]] || []).length ? '<div class="k-chips">' + f[l[0]].map(function (domain) {
                         return '<span class="k-tag ' + l[1] + ' mono"><span>' + esc(domain) + '</span>' +
                             '<button type="button" data-act="list-del" data-list="' + l[1] + '" data-v="' + esc(domain) + '" ' +
                             'aria-label="' + esc(t.removeAria(domain)) + '">' + icon(ICONS.close, 14) + '</button></span>';
-                    }).join('') + '</div></div>';
-            }).join('') + '</div></section>';
-        return html + '</div>';
+                    }).join('') + '</div>' : '<div class="muted">' + esc(t.listEmpty) + '</div>') + '</section>';
+            }).join('') + '</div></div>';
     }
 
     /* ------------------------------------------------------------------ view: settings */
@@ -1031,7 +1090,7 @@
 
     /* switch to a tab and fetch what it shows (the caller redraws) */
     function openTab(tab) {
-        S.tab = TABS.indexOf(tab) >= 0 ? tab : 'dash';
+        S.tab = pageFor(tab);
         S.ui.sel = null;
         if (S.tab === 'devices') { loadHosts().then(refreshView, function () {}); }
         if (VIEWS[S.tab] && VIEWS[S.tab].load) {
@@ -1040,14 +1099,14 @@
     }
 
     /*
-     * OPNsense's side menu has entries for some of our tabs (/ui/inversapanel#devices, ...). The server cannot
+     * OPNsense's side menu has the same entries as our menu (/ui/inversapanel#devices, ...). The server cannot
      * see the part after "#", so it marks all of them as the current page: mark the one that is open.
      */
     function syncMenu() {
         if (!document.querySelectorAll) { return; }
         var links = document.querySelectorAll('#mainmenu a[href^="/ui/inversapanel#"]');
         for (var i = 0; i < links.length; i++) {
-            var on = links[i].getAttribute('href').split('#')[1] === S.tab;
+            var on = groupOf(pageFor(links[i].getAttribute('href').split('#')[1])) === groupOf(S.tab);
             links[i].classList.toggle('active', on);
         }
     }
@@ -1264,10 +1323,9 @@
 
     function start(element) {
         root = element;
-        TABS = TAB_ORDER.filter(function (key) { return CORE_TABS.indexOf(key) >= 0 || VIEWS[key]; });
         var hashTab = String(window.location.hash || '').replace('#', '');
         S = {
-            tab: TABS.indexOf(hashTab) >= 0 ? hashTab : 'dash',
+            tab: pageFor(hashTab),
             saved: null, draft: null, options: null,
             hosts: [], source: null, hostsLoaded: false,
             traffic: { last: null, rate: null, hist: [] },
@@ -1295,8 +1353,9 @@
             /* a side menu entry of OPNsense for another tab only changes the part after "#" */
             if (window.addEventListener) {
                 window.addEventListener('hashchange', function () {
-                    var tab = String(window.location.hash || '').replace('#', '');
-                    if (TABS.indexOf(tab) >= 0 && tab !== S.tab) {
+                    var tab = String(window.location.hash || '').replace('#', ''), page = pageFor(tab);
+                    /* unknown addresses are ignored; a menu entry that is open already keeps the page it shows */
+                    if ((page !== 'dash' || tab === 'dash') && page !== S.tab && groupOf(S.tab) !== tab) {
                         openTab(tab);
                         render();
                     }
@@ -1314,9 +1373,9 @@
     }
 
     /*
-     * Extension point for views/*.js. A view is
+     * Extension point for views/*.js. A view is a page:
      *   { key, icon, label(t), render(), load()?, act(name, el)?, input(name, el, type)?, changes(add, draft, saved)? }
-     * act/input return what to redraw: 'full' | 'main' | 'pending'.
+     * act/input return what to redraw: 'full' | 'main' | 'pending'. Where a page shows is decided by MENU.
      */
     /* the welcome card is answered once, stored immediately (not part of the pending changes) */
     function saveWelcomed() {

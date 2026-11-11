@@ -42,7 +42,7 @@
             if (!nets.length) {
                 return html + '<section class="k-card"><div class="k-setting" style="padding:0;border:none;flex-wrap:wrap"><div class="k-ibox big">' + h.icon(ICON, 22) + '</div>' +
                     '<div class="k-setting-text"><b style="font-size:16px">' + h.esc(T.gNone) + '</b><span class="muted">' + h.esc(T.gNoneText) + '</span></div>' +
-                    '<button type="button" class="k-btn primary" data-act="tab" data-v="net">' + h.esc(T.gCreate) + '</button></div></section></div>';
+                    '<button type="button" class="k-btn primary" data-act="tab" data-v="nets">' + h.esc(T.gCreate) + '</button></div></section></div>';
             }
             html += nets.map(function (n) {
                 var guests = h.hosts().filter(function (x) { return x.network === n.name && x.online; });

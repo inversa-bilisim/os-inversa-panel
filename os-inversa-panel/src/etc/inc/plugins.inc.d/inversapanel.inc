@@ -126,7 +126,7 @@ function inversapanel_firewall_access(\OPNsense\Firewall\Plugin $fw, $mdl, $mapp
             'to' => $to,
             'descr' => sprintf('Inversa Panel: %s %s to %s', $allow ? 'allow' : 'block', $from, $to),
             'label' => inversapanel_label("access-{$from}-{$to}"),
-            '#ref' => 'ui/inversapanel#net',
+            '#ref' => 'ui/inversapanel#nets',
         ]);
     }
     foreach ($internet as $from => $allow) {
@@ -141,7 +141,7 @@ function inversapanel_firewall_access(\OPNsense\Firewall\Plugin $fw, $mdl, $mapp
             'to_not' => true,
             'descr' => sprintf('Inversa Panel: %s %s to internet', $allow ? 'allow' : 'block', $from),
             'label' => inversapanel_label("access-{$from}-wan"),
-            '#ref' => 'ui/inversapanel#net',
+            '#ref' => 'ui/inversapanel#nets',
         ]);
     }
 }

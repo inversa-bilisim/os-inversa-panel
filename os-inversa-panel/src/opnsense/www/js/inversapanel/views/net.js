@@ -3,7 +3,8 @@
  * Copyright (C) 2026 Inversa Bilişim
  *
  * Network & Internet: internet connection (DHCP / PPPoE + VLAN / static), internal networks
- * (own port or VLAN), access between networks, ports.
+ * (own port or VLAN), access between networks, ports. Three pages of the "Network & Internet"
+ * menu entry ("net", "nets", "ports") that share one state; their actions all go by "net:...".
  *
  * Changes to the connection and networks are applied with their own button and protected by
  * the firewall-side rollback: unless confirmed within the countdown, OPNsense restores the
@@ -20,7 +21,7 @@
     var KIND_COLOR = { home: '#1F4FC7', iot: '#0F766E', guest: '#7C3AED', camera: '#B45309', server: '#475569' };
     var KINDS = ['home', 'iot', 'guest', 'camera', 'server'];
 
-    var N = { data: null, sub: 'wan', wan: null, add: null, edit: null, busy: false, countdown: null, test: null, testing: false, error: null };
+    var N = { data: null, wan: null, add: null, edit: null, busy: false, countdown: null, test: null, testing: false, error: null };
 
     function t() { return h.T(); }
     function draft() { return h.S().draft; }
@@ -334,7 +335,7 @@
             if (p.untagged) { return netName(p.untagged); }
             return p.vlans.length ? T.portTrunkOnly : T.portUnused;
         }
-        return '<section class="k-card"><div><h2>' + h.esc(T.portsTitle) + '</h2><div class="muted">' + h.esc(T.portsSubRo) + '</div></div>' +
+        return '<section class="k-card">' +
             '<div class="k-ports">' + N.data.ports.map(function (p) {
                 return '<div class="k-port"><div class="k-port-top"><span class="mono">' + h.esc(p.device) + '</span><span class="k-dot' + (p.link ? ' ok' : '') + '"></span></div>' +
                     '<div class="k-jack' + (p.link ? ' up' : '') + '"></div><b>' + h.esc(role(p)) + '</b>' +
@@ -343,28 +344,30 @@
             }).join('') + '</div></section>';
     }
 
-    window.InversaPanelApp.register({
-        key: 'net',
-        icon: ICON,
-        label: function (T) { return T.tabNet; },
-        load: load,
-        render: function () {
-            var T = t();
-            var html = '<div class="k-stack"><div><h1>' + h.esc(T.netTitle) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + h.esc(T.netSub) + '</div></div>';
-            if (!N.data) {
-                return html + '<div class="k-loading">…</div></div>';
+    /* one of the three pages: its own heading, the shared banners, its content */
+    function page(key, title, sub, body) {
+        return {
+            key: key,
+            icon: ICON,
+            label: title,
+            load: load,
+            render: function () {
+                var T = t();
+                var html = '<div class="k-stack"><div><h1>' + h.esc(title(T)) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + h.esc(sub(T)) + '</div></div>';
+                if (!N.data) {
+                    return html + '<div class="k-loading">…</div></div>';
+                }
+                return html + banners() + body() + '</div>';
             }
-            html += banners();
-            html += '<div class="k-chips">' + [['wan', T.subWan], ['nets', T.subNets], ['ports', T.subPorts]].map(function (o) {
-                return '<button type="button" class="k-chip' + (N.sub === o[0] ? ' on' : '') + '" data-act="net:sub" data-v="' + o[0] + '">' + h.esc(o[1]) + '</button>';
-            }).join('') + '</div>';
-            html += N.sub === 'nets' ? viewNets() : (N.sub === 'ports' ? viewPorts() : viewWan());
-            return html + '</div>';
-        },
+        };
+    }
+
+    window.InversaPanelApp.register(page('nets', function (T) { return T.subNets; }, function (T) { return T.netsSub; }, viewNets));
+    window.InversaPanelApp.register(page('ports', function (T) { return T.subPorts; }, function (T) { return T.portsSubRo; }, viewPorts));
+    window.InversaPanelApp.register(Object.assign(page('net', function (T) { return T.subWan; }, function (T) { return T.wanSub; }, viewWan), {
         act: function (name, el) {
             var v = el.getAttribute('data-v'), f = N.wan;
             switch (name) {
-                case 'sub': N.sub = v; return 'main';
                 case 'confirm': confirm(); return null;
                 case 'test':
                     N.testing = true;
@@ -478,5 +481,5 @@
                 }
             });
         }
-    });
+    }));
 })();
