@@ -25,7 +25,7 @@ Inversa Panel, Suricata'yı başlatmadan önce boş belleğe bakar (Hyperscan il
 
 DNS engelleme ve saldırı önleme kapalıyken eklentinin kayda değer bir bellek ihtiyacı yoktur.
 
-## Sürüm 0.2'de neler var
+## Sürüm 1.0'da neler var
 
 Üst menüde altı başlık var; birden çok sayfası olan başlıklar sayfalarını alt sekme olarak gösterir. OPNsense'in yan menüsünde (**Inversa**) aynı altı başlık bulunur.
 
@@ -44,6 +44,7 @@ DNS engelleme ve saldırı önleme kapalıyken eklentinin kayda değer bir belle
 | Güvenlik › Beyaz / kara liste | Her zaman izin verilen ve her zaman engellenen alan adları | Aynı Unbound politikası (izin listesi / joker alan adları) |
 | Güvenlik › Ülkeler | İki mod: **seçilen ülkeleri engelle** (yalnız gelen / gelen ve giden) veya **yalnızca seçilen ülkelere izin ver** (ör. yalnızca Türkiye ve Azerbaycan; yalnızca gelen bağlantıları kısıtlar, içeriden çıkış etkilenmez). Her modun ülke listesi ayrı tutulur. **VPN bağlantıları muaf** seçeneği (varsayılan kapalı), engellenen deneme sayısı. Ülke verisi kayıt gerektirmeden **DB-IP Lite**'tan (CC BY 4.0) alınır, ayda bir yenilenir; isteyen kendi MaxMind anahtarını kullanabilir | GeoIP takma adı `inversapanel_geo` + otomatik kural; izin modunda ayrıca `inversapanel_geo_allow` (seçilen ülkeler + hiçbir ülkeye ait olmayan özel/yerel adres aralıkları); OPNsense'te kaynak ayarlı değilse ülke dosyaları `/usr/local/share/GeoIP/alias` altına yazılır |
 | Kayıtlar | **Saldırılar**: saldırı önleme uyarıları, ülke kısıtına takılanlar ve güvenlik duvarının reddettiği bağlantılar tek listede (kaynak adres ve ülke, hedef, sonuç; en çok deneyen adresler / ülkeler / hedefler; satırdan adres engelleme), 30 gün. **İnternet geçmişi**: cihaz bazında gidilen ve engellenen alan adları; varsayılan kapalı, ağ bazında seçilir, Unbound'un sorgu kaydından okunur (OPNsense son 7 günü tutar). **Erişim ve değişiklikler**: VPN bağlantıları, panele girişler ve hatalı denemeler, yeni cihazlar, ayar değişiklikleri (kim, nereden, hangi sayfadan), 90 gün. Her sayfada arama, süre/tür filtreleri ve CSV | Dakikada bir güvenlik duvarı, Suricata ve denetim günlüklerinden okuyup `/var/db/inversapanel` altına yazar; ülke kuralına kayıt (log) seçeneği ekler; engellenen adresler için WAN'da bir engelleme kuralı |
+| Ayarlar › Hakkımızda | Kurulu sürüm ve OPNsense sürümü, lisans ve kaynak kodu, Inversa Bilişim iletişim bilgisi, parola/anahtar içermeyen "destek bilgileri" özeti (kopyalanabilir), panelin üzerine kurulduğu açık kaynaklı yazılımlar | Sadece okur |
 | Güvenlik › Saldırı önleme | Suricata ile korunan ağlardaki trafiği bilinen saldırı ve zararlı yazılım izlerine karşı denetler: **yalnızca uyar** veya **engelle**; beş grup (zararlı yazılım ve komuta sunucuları, bilinen saldırgan adresler, açık istismarı, oltalama, tarama); son uyarılar cihaz adıyla listelenir | OPNsense'in Saldırı Tespiti ayarları (Servisler › Saldırı Tespiti): seçilen kural setleri, engelleme için `Inversa Panel (managed)` politikası, gecelik kural güncelleme görevi |
 | Ayarlar | Dil, korunan ağlar, engel yanıtı, DNS istatistikleri, **Inversa Panel'in eklediklerini kaldır** | `OPNsense/InversaPanel` modeli |
 
@@ -133,7 +134,7 @@ tools/deploy.sh, tools/remove.sh             test cihazına kopyalama / kaldırm
 - OPNsense'te root'un kabuğu `csh`'dir; SSH ile `sh` komutları çalıştırırken `ssh root@firewall /bin/sh -s <<'EOF' ... EOF` kullanın.
 - Test ağı WAN'ı ev ağının içindeyse (ör. 192.168.1.0/24), yönetim kuralında **reply-to'yu kapatın**; yoksa yanıtlar modem üzerinden döner ve SSH/GUI bağlantıları kopar.
 
-## Bilinen sınırlar ve test edilmeyenler (0.2)
+## Bilinen sınırlar ve test edilmeyenler (1.0)
 
 - **IPsec siteden siteye:** yalnızca IKEv2, ortak anahtar ve IPv4; şifreleme seti sabittir (AES-256, SHA-256, DH 14) ve arayüzden değiştirilemez. Her ağ çifti ayrı bir alt bağlantıdır. Bu tarafın kimliği "Bu tarafın adresi" alanı (boşsa oluşturma anındaki WAN adresi), karşı tarafın kimliği girilen adresidir; karşı cihaz kendi kimliği olarak başka bir değer gönderiyorsa orada bu değerler ayarlanmalıdır. Şubeler arası geçiş (A şubesinin B şubesine merkez üzerinden ulaşması) yoktur. OPNsense'te elle kurulmuş IPsec tünelleri yalnızca adlarıyla listelenir. İki OPNsense 26.7.8 arasında denendi (tünel kuruldu, iki yönde trafik geçti, kapat/aç/sil); **başka marka cihazlarla (FortiGate, MikroTik, Sophos, Zyxel…) denenmedi**. Modem arkasındaki (NAT) kurulum da denenmedi.
 - **Ağ türleri kalktı (önceki sürümlerde: Ev, IoT, Misafir, Kamera, Sunucu).** Her ağın bir rengi vardır; eski tür renge çevrilir, misafir ağlarının ortak hız sınırı o ağların kendi sınırı olur, bütün ağlardan kapatılmış ağ "izole" sayılır. Bu taşıma panel ilk açıldığında bir kez yapılır. İzolasyon çift yönlüdür (seçilen ağla karşılıklı erişim); tek yönlü kural erişim tablosundan verilir. Yeni ağ izole kurulur. Hız sınırı ağın tamamı içindir, cihaz başına değildir.

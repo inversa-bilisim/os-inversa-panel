@@ -161,4 +161,17 @@ class StateController extends ApiControllerBase
             ],
         ];
     }
+
+    /**
+     * for the About page: this version, and what it runs on
+     */
+    public function aboutAction()
+    {
+        $product = json_decode((string)(new \OPNsense\Core\Backend())->configdRun('firmware product'), true) ?? [];
+        return [
+            'version' => Catalog::VERSION,
+            'product' => (string)($product['product_name'] ?? 'OPNsense'),
+            'product_version' => (string)($product['product_version'] ?? ''),
+        ];
+    }
 }

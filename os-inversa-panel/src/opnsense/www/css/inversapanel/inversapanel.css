@@ -637,3 +637,18 @@ header.page-content-head { display: none; }
 .inversapanel .k-pg[disabled] { opacity: .45; cursor: not-allowed; }
 .inversapanel .k-pg-gap { color: var(--k-muted); padding: 0 2px; }
 .inversapanel .k-pager .k-seg button { min-height: 34px; padding: 0 10px; font-size: 13px; }
+
+/* about */
+.inversapanel button.k-brand { border: none; background: transparent; padding: 0; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+.inversapanel .k-about { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 16px; align-items: start; }
+.inversapanel .k-about-brand { display: flex; align-items: center; gap: 14px; }
+.inversapanel .k-about-logo { width: 56px; height: 56px; }
+.inversapanel .k-about-name { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+.inversapanel .k-about .k-kv:last-child { border-bottom: none; }
+.inversapanel .k-about .k-kv span:last-child { word-break: normal; overflow-wrap: anywhere; }
+.inversapanel .k-about a { color: var(--k-accent); }
+.inversapanel .k-about-support { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.inversapanel .k-about-support b { display: block; font-weight: 600; }
+.inversapanel .k-about-support .k-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: 13px; }
+.inversapanel .k-about-pre { margin: 0; padding: 10px 12px; background: var(--k-soft); border: 1px solid var(--k-line); border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; color: var(--k-text-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.inversapanel .k-about-part { flex: 0 0 110px; font-weight: 600; }

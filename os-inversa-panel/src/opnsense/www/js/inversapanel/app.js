@@ -63,7 +63,7 @@
         ['devices', ['devices', 'sched']],
         ['security', ['filter', 'ips', 'geo', 'lists']],
         ['logs', ['attacks', 'history', 'events']],
-        ['settings', ['settings']]
+        ['settings', ['settings', 'about']]
     ];
     /* addresses of menu entries that no longer exist */
     var MOVED = { remote: 'vpn', guest: 'nets' };
@@ -596,8 +596,8 @@
         var t = T();
         document.getElementById('k-header').innerHTML =
             '<div class="k-header">' +
-            '<div class="k-brand"><div class="k-logo" aria-hidden="true"></div>' +
-            '<div><div class="k-title">Inversa Panel</div><div class="muted">' + esc(t.appSub) + '</div></div></div>' +
+            '<button type="button" class="k-brand" data-act="tab" data-v="about" title="' + esc(t.tabAbout) + '"><div class="k-logo" aria-hidden="true"></div>' +
+            '<div><div class="k-title">Inversa Panel</div><div class="muted">' + esc(t.appSub) + '</div></div></button>' +
             /* pending changes live inside the header so they never push the page down */
             '<div id="k-pending" class="k-pending-slot"></div>' +
             '<div class="k-head-right">' +
@@ -627,7 +627,7 @@
     /* the pages of the open menu entry, when it has more than one */
     function renderSubtabs() {
         var t = T(), pages = pagesOf(groupOf(S.tab));
-        var core = { devices: t.tabDevices, filter: t.subFilter, lists: t.subLists };
+        var core = { devices: t.tabDevices, filter: t.subFilter, lists: t.subLists, settings: t.tabSettings };
         document.getElementById('k-subtabs').innerHTML = pages.length < 2 ? '' :
             '<div class="k-subtabs" role="group" aria-label="' + esc(t.subtabsAria) + '">' + pages.map(function (key) {
                 var on = S.tab === key, label = esc(VIEWS[key] ? VIEWS[key].label(t) : core[key]);

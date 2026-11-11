@@ -12,6 +12,9 @@ namespace OPNsense\InversaPanel;
  */
 class Catalog
 {
+    /* the version shown on the About page (the same as PLUGIN_VERSION in the Makefile) */
+    const VERSION = '1.0.0';
+
     /* name of the firewall alias holding blocked devices (MAC type) */
     const BLOCKED_ALIAS = 'inversapanel_blocked';
 
