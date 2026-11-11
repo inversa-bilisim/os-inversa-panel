@@ -73,6 +73,14 @@ class NetworkController extends ApiControllerBase
         return json_decode((new Backend())->configdRun('inversapanel nettest'), true) ?? ['ok' => false];
     }
 
+    /**
+     * the address the internet sees this firewall under (asks a service outside; only on request)
+     */
+    public function extipAction()
+    {
+        return json_decode((string)(new Backend())->configdRun('inversapanel extip'), true) ?? ['ip' => ''];
+    }
+
     public function confirmAction()
     {
         if (!$this->request->isPost()) {

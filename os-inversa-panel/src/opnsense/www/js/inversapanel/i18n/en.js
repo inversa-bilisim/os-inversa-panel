@@ -118,6 +118,13 @@ window.InversaPanelI18n.en = {
     wanTest: 'Test connection', wanTesting: 'Testing…', chkGateway: 'Gateway', chkInternet: 'Internet', chkDns: 'Name resolution (DNS)',
     wanMulti: 'This system has more than one internet connection (multi-WAN). To avoid confusion, connection settings can only be changed in the OPNsense menus.',
     wanComplex: 'Your internet connection uses a type Inversa Panel does not support; change it in the OPNsense menus.',
+    wanPortShort: 'Port', wanLinkUp: 'cable connected', wanIp: 'IP address', wanTestTitle: 'Connection test', wanRetest: 'Test again',
+    wanExt: 'External IP', wanExtBtn: 'Show external IP', wanExtFailed: 'could not be found',
+    wanExtNote: 'The external IP is found by the firewall asking Cloudflare (1.1.1.1), when the button is pressed.',
+    wanAdv: 'Advanced: MAC address, MTU', wanAuto: 'automatic',
+    wanMac: 'MAC address', wanMacSub: 'If your provider tied the line to the modem’s MAC address, enter that address. Empty: the port’s own address.',
+    wanMtuSub: 'Leave empty unless your provider told you another value.',
+    wanMtuPppoe: 'Empty: 1492. If some sites do not open, try a lower value (e.g. 1452).',
     wanType: 'Connection type', wanSettings: function (type) { return type + ' · settings'; },
     wt: {
         dhcp: ['Behind a modem / router', 'OPNsense gets its address from the modem automatically.'],

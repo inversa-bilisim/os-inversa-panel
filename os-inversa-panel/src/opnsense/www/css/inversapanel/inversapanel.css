@@ -302,15 +302,33 @@
 .inversapanel .k-week-axis { display: flex; justify-content: space-between; padding-left: 42px; font-size: 11px; color: var(--k-muted); }
 
 /* network */
-/* internet connection: the connection types one below the other, the settings of the chosen one to their right */
+/* internet connection: the kinds one below the other, the settings of the chosen one, how the connection is now */
 .inversapanel .k-narrow { max-width: 1120px; }
 .inversapanel .k-wan { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
-.inversapanel .k-wan-types { flex: 1 1 280px; gap: 10px; }
+.inversapanel .k-wan-types { flex: 1 1 260px; gap: 10px; }
 .inversapanel .k-wan-types h2 { margin-bottom: 4px; }
 .inversapanel .k-wan-types .k-opt { flex: none; width: 100%; min-height: 64px; }
-.inversapanel .k-wan-settings { flex: 2.2 1 420px; }
+.inversapanel .k-wan-settings { flex: 1.9 1 380px; }
 .inversapanel .k-wan-fields { display: flex; flex-wrap: wrap; gap: 12px 16px; }
-.inversapanel .k-wan-fields .k-field { flex: 1 1 220px; min-width: 0; }
+.inversapanel .k-wan-fields .k-field { flex: 1 1 200px; min-width: 0; }
+.inversapanel .k-wan-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--k-line-2); }
+.inversapanel .k-wan-row:last-child { border-bottom: none; }
+.inversapanel .k-wan-text { min-width: 0; }
+.inversapanel .k-wan-text b { display: block; font-weight: 600; }
+.inversapanel .k-wan-row .k-chips, .inversapanel .k-wan-ctl { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; flex: none; }
+.inversapanel .k-wan-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; }
+.inversapanel .k-wan-foot .muted { flex: 1 1 180px; }
+.inversapanel .k-wan-state { flex: 1.2 1 300px; gap: 10px; }
+.inversapanel .k-wan-head { display: flex; align-items: center; gap: 12px; }
+.inversapanel .k-wan-head b { display: block; font-size: 16px; }
+.inversapanel .k-wan-state .k-kv { padding: 6px 0; }
+.inversapanel .k-wan-sub { font-size: 12px; font-weight: 600; color: var(--k-text-2); text-transform: uppercase; letter-spacing: .04em; padding-top: 6px; }
+.inversapanel .k-wan-chk { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; color: var(--k-muted); }
+.inversapanel .k-wan-chk span:nth-of-type(1) { flex: 1 1 auto; color: var(--k-text); }
+.inversapanel .k-wan-chk.ok svg { color: #15803D; }
+.inversapanel .k-wan-chk.bad svg { color: var(--k-warn); }
+.inversapanel .k-wan-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.inversapanel .k-wan-btns .k-btn { min-height: 36px; font-size: 13px; padding: 0 12px; }
 .inversapanel .k-net-card { flex: 1 1 260px; }
 .inversapanel .k-add-card { flex: 1 1 260px; min-height: 180px; align-items: center; justify-content: center; text-align: center; border-style: dashed; border-color: var(--k-off); background: transparent; cursor: pointer; color: var(--k-text-2); }
 .inversapanel .k-edit { border-color: var(--k-accent); box-shadow: 0 0 0 3px #DCE6FB; }

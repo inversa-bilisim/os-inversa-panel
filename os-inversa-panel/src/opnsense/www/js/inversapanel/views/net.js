@@ -50,7 +50,10 @@
         return h.api('GET', '/api/inversapanel/network/get').then(function (data) {
             N.data = data;
             var w = data.wan || {};
-            N.wan = { type: w.type, port: w.port, vlan: w.vlan || '', useVlan: !!w.vlan, username: w.username || '', password: '', ip: w.ip || '', gateway: w.gateway || '', ipv6: w.ipv6 === 'off' ? 'off' : 'auto' };
+            N.wan = { type: w.type, port: w.port, vlan: w.vlan || '', useVlan: !!w.vlan, username: w.username || '', password: '', ip: w.ip || '', gateway: w.gateway || '', ipv6: w.ipv6 === 'off' ? 'off' : 'auto',
+                mac: w.mac || '', mtu: w.mtu || '' };
+            /* the connection is tested once by itself, so the state block is not empty */
+            if (w.exists && !N.test && !N.testing) { runTest(); }
             N.wanOrig = JSON.stringify(N.wan);
             if (data.rollback && !h.countdown()) {
                 h.startCountdown(data.rollback.remaining);
@@ -78,6 +81,12 @@
         }).then(function () { h.redraw('main'); });
     }
 
+    function runTest() {
+        N.testing = true;
+        h.api('GET', '/api/inversapanel/network/test').then(function (r) { N.test = r; }, function () { N.test = { ok: false }; })
+            .then(function () { N.testing = false; if (h.S().tab === 'net') { h.redraw('main'); } });
+    }
+
     /* ------------------------------------------------------------------ rendering */
 
     function banners() {
@@ -96,34 +105,48 @@
         }).join('') + '</div>';
     }
 
+    /* the connection as it is now: addresses, gateway, name servers, and whether it works */
+    function wanState() {
+        var T = t(), w = N.data.wan, live = w.live || {};
+        var kv = function (label, value) {
+            return '<div class="k-kv"><span class="muted">' + h.esc(label) + '</span><span class="mono">' + h.esc(value) + '</span></div>';
+        };
+        var html = '<section class="k-card k-wan-state"><div class="k-wan-head"><div class="k-ibox big ' + (w.address ? 'on' : 'cut') + '">' + h.icon(GLOBE, 22) + '</div>' +
+            '<div><b>' + h.esc(w.address ? T.wanConnected : T.wanDown) + '</b><span class="muted">' + h.esc(T.wanVia[w.type] || w.type) + '</span></div></div><div>' +
+            kv(T.wanPortShort, w.port + (w.vlan ? ' · VLAN ' + w.vlan : '') + ' · ' + (live.link ? T.wanLinkUp : T.linkDown)) +
+            kv(T.wanIp, live.ipv4 || w.address || '—') +
+            kv(T.chkGateway, live.gateway || '—') +
+            (N.extip !== undefined ? kv(T.wanExt, N.extip === null ? '…' : (N.extip || T.wanExtFailed)) : '') +
+            kv('DNS', (live.dns || []).join(', ') || '—') +
+            (live.ipv6 ? kv('IPv6', live.ipv6) : '') + '</div>' +
+            '<div class="k-wan-sub">' + h.esc(T.wanTestTitle) + '</div><div>' +
+            [['gateway', T.chkGateway], ['internet', T.chkInternet], ['dns', T.chkDns]].map(function (c) {
+                var r = (N.test || {})[c[0]] || {};
+                return '<div class="k-wan-chk' + (N.test ? (r.ok ? ' ok' : ' bad') : '') + '">' + h.icon(!N.test ? PULSE : (r.ok ? h.ICONS.ok : h.ICONS.close), 14) +
+                    '<span>' + h.esc(c[1]) + (c[0] === 'internet' && r.address ? ' (' + h.esc(r.address) + ')' : '') + '</span>' +
+                    '<span class="mono muted">' + (!N.test ? '…' : (r.ok ? h.esc(String(r.ms)) + ' ms' : '—')) + '</span></div>';
+            }).join('') + '</div>' +
+            '<div class="k-wan-btns"><button type="button" class="k-btn" data-act="net:test"' + (N.testing ? ' disabled' : '') + '>' + h.icon(PULSE, 15) + h.esc(N.testing ? T.wanTesting : T.wanRetest) + '</button>' +
+            '<button type="button" class="k-btn" data-act="net:extip"' + (N.extip === null ? ' disabled' : '') + '>' + h.esc(T.wanExtBtn) + '</button></div>' +
+            '<div class="muted small">' + h.esc(T.wanExtNote) + '</div></section>';
+        return html;
+    }
+
     function viewWan() {
         var T = t(), w = N.data.wan, f = N.wan;
         if (!w.exists) {
             return '<div class="k-card k-empty">' + h.esc(T.wanMissing) + '</div>';
         }
-        var html = '<div class="k-stack k-narrow"><section class="k-card"><div class="k-setting" style="padding:0;border:none;flex-wrap:wrap">' +
-            '<div class="k-ibox big ' + (w.address ? 'on' : 'cut') + '">' + h.icon(GLOBE, 24) + '</div>' +
-            '<div class="k-setting-text"><b style="font-size:16px">' + h.esc(w.address ? T.wanConnected : T.wanDown) + '</b>' +
-            '<span class="muted">' + h.esc(T.wanVia[w.type] || w.type) + ' · ' + h.esc(w.port) + (w.vlan ? ' · VLAN ' + h.esc(w.vlan) : '') + (w.address ? ' · ' + h.esc(w.address) : '') + '</span></div>' +
-            '<button type="button" class="k-btn" data-act="net:test"' + (N.testing ? ' disabled' : '') + '>' + h.icon(PULSE, 16) + h.esc(N.testing ? T.wanTesting : T.wanTest) + '</button></div>';
-        if (N.test) {
-            html += '<div class="k-banner ' + (N.test.ok ? 'ok' : 'warn') + '" style="margin:0;flex-direction:column;align-items:stretch">' +
-                [['gateway', T.chkGateway], ['internet', T.chkInternet], ['dns', T.chkDns]].map(function (c) {
-                    var r = N.test[c[0]] || {};
-                    return '<div style="display:flex;gap:8px;align-items:center">' + h.icon(r.ok ? h.ICONS.ok : h.ICONS.close, 16) +
-                        '<span style="flex:1 1 auto">' + h.esc(c[1]) + (r.address ? ' (' + h.esc(r.address) + ')' : '') + '</span>' +
-                        '<span class="mono">' + (r.ok ? h.esc(String(r.ms)) + ' ms' : '—') + '</span></div>';
-                }).join('') + '</div>';
-        }
-        html += '</section>';
-
         if (w.readonly) {
-            return html + '<div class="k-banner info" style="margin:0">' + h.icon(h.ICONS.info, 20) + '<span>' +
-                h.esc(w.reasons.indexOf('multiwan') >= 0 ? T.wanMulti : T.wanComplex) + '</span></div></div>';
+            return '<div class="k-banner info" style="margin:0">' + h.icon(h.ICONS.info, 20) + '<span>' +
+                h.esc(w.reasons.indexOf('multiwan') >= 0 ? T.wanMulti : T.wanComplex) + '</span></div><div class="k-wan">' + wanState() + '</div>';
         }
-
-        /* connection types one below the other on the left, what the chosen one needs on the right */
-        html += '<div class="k-wan"><section class="k-card k-wan-types"><h2>' + h.esc(T.wanType) + '</h2>' + ['dhcp', 'pppoe', 'static'].map(function (k) {
+        var changed = JSON.stringify(N.wan) !== N.wanOrig;
+        var row = function (title, sub, control) {
+            return '<div class="k-wan-row"><div class="k-wan-text"><b>' + h.esc(title) + '</b><span class="muted">' + h.esc(sub) + '</span></div>' + control + '</div>';
+        };
+        /* the kinds of connection one below the other, what the chosen one needs beside them, then how it is right now */
+        var html = '<div class="k-wan"><section class="k-card k-wan-types"><h2>' + h.esc(T.wanType) + '</h2>' + ['pppoe', 'static', 'dhcp'].map(function (k) {
             var on = f.type === k;
             return '<button type="button" class="k-opt' + (on ? ' on' : '') + '" data-act="net:wantype" data-v="' + k + '" aria-pressed="' + on + '">' +
                 '<b>' + h.esc(T.wt[k][0]) + '</b><span>' + h.esc(T.wt[k][1]) + '</span></button>';
@@ -146,21 +169,21 @@
             html += '<div class="k-banner warn" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span>' + h.esc(T.dhcpWarn) + '</span></div>';
         }
         html += '<div>' +
-            '<div class="k-setting wrap"><div class="k-setting-text"><b>' + h.esc(T.wanPort) + '</b><span class="muted">' + h.esc(T.wanPortSub) + '</span></div>' +
-            portChips(f.port, 'wanport') + '</div>' +
-            '<div class="k-setting wrap"><div class="k-setting-text"><b>' + h.esc(T.vlanReq) + '</b><span class="muted">' + h.esc(T.vlanReqSub) + '</span></div>' +
-            '<div class="k-row" style="align-items:center;gap:8px">' + (f.useVlan ? '<input type="text" inputmode="numeric" class="mono" style="width:90px" data-input="net:wan-vlan" value="' + h.esc(f.vlan) + '" aria-label="' + h.esc(T.vlanId) + '">' : '') +
-            h.toggle(f.useVlan, 'data-act="net:wanvlan"', T.vlanReq) + '</div></div>' +
-            '<div class="k-setting wrap"><div class="k-setting-text"><b>IPv6</b><span class="muted">' + h.esc(T.ipv6Sub) + '</span></div>' +
-            '<div class="k-seg">' + [['auto', T.v6Auto], ['off', T.v6Off]].map(function (o) {
+            row(T.wanPort, T.wanPortSub, portChips(f.port, 'wanport')) +
+            row(T.vlanReq, T.vlanReqSub, '<div class="k-wan-ctl">' + (f.useVlan ? '<input type="text" inputmode="numeric" class="mono" style="width:80px" data-input="net:wan-vlan" value="' + h.esc(f.vlan) + '" aria-label="' + h.esc(T.vlanId) + '">' : '') +
+                h.toggle(f.useVlan, 'data-act="net:wanvlan"', T.vlanReq) + '</div>') +
+            row('IPv6', T.ipv6Sub, '<div class="k-seg">' + [['auto', T.v6Auto], ['off', T.v6Off]].map(function (o) {
                 return '<button type="button" class="' + (f.ipv6 === o[0] ? 'on' : '') + '" data-act="net:wanv6" data-v="' + o[0] + '">' + h.esc(o[1]) + '</button>';
-            }).join('') + '</div></div></div></section></div>';
-
-        var changed = JSON.stringify(N.wan) !== N.wanOrig;
-        html += '<div class="k-row" style="justify-content:flex-end;align-items:center"><span class="muted">' + h.esc(T.netSafety) + '</span>' +
+            }).join('') + '</div>') +
+            (N.wanAdv || f.mac || f.mtu ?
+                row(T.wanMac, T.wanMacSub, '<input type="text" class="mono" style="width:180px" data-input="net:wan-mac" value="' + h.esc(f.mac) + '" placeholder="' + h.esc(T.wanAuto) + '" autocomplete="off" spellcheck="false">') +
+                row('MTU', f.type === 'pppoe' ? T.wanMtuPppoe : T.wanMtuSub, '<input type="text" inputmode="numeric" class="mono" style="width:100px" data-input="net:wan-mtu" value="' + h.esc(f.mtu) + '" placeholder="' + (f.type === 'pppoe' ? '1492' : '1500') + '">') : '') +
+            '</div>' +
+            '<div class="k-wan-foot">' + (N.wanAdv || f.mac || f.mtu ? '' : '<button type="button" class="k-link small" data-act="net:wanadv">' + h.esc(T.wanAdv) + '</button>') +
+            '<span class="muted small">' + h.esc(T.netSafety) + '</span>' +
             '<button type="button" class="k-btn" data-act="net:wanreset"' + (changed ? '' : ' disabled') + '>' + h.esc(T.discard) + '</button>' +
-            '<button type="button" class="k-btn primary" data-act="net:wanapply"' + (changed && !N.busy && !h.countdown() ? '' : ' disabled') + '>' + h.esc(N.busy ? T.applying : T.netApply) + '</button></div>';
-        return html + '</div>';
+            '<button type="button" class="k-btn primary" data-act="net:wanapply"' + (changed && !N.busy && !h.countdown() ? '' : ' disabled') + '>' + h.esc(N.busy ? T.applying : T.netApply) + '</button></div></section>';
+        return html + wanState() + '</div>';
     }
 
     /* the range the firewall picks when none is given (Network::setDhcp) */
@@ -399,18 +422,21 @@
         act: function (name, el) {
             var v = el.getAttribute('data-v'), f = N.wan;
             switch (name) {
-                case 'test':
-                    N.testing = true;
-                    h.api('GET', '/api/inversapanel/network/test').then(function (r) { N.test = r; }, function () { N.test = { ok: false }; })
-                        .then(function () { N.testing = false; h.redraw('main'); });
+                case 'test': runTest(); return 'main';
+                case 'extip':
+                    /* null: asked, no answer yet */
+                    N.extip = null;
+                    h.api('GET', '/api/inversapanel/network/extip').then(function (r) { N.extip = (r && r.ip) || ''; }, function () { N.extip = ''; })
+                        .then(function () { h.redraw('main'); });
                     return 'main';
+                case 'wanadv': N.wanAdv = true; return 'main';
                 case 'wantype': f.type = v; return 'main';
                 case 'wanport': f.port = v; return 'main';
                 case 'wanvlan': f.useVlan = !f.useVlan; if (!f.useVlan) { f.vlan = ''; } return 'main';
                 case 'wanv6': f.ipv6 = v; return 'main';
                 case 'wanreset': load().then(function () { h.redraw('main'); }); return null;
                 case 'wanapply':
-                    netApply({ wan: { type: f.type, port: f.port, vlan: f.useVlan ? f.vlan : '', username: f.username, password: f.password, ip: f.ip, gateway: f.gateway, ipv6: f.ipv6 } });
+                    netApply({ wan: { type: f.type, port: f.port, vlan: f.useVlan ? f.vlan : '', username: f.username, password: f.password, ip: f.ip, gateway: f.gateway, ipv6: f.ipv6, mac: f.mac, mtu: f.mtu } });
                     return null;
                 case 'edit':
                     if (N.form && N.form.key === v) { N.form = null; } else { openForm(netByKey(v)); }
@@ -439,9 +465,9 @@
         },
         input: function (name, el, type) {
             var f = N.wan, val = el.value;
-            var map = { 'wan-username': [f, 'username'], 'wan-password': [f, 'password'], 'wan-ip': [f, 'ip'], 'wan-gateway': [f, 'gateway'], 'wan-vlan': [f, 'vlan'] };
+            var map = { 'wan-username': [f, 'username'], 'wan-password': [f, 'password'], 'wan-ip': [f, 'ip'], 'wan-gateway': [f, 'gateway'], 'wan-vlan': [f, 'vlan'], 'wan-mac': [f, 'mac'], 'wan-mtu': [f, 'mtu'] };
             if (map[name]) {
-                map[name][0][map[name][1]] = name === 'wan-vlan' ? val.replace(/[^0-9]/g, '').slice(0, 4) : val.trim();
+                map[name][0][map[name][1]] = name === 'wan-vlan' || name === 'wan-mtu' ? val.replace(/[^0-9]/g, '').slice(0, 4) : (name === 'wan-mac' ? val.trim().toLowerCase().replace(/-/g, ':') : val.trim());
             } else if (name.indexOf('f-') === 0 && N.form) {
                 var form = N.form, key = name.slice(2), p = parts(form.ip);
                 if (key === 'name') {

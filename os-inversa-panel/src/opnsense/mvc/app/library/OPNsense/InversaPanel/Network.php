@@ -25,6 +25,9 @@ class Network
 {
     private $backend;
 
+    /* device whose own MTU was cleared in this request */
+    private $resetMtu = null;
+
     public function __construct()
     {
         $this->backend = new Backend();
@@ -155,6 +158,12 @@ class Network
                 }
             }
             $wan['address'] = Vpn::wanAddress();
+            /* advanced: an own MAC address (some providers tie the line to the modem's), an own MTU */
+            $wan['mac'] = (string)$node->spoofmac;
+            $mtu = (int)(string)$node->mtu;
+            /* OPNsense takes the MTU of the line below PPPoE; the page shows the one of the connection (8 less) */
+            $wan['mtu'] = $mtu > 0 ? (string)($wan['type'] === 'pppoe' ? $mtu - 8 : $mtu) : '';
+            $wan['live'] = $this->wanLive($device, $wan['port'], $ports);
         }
 
         /* --- internal networks --- */
@@ -324,6 +333,26 @@ class Network
             }
         }
         $node->ipaddrv6 = ($wan['ipv6'] ?? 'auto') === 'auto' ? 'dhcp6' : '';
+        if (array_key_exists('mac', $wan)) {
+            $mac = strtolower(trim((string)$wan['mac']));
+            if ($mac !== '' && !preg_match('/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/', $mac)) {
+                throw new \InvalidArgumentException('invalid MAC address (example: 00:11:22:33:44:55)');
+            }
+            $node->spoofmac = $mac;
+        }
+        if (array_key_exists('mtu', $wan)) {
+            $mtu = trim((string)$wan['mtu']);
+            $max = $type === 'pppoe' ? 1492 : 9000;
+            if ($mtu !== '' && (!ctype_digit($mtu) || (int)$mtu < 576 || (int)$mtu > $max)) {
+                throw new \InvalidArgumentException("invalid MTU (576 to $max)");
+            }
+            if ($mtu === '' && (string)$node->mtu !== '') {
+                /* OPNsense leaves a port at the size it was given: put it back to the standard one ourselves */
+                $this->resetMtu = $lower;
+            }
+            /* OPNsense wants the MTU of the line below PPPoE: 8 more than the connection's */
+            $node->mtu = $mtu === '' ? '' : (string)((int)$mtu + ($type === 'pppoe' ? 8 : 0));
+        }
         $gateways->serializeToConfig(false, true);
         return ['wan'];
     }
@@ -373,6 +402,44 @@ class Network
             $this->setDhcp($key, $ip . '/24', true, $net['dhcp_from'] ?? '', $net['dhcp_to'] ?? '', (string)($net['lease'] ?? ''));
         }
         return $key;
+    }
+
+    /**
+     * the connection as it is right now: addresses, gateway, the name servers the system was given
+     */
+    private function wanLive($device, $port, array $ports)
+    {
+        $details = json_decode($this->backend->configdpRun('interface list ifconfig', [$device]), true) ?? [];
+        $info = $details[$device] ?? [];
+        $ipv4 = '';
+        foreach ($info['ipv4'] ?? [] as $addr) {
+            if (!empty($addr['ipaddr'])) {
+                $ipv4 = $addr['ipaddr'] . (isset($addr['subnetbits']) ? '/' . $addr['subnetbits'] : '');
+                break;
+            }
+        }
+        $ipv6 = '';
+        foreach ($info['ipv6'] ?? [] as $addr) {
+            if (!empty($addr['ipaddr']) && empty($addr['link-local']) && stripos($addr['ipaddr'], 'fe80:') !== 0) {
+                $ipv6 = $addr['ipaddr'];
+                break;
+            }
+        }
+        $out = [];
+        exec('/sbin/route -n get default 2>/dev/null', $out);
+        $gateway = '';
+        foreach ($out as $line) {
+            if (preg_match('/^\s*gateway:\s*(\S+)/', $line, $m)) {
+                $gateway = $m[1];
+            }
+        }
+        $dns = [];
+        foreach (@file('/etc/resolv.conf') ?: [] as $line) {
+            if (preg_match('/^nameserver\s+(\S+)/', $line, $m) && strpos($m[1], '127.') !== 0 && $m[1] !== '::1' && stripos($m[1], 'fe80:') !== 0) {
+                $dns[] = $m[1];
+            }
+        }
+        return ['ipv4' => $ipv4, 'ipv6' => $ipv6, 'gateway' => $gateway, 'dns' => array_values(array_unique($dns)), 'link' => !empty($ports[$port]['link'])];
     }
 
     /**
@@ -524,6 +591,9 @@ class Network
      */
     public function apply(array $keys)
     {
+        if ($this->resetMtu !== null && preg_match('/^[a-z0-9_.]+$/i', $this->resetMtu)) {
+            exec('/sbin/ifconfig ' . escapeshellarg($this->resetMtu) . ' mtu 1500 2>/dev/null');
+        }
         $this->backend->configdRun('interface vlan configure');
         $this->backend->configdRun('interface invoke registration');
         foreach (array_unique($keys) as $key) {

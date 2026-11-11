@@ -116,6 +116,13 @@ window.InversaPanelI18n.tr = {
     wanTest: 'Bağlantıyı test et', wanTesting: 'Test ediliyor…', chkGateway: 'Ağ geçidi', chkInternet: 'İnternet', chkDns: 'Alan adı çözümleme (DNS)',
     wanMulti: 'Bu sistemde birden fazla internet bağlantısı (çoklu WAN) var. Karışıklık olmaması için bağlantı ayarları yalnızca OPNsense menülerinden değiştirilebilir.',
     wanComplex: 'İnternet bağlantınız Inversa Panel’in desteklemediği bir türde yapılandırılmış; ayarlar yalnızca OPNsense menülerinden değiştirilebilir.',
+    wanPortShort: 'Port', wanLinkUp: 'kablo takılı', wanIp: 'IP adresi', wanTestTitle: 'Bağlantı testi', wanRetest: 'Yeniden test et',
+    wanExt: 'Dış IP', wanExtBtn: 'Dış IP’yi göster', wanExtFailed: 'öğrenilemedi',
+    wanExtNote: 'Dış IP, düğmeye basıldığında güvenlik duvarının Cloudflare’e (1.1.1.1) sormasıyla öğrenilir.',
+    wanAdv: 'Gelişmiş: MAC adresi, MTU', wanAuto: 'otomatik',
+    wanMac: 'MAC adresi', wanMacSub: 'Sağlayıcınız hattı modemin MAC adresine bağladıysa o adresi yazın. Boşsa portun kendi adresi kullanılır.',
+    wanMtuSub: 'Boş bırakın; yalnızca sağlayıcınız başka bir değer söylediyse yazın.',
+    wanMtuPppoe: 'Boşsa 1492. Bazı siteler açılmıyorsa daha düşük bir değer (ör. 1452) deneyin.',
     wanType: 'Bağlantı türü', wanSettings: function (type) { return type + ' · ayarlar'; },
     wt: {
         dhcp: ['Modem / router arkasında', 'OPNsense adresini modemden otomatik alır.'],
