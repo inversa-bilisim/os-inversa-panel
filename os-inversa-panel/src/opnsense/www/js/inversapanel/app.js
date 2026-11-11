@@ -48,6 +48,8 @@
     };
     var CATS = ['ads', 'malware', 'adult', 'gambling', 'bypass', 'safesearch', 'forcedns'];
     var QUICK = ['ads', 'malware', 'adult', 'forcedns'];
+    /* colour of a network by its kind (network cards, access table, device list) */
+    var KIND_COLOR = { home: '#1F4FC7', iot: '#0F766E', guest: '#7C3AED', camera: '#B45309', server: '#475569' };
     var TYPES = ['phone', 'tablet', 'laptop', 'tv', 'console', 'printer', 'iot', 'server', 'unknown'];
     /*
      * The menu: each entry opens one or more pages; with more than one, the pages show as sub tabs
@@ -759,7 +761,7 @@
             if (S.ui.filter === 'blocked' && !cfg.blocked) { return false; }
             if (S.ui.filter === 'waiting' && !waiting(h)) { return false; }
             if (!q) { return true; }
-            return (devName(h) + ' ' + h.ips.join(' ') + ' ' + h.mac + ' ' + h.vendor + ' ' + h.hostname).toLowerCase().indexOf(q) >= 0;
+            return (devName(h) + ' ' + (h.network || '') + ' ' + h.ips.join(' ') + ' ' + h.mac + ' ' + h.vendor + ' ' + h.hostname).toLowerCase().indexOf(q) >= 0;
         }).sort(function (a, b) {
             var byName = devName(a).localeCompare(devName(b), T().locale), sort = S.ui.sort;
             if (sort && SORTS[sort.col]) {
@@ -780,6 +782,11 @@
      */
     var SORTS = {
         name: function (a, b) { return devName(a).localeCompare(devName(b), T().locale); },
+        /* by network, inside a network by address */
+        network: function (a, b) {
+            if (!a.network || !b.network) { return a.network ? -1 : (b.network ? 1 : 0); }
+            return a.network.localeCompare(b.network, T().locale) || SORTS.ip(a, b);
+        },
         ip: function (a, b) {
             var x = hostIp4(a), y = hostIp4(b);
             if (!x || !y) { return x ? -1 : (y ? 1 : (a.ips[0] || '~').localeCompare(b.ips[0] || '~')); }
@@ -798,7 +805,7 @@
         }
     };
     /* which way the values run after the first click, for the arrow: 1 = small to large */
-    var SORT_RUNS = { name: 1, ip: 1, mac: 1, seen: -1, conns: -1, net: 1 };
+    var SORT_RUNS = { name: 1, network: 1, ip: 1, mac: 1, seen: -1, conns: -1, net: 1 };
 
     function sortHead(col, label) {
         var t = T(), sort = S.ui.sort, on = sort && sort.col === col, up = on && sort.dir * SORT_RUNS[col] > 0;
@@ -813,10 +820,18 @@
         return !!(h.online && h.dhcp === false && ip && dhcpNetOf(ip));
     }
 
+    /* the network a device is on: its name, in the colour of the network's kind */
+    function networkBadge(h) {
+        if (!h.network) { return '<span class="muted">—</span>'; }
+        var kind = (S.draft.kinds || {})[h.network_key] || 'home';
+        return '<span class="k-netbadge" title="' + esc(T().netKinds[kind] || '') + '"><span class="k-dot" style="background:' + (KIND_COLOR[kind] || KIND_COLOR.home) + '"></span>' +
+            esc(h.network) + '</span>';
+    }
+
     function deviceRows() {
         var t = T(), rows = filteredHosts();
         if (!rows.length) {
-            return '<tr><td colspan="6" class="k-empty" style="text-align:center">' +
+            return '<tr><td colspan="7" class="k-empty" style="text-align:center">' +
                 esc(S.hosts.length ? t.noResult : (S.hostsLoaded ? t.noDevicesYet : '…')) + '</td></tr>';
         }
         return rows.map(function (h) {
@@ -829,6 +844,7 @@
                 '<button type="button" class="k-dev-name" data-act="sel" data-mac="' + esc(h.mac) + '" aria-label="' + esc(t.editAria(name)) + '">' +
                 '<span style="min-width:0"><b>' + esc(name) + '</b><span class="muted">' + esc(h.vendor || t.unknownVendor) + '</span></span>' +
                 '<span style="color:#5B6573;flex:none">' + icon(ICONS.pencil, 15) + '</span></button></div></td>' +
+                '<td>' + networkBadge(h) + '</td>' +
                 '<td class="mono">' + esc(h.ips[0] || '—') + (h.ips.length > 1 ? ' <span class="muted">+' + (h.ips.length - 1) + '</span>' : '') +
                     (fixed ? ' <span class="k-badge" title="' + esc(moving ? t.dIpRenew : t.dFixedIp + ': ' + fixed) + '">' + esc(moving ? t.dFixedShort + ' → ' + fixed : t.dFixedShort) + '</span>' : '') +
                     (selfAddressed(h) ? ' <span class="k-badge" title="' + esc(t.dIpManual(h.ips[0])) + '">' + esc(t.dManualShort) + '</span>' : '') + '</td>' +
@@ -935,7 +951,7 @@
             '<input type="search" data-input="search" value="' + esc(S.ui.search) + '" placeholder="' + esc(t.search) + '" aria-label="' + esc(t.search) + '"></label>' +
             '<div class="k-chips" role="group" aria-label="' + esc(t.devTitle) + '">' + filters + '</div></div>' +
             '<div class="k-row"><div class="k-table-box k-grow"><table class="k-table"><thead><tr>' +
-            sortHead('name', t.colDevice) + sortHead('ip', t.colIp) + sortHead('mac', t.colMac) +
+            sortHead('name', t.colDevice) + sortHead('network', t.colNetwork) + sortHead('ip', t.colIp) + sortHead('mac', t.colMac) +
             sortHead('seen', t.colSeen) + sortHead('conns', t.colConns) + sortHead('net', t.colNet) +
             '</tr></thead><tbody id="k-devrows">' + deviceRows() + '</tbody></table></div>' +
             devicePanel() + '</div></div>';
@@ -1395,7 +1411,7 @@
 
     var helpers = {
         esc: esc, icon: icon, toggle: toggle, api: api, fmt: fmt, ago: ago, clone: clone,
-        toggleInList: toggleInList, devName: devName, hostByMac: hostByMac, ICONS: ICONS,
+        toggleInList: toggleInList, devName: devName, hostByMac: hostByMac, ICONS: ICONS, KIND_COLOR: KIND_COLOR,
         T: function () { return T(); },
         S: function () { return S; },
         redraw: redraw,

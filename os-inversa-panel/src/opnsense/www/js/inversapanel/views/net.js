@@ -18,7 +18,7 @@
     var GLOBE = 'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20';
     var PULSE = 'M22 12h-4l-3 9L9 3l-3 9H2';
     var PLUS = 'M12 5v14M5 12h14';
-    var KIND_COLOR = { home: '#1F4FC7', iot: '#0F766E', guest: '#7C3AED', camera: '#B45309', server: '#475569' };
+    var KIND_COLOR = h.KIND_COLOR;
     var KINDS = ['home', 'iot', 'guest', 'camera', 'server'];
 
     var N = { data: null, wan: null, add: null, edit: null, busy: false, countdown: null, test: null, testing: false, error: null };
