@@ -1,0 +1,9 @@
+Inversa Panel brings the most used OPNsense settings onto a single, simple screen:
+see every device on the network, cut a device's internet access with one
+click, block ads, malware, adult content, gambling and apps via DNS, and
+watch internet traffic and blocked requests on an overview page.
+
+Inversa Panel does not keep a parallel configuration: it writes to OPNsense's own
+firewall alias ("inversapanel_blocked"), automatic firewall rules and the Unbound
+blocklist policy "Inversa Panel (managed)", so everything stays visible in the
+regular OPNsense pages.

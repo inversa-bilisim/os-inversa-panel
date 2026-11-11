@@ -1,0 +1,9 @@
+<acl>
+    <page-inversapanel>
+        <name>Inversa Panel: easy management</name>
+        <patterns>
+            <pattern>ui/inversapanel/*</pattern>
+            <pattern>api/inversapanel/*</pattern>
+        </patterns>
+    </page-inversapanel>
+</acl>

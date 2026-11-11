@@ -1,0 +1,352 @@
+/*
+ * SPDX-License-Identifier: BSD-2-Clause
+ * Copyright (C) 2026 Inversa Bilişim
+ *
+ * Everything is scoped below .inversapanel so the OPNsense (bootstrap) theme is not affected,
+ * and a few bootstrap defaults are neutralised inside our container.
+ */
+.inversapanel {
+    --k-bg: #F3F5F8;
+    --k-card: #FFFFFF;
+    --k-text: #18212F;
+    --k-text-2: #36404D;
+    --k-muted: #5B6573;
+    --k-line: #E1E5EB;
+    --k-line-2: #EEF1F4;
+    --k-input: #D5DAE1;
+    --k-soft: #F8F9FB;
+    --k-chip: #E6E9EE;
+    --k-accent: #1F4FC7;
+    --k-accent-soft: #EEF3FD;
+    --k-ok: #16A34A;
+    --k-ok-text: #14532D;
+    --k-ok-soft: #E3F2E8;
+    --k-warn: #C2410C;
+    --k-warn-text: #7A2E06;
+    --k-warn-soft: #FFF6EC;
+    --k-warn-line: #F2C99B;
+    --k-off: #AEB6C1;
+    background: var(--k-bg);
+    color: var(--k-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    padding: 20px;
+    border-radius: 12px;
+    box-sizing: border-box;
+}
+.inversapanel *, .inversapanel *::before, .inversapanel *::after { box-sizing: border-box; }
+.inversapanel h1, .inversapanel h2, .inversapanel h3 { margin: 0; color: var(--k-text); font-family: inherit; }
+.inversapanel h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.01em; }
+.inversapanel h2 { font-size: 16px; font-weight: 600; }
+.inversapanel label { font-weight: normal; margin: 0; max-width: none; }
+.inversapanel button { font-family: inherit; line-height: 1.2; }
+.inversapanel button:focus-visible, .inversapanel input:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
+.inversapanel input[type=text], .inversapanel input[type=search] {
+    font-family: inherit; font-size: 14px; color: var(--k-text); background: #fff;
+    min-height: 44px; border: 1px solid var(--k-input); border-radius: 10px; padding: 0 12px; box-shadow: none;
+}
+.inversapanel .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+.inversapanel .muted { color: var(--k-muted); font-size: 13px; }
+.inversapanel .small { font-size: 12px; }
+.inversapanel .k-loading { padding: 48px; text-align: center; color: var(--k-muted); }
+.inversapanel .k-stack { display: flex; flex-direction: column; gap: 16px; }
+.inversapanel .k-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.inversapanel .k-row.stretch { align-items: stretch; }
+.inversapanel .k-grow { flex: 999 1 560px; min-width: 0; }
+.inversapanel .k-side { flex: 1 1 320px; min-width: 0; }
+.inversapanel .k-half { flex: 1 1 420px; min-width: 0; }
+
+/* header */
+.inversapanel .k-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.inversapanel .k-brand { display: flex; align-items: center; gap: 12px; }
+/* the mark already is a rounded tile in the accent colour (img/inversapanel/logo.png, 128 px for sharp high-density screens) */
+.inversapanel .k-logo { width: 44px; height: 44px; flex: none; background: url(../../img/inversapanel/logo.png) center / contain no-repeat; }
+.inversapanel .k-title { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+.inversapanel .k-head-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.inversapanel .k-pill { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 18px; font-size: 13px; font-weight: 600; }
+.inversapanel .k-pill.ok { background: var(--k-ok-soft); color: var(--k-ok-text); }
+.inversapanel .k-pill.warn { background: #FDE7D3; color: var(--k-warn-text); }
+/* the pill is a button that explains itself */
+.inversapanel button.k-pill { border: none; font-family: inherit; cursor: pointer; }
+.inversapanel button.k-pill:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
+.inversapanel .k-tip { position: relative; }
+.inversapanel .k-tip-box { display: none; position: absolute; z-index: 20; top: calc(100% + 8px); right: 0; width: max-content; max-width: min(320px, 80vw); padding: 12px 14px; border-radius: 12px; background: var(--k-text); color: #fff; font-size: 13px; font-weight: 400; line-height: 1.45; text-align: left; white-space: normal; box-shadow: 0 8px 24px rgba(24, 33, 47, .22); cursor: default; }
+.inversapanel .k-tip:hover .k-tip-box, .inversapanel .k-tip:focus-visible .k-tip-box { display: block; }
+/* keeps the box open while the pointer travels from the pill into it */
+.inversapanel .k-tip-box::before { content: ""; position: absolute; left: 0; right: 0; top: -8px; height: 8px; }
+.inversapanel .k-tip-box b { display: block; font-weight: 600; }
+.inversapanel .k-tip-box ul { margin: 4px 0 0; padding-left: 18px; }
+.inversapanel .k-tip-box .k-tip-go { display: block; margin-top: 8px; color: #C9D2DE; }
+.inversapanel .k-dot { width: 8px; height: 8px; border-radius: 4px; flex: none; display: inline-block; background: var(--k-off); }
+.inversapanel .k-dot.ok { background: var(--k-ok); }
+.inversapanel .k-dot.warn { background: var(--k-warn); }
+
+/* pending changes, inside the header between brand and status */
+.inversapanel .k-pending-slot { flex: 1 1 320px; min-width: 0; display: flex; justify-content: center; }
+.inversapanel .k-pending-slot:empty { flex-basis: 0; }
+.inversapanel .k-pending-inline { display: flex; align-items: center; gap: 10px; max-width: 560px; min-width: 0; text-align: left; background: var(--k-warn-soft); border: 1px solid var(--k-warn-line); color: var(--k-warn-text); border-radius: 12px; padding: 6px 6px 6px 12px; transition: opacity .6s ease; }
+.inversapanel .k-pending-inline.ok { background: #EAF6EE; border-color: #A9D8B8; color: var(--k-ok-text); padding-right: 12px; }
+.inversapanel .k-pending-inline.err { background: #FDECEC; border-color: #F3B4B4; color: #7F1D1D; }
+.inversapanel .k-pending-inline.fade { opacity: 0; }
+.inversapanel .k-pending-inline .k-note { font-size: 13px; line-height: 1.3; min-width: 0; }
+.inversapanel .k-pending-inline .k-note ul { margin: 4px 0 0; padding-left: 18px; }
+.inversapanel .k-pending-inline .k-icon-btn { width: 32px; height: 32px; background: transparent; color: inherit; }
+.inversapanel .k-pending-inline svg { flex: none; }
+.inversapanel .k-pending-inline .k-pending-text { display: flex; flex-direction: column; align-items: flex-start; text-align: left; min-width: 0; flex: 1 1 auto; line-height: 1.25; }
+.inversapanel .k-pending-wrap { position: relative; min-width: 0; max-width: 680px; }
+.inversapanel .k-btn.ghost { border-color: transparent; background: transparent; color: var(--k-warn-text); text-decoration: underline; text-underline-offset: 3px; }
+/* "show changes" list opens over the page, it does not push content */
+.inversapanel .k-changes { position: absolute; top: calc(100% + 8px); left: 0; right: 0; min-width: 340px; z-index: 1050; background: #fff; color: var(--k-text); text-align: left; border: 1px solid var(--k-line); border-radius: 12px; box-shadow: 0 12px 32px rgba(16, 24, 40, .18); max-height: 380px; overflow: auto; }
+.inversapanel .k-changes-head { padding: 12px 16px 10px; font-weight: 600; border-bottom: 1px solid var(--k-line); }
+.inversapanel .k-changes ul { list-style: none; margin: 0; padding: 0; }
+.inversapanel .k-changes li { display: flex; align-items: center; gap: 12px; padding: 8px 16px; border-bottom: 1px solid var(--k-line-2); }
+.inversapanel .k-changes li:last-child { border-bottom: none; }
+.inversapanel .k-ch-text { flex: 1 1 auto; min-width: 0; }
+.inversapanel .k-ch-what { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inversapanel .k-ch-diff { font-size: 13px; color: var(--k-muted); }
+.inversapanel .k-ch-diff .to { color: var(--k-accent); font-weight: 600; }
+.inversapanel .k-ch-diff .add { color: #15803D; font-weight: 600; }
+.inversapanel .k-ch-diff .del { color: #9A3B0A; font-weight: 600; text-decoration: line-through; }
+.inversapanel .k-pending-inline .k-pending-text b { font-weight: 600; white-space: nowrap; }
+.inversapanel .k-pending-inline .k-pending-text span { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inversapanel .k-btn.small { min-height: 36px; padding: 0 12px; font-size: 13px; flex: none; }
+
+/* language dropdown: grows with the number of languages without widening the header */
+.inversapanel .k-lang { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 10px; border: 1px solid var(--k-input); border-radius: 10px; background: #fff; color: var(--k-text-2); cursor: pointer; }
+/* the OPNsense theme forces "background: #fff !important" on every select (its arrow image then repeats) */
+.inversapanel .k-lang select { appearance: none; -webkit-appearance: none; -moz-appearance: none; border: none !important; background: transparent !important; background-image: none !important; width: auto; height: auto; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--k-text); padding: 0 18px 0 0; margin-right: -18px; min-height: 40px; cursor: pointer; outline: none; box-shadow: none; }
+.inversapanel .k-lang select:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
+.inversapanel .k-lang svg:last-child { pointer-events: none; }
+
+/* segmented control */
+.inversapanel .k-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--k-input); border-radius: 10px; overflow: hidden; background: #fff; }
+.inversapanel .k-seg button { min-height: 44px; padding: 0 14px; border: none; font-size: 14px; font-weight: 500; cursor: pointer; background: #fff; color: var(--k-text-2); }
+.inversapanel .k-seg button.on { background: var(--k-accent); color: #fff; font-weight: 600; }
+
+/* tabs */
+.inversapanel .k-tabs { display: flex; flex-wrap: wrap; column-gap: 2px; align-items: center; border-bottom: 1px solid #DDE2E8; margin-bottom: 20px; }
+.inversapanel .k-tab { display: flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 11px; border: none; background: transparent; font-size: 14px; font-weight: 500; cursor: pointer; margin-bottom: -1px; border-bottom: 2px solid transparent; color: #4A5462; }
+.inversapanel .k-tab.on { color: var(--k-accent); border-bottom-color: var(--k-accent); font-weight: 600; }
+.inversapanel .k-tab[disabled] { cursor: not-allowed; color: #6B7482; }
+.inversapanel .k-soon { font-size: 11px; font-weight: 600; color: #4A5462; background: var(--k-chip); border-radius: 6px; padding: 2px 6px; }
+.inversapanel .k-tab-sep { width: 1px; height: 24px; background: #DDE2E8; margin: 0 8px; }
+
+/* banners */
+.inversapanel .k-banner { display: flex; align-items: flex-start; gap: 10px; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; }
+.inversapanel .k-banner.warn { background: var(--k-warn-soft); border: 1px solid var(--k-warn-line); color: var(--k-warn-text); }
+.inversapanel .k-banner.ok { background: #EAF6EE; border: 1px solid #A9D8B8; color: var(--k-ok-text); font-weight: 500; align-items: center; }
+.inversapanel .k-banner.info { background: var(--k-accent-soft); border: 1px solid #C5D5F5; color: #1E3A7B; }
+.inversapanel .k-banner.err { background: #FDECEC; border: 1px solid #F3B4B4; color: #7F1D1D; }
+.inversapanel .k-banner svg { flex: none; margin-top: 1px; }
+.inversapanel .k-pending { justify-content: space-between; flex-wrap: wrap; align-items: center; }
+.inversapanel .k-pending-text { display: flex; align-items: center; gap: 12px; }
+.inversapanel .k-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* buttons */
+.inversapanel .k-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--k-input); background: #fff; color: var(--k-text); font-size: 14px; font-weight: 600; cursor: pointer; }
+.inversapanel .k-btn.primary { border: none; background: var(--k-accent); color: #fff; }
+.inversapanel .k-btn.soft { background: var(--k-bg); }
+.inversapanel .k-btn[disabled] { opacity: .6; cursor: progress; }
+.inversapanel .k-link { align-self: flex-start; min-height: 44px; padding: 0; border: none; background: transparent; color: var(--k-accent); font-size: 14px; font-weight: 600; cursor: pointer; }
+.inversapanel .k-icon-btn { width: 44px; height: 44px; border: none; background: var(--k-bg); border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--k-text-2); flex: none; }
+
+/* switch */
+.inversapanel .k-switch { width: 56px; height: 44px; padding: 0; border: none; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.inversapanel .k-track { display: block; position: relative; width: 44px; height: 24px; border-radius: 12px; background: var(--k-off); transition: background .15s; }
+.inversapanel .k-knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 9px; background: #fff; box-shadow: 0 1px 2px rgba(16,24,40,.3); transition: left .15s; }
+.inversapanel .k-switch.on .k-track { background: var(--k-accent); }
+.inversapanel .k-switch.on .k-knob { left: 23px; }
+.inversapanel .k-switch.cut .k-track { background: var(--k-warn); }
+
+/* chips */
+.inversapanel .k-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.inversapanel .k-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid var(--k-input); background: #fff; color: var(--k-text-2); }
+.inversapanel .k-chip.on { border-color: var(--k-accent); background: var(--k-accent-soft); color: var(--k-accent); font-weight: 600; }
+.inversapanel .k-count { font-size: 12px; font-weight: 600; border-radius: 6px; padding: 1px 7px; background: var(--k-chip); color: var(--k-text-2); }
+.inversapanel .k-chip.on .k-count { background: var(--k-accent); color: #fff; }
+.inversapanel .k-tag { display: inline-flex; align-items: center; gap: 2px; padding: 2px 2px 2px 10px; border-radius: 8px; }
+.inversapanel .k-tag.allow { background: var(--k-ok-soft); color: var(--k-ok-text); }
+.inversapanel .k-tag.deny { background: #FDE7D3; color: var(--k-warn-text); }
+.inversapanel .k-tag button { width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: inherit; padding: 0; }
+.inversapanel .k-badge { font-size: 12px; color: #4A5462; background: var(--k-bg); border-radius: 6px; padding: 2px 8px; flex: none; }
+/* a remark inside a form field */
+.inversapanel .k-note, .inversapanel .k-field > span.k-note { display: block; padding: 8px 10px; border-radius: 8px; font-size: 13px; font-weight: 400; background: var(--k-accent-soft); border: 1px solid #C5D5F5; color: #1E3A7B; }
+.inversapanel .k-note.warn, .inversapanel .k-field > span.k-note.warn { background: var(--k-warn-soft); border-color: var(--k-warn-line); color: var(--k-warn-text); }
+.inversapanel .k-badge.fixed { font-size: 11px; font-weight: 600; background: var(--k-chip); color: var(--k-text-2); }
+
+/* cards */
+.inversapanel .k-card { background: var(--k-card); border: 1px solid var(--k-line); border-radius: 16px; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.inversapanel .k-card.tight { padding: 8px 24px; gap: 0; }
+.inversapanel .k-card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.inversapanel .k-status { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.inversapanel .k-status-main { display: flex; align-items: center; gap: 16px; }
+.inversapanel .k-badge-big { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex: none; }
+.inversapanel .k-badge-big.ok { background: var(--k-ok-soft); color: #15803D; }
+.inversapanel .k-badge-big.warn { background: #FDE7D3; color: var(--k-warn); }
+.inversapanel .k-info { display: inline-flex; align-items: center; gap: 6px; background: var(--k-bg); border-radius: 8px; padding: 6px 10px; font-size: 13px; color: var(--k-text-2); }
+.inversapanel .k-kpis { display: flex; flex-wrap: wrap; gap: 16px; }
+.inversapanel .k-kpi { flex: 1 1 220px; background: var(--k-card); border: 1px solid var(--k-line); border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+.inversapanel .k-kpi-label { font-size: 13px; color: var(--k-muted); font-weight: 500; }
+.inversapanel .k-kpi-value { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+.inversapanel .k-kpi-unit { font-size: 14px; color: var(--k-muted); margin-left: 6px; font-weight: 400; letter-spacing: 0; }
+
+/* lists */
+.inversapanel .k-list-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--k-line-2); }
+.inversapanel .k-list-row:last-child { border-bottom: none; }
+.inversapanel .k-grow-text { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inversapanel .k-bar { height: 6px; border-radius: 3px; background: var(--k-line-2); }
+.inversapanel .k-bar > div { height: 6px; border-radius: 3px; background: var(--k-accent); }
+.inversapanel .k-setting { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--k-line-2); }
+.inversapanel .k-setting:last-child { border-bottom: none; }
+.inversapanel .k-setting-text { flex: 1 1 260px; min-width: 0; }
+.inversapanel .k-setting-text b { display: block; font-weight: 600; }
+.inversapanel .k-setting.wrap { flex-wrap: wrap; justify-content: space-between; }
+.inversapanel .k-ibox { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex: none; background: var(--k-bg); color: var(--k-muted); }
+.inversapanel .k-ibox.on { background: var(--k-accent-soft); color: var(--k-accent); }
+.inversapanel .k-ibox.cut { background: #FDE7D3; color: #9A3B0A; }
+.inversapanel .k-ibox.big { width: 48px; height: 48px; border-radius: 12px; }
+
+/* chart */
+.inversapanel .k-chart { position: relative; height: 200px; }
+.inversapanel .k-chart svg { display: block; width: 100%; height: 200px; }
+.inversapanel .k-chart .k-axis { position: absolute; left: 0; font-size: 11px; color: var(--k-muted); background: #fff; padding-right: 4px; }
+.inversapanel .k-legend { display: flex; gap: 16px; font-size: 13px; color: var(--k-text-2); }
+.inversapanel .k-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.inversapanel .k-legend i { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
+.inversapanel .k-axis-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--k-muted); }
+
+/* devices */
+.inversapanel .k-toolbar .k-search { flex: 1 1 280px; width: auto; }
+.inversapanel .k-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.inversapanel .k-search { flex: 0 0 auto; width: 100%; max-width: 420px; display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--k-input); border-radius: 10px; padding: 0 12px; min-height: 44px; }
+.inversapanel .k-search input { flex: 1 1 auto; min-width: 0; border: none !important; outline: none; min-height: 40px; padding: 0; }
+.inversapanel .k-table-box { background: var(--k-card); border: 1px solid var(--k-line); border-radius: 16px; overflow-x: auto; }
+.inversapanel table.k-table { width: 100%; min-width: 860px; border-collapse: collapse; margin: 0; }
+.inversapanel .k-table th { text-align: left; font-size: 12px; color: var(--k-muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; padding: 14px 12px; border-bottom: 1px solid var(--k-line); }
+/* column headings sort the table */
+.inversapanel .k-th { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; margin: -6px -8px; padding: 0 8px; border: none; border-radius: 8px; background: transparent; color: inherit; font: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; }
+.inversapanel .k-th:hover, .inversapanel .k-th.on { color: var(--k-text); background: var(--k-soft); }
+.inversapanel .k-th:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
+.inversapanel .k-th-arrow { display: inline-block; width: 10px; font-size: 9px; line-height: 1; color: var(--k-accent); }
+.inversapanel .k-table td { padding: 6px 12px; border-bottom: 1px solid var(--k-line-2); vertical-align: middle; }
+.inversapanel .k-table th:first-child, .inversapanel .k-table td:first-child { padding-left: 20px; }
+.inversapanel .k-table th:last-child, .inversapanel .k-table td:last-child { padding-right: 20px; text-align: right; }
+.inversapanel .k-table tr.cut td { background: var(--k-warn-soft); }
+.inversapanel .k-table tr.sel td { background: var(--k-accent-soft); }
+.inversapanel .k-dev { display: flex; align-items: center; gap: 12px; }
+.inversapanel .k-dev-name { display: flex; align-items: center; gap: 8px; min-height: 44px; border: none; background: transparent; padding: 0; text-align: left; cursor: pointer; min-width: 0; color: var(--k-text); }
+.inversapanel .k-dev-name b { display: block; font-size: 14px; }
+.inversapanel .k-net { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.inversapanel .k-net-label { font-size: 13px; font-weight: 600; color: var(--k-text-2); }
+.inversapanel .k-net-label.cut { color: #9A3B0A; }
+.inversapanel .k-empty { padding: 32px; text-align: center; color: var(--k-muted); }
+.inversapanel .k-types { display: flex; flex-wrap: wrap; gap: 6px; }
+.inversapanel .k-type { width: 44px; height: 44px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--k-input); background: #fff; color: var(--k-muted); }
+.inversapanel .k-type.on { border-color: var(--k-accent); background: var(--k-accent-soft); color: var(--k-accent); }
+.inversapanel .k-kv { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--k-line-2); font-size: 13px; }
+.inversapanel .k-kv span:last-child { font-weight: 500; text-align: right; word-break: break-all; }
+.inversapanel .k-field { display: flex; flex-direction: column; gap: 6px; }
+.inversapanel .k-field > span { font-weight: 600; font-size: 13px; }
+
+/* blocking */
+.inversapanel .k-apps { display: flex; flex-wrap: wrap; gap: 10px; }
+.inversapanel .k-app { flex: 1 1 150px; display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 12px; border-radius: 12px; cursor: pointer; text-align: left; border: 1px solid var(--k-line); background: #fff; }
+.inversapanel .k-app.on { border-color: #E9A46A; background: var(--k-warn-soft); }
+.inversapanel .k-mono { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex: none; background: var(--k-chip); color: var(--k-text-2); }
+.inversapanel .k-app.on .k-mono { background: var(--k-warn); color: #fff; }
+.inversapanel .k-app-text { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.inversapanel .k-app-text b { font-weight: 600; font-size: 14px; color: var(--k-text); }
+.inversapanel .k-app-text span { font-size: 12px; font-weight: 600; color: var(--k-muted); }
+.inversapanel .k-app.on .k-app-text span { color: #9A3B0A; }
+.inversapanel .k-addrow { display: flex; gap: 8px; }
+.inversapanel .k-addrow input { flex: 1 1 auto; min-width: 0; }
+
+@media (max-width: 640px) {
+    .inversapanel { padding: 12px; }
+    .inversapanel .k-card { padding: 16px; }
+}
+
+/* ---- v0.2 views ------------------------------------------------------------ */
+.inversapanel input[type=password], .inversapanel input[type=time] {
+    font-family: inherit; font-size: 14px; color: var(--k-text); background: #fff;
+    min-height: 44px; border: 1px solid var(--k-input); border-radius: 10px; padding: 0 12px; box-shadow: none;
+}
+.inversapanel input[type=range] { width: 100%; accent-color: var(--k-accent); min-height: 28px; }
+.inversapanel .k-card.dim, .inversapanel .k-list-row.dim { opacity: .72; }
+.inversapanel .k-welcome { border-color: #C5D5F5; background: var(--k-accent-soft); }
+.inversapanel .k-chip.warn.on { border-color: var(--k-warn); background: var(--k-warn-soft); color: #9A3B0A; }
+.inversapanel .k-chip[disabled] { opacity: .45; cursor: not-allowed; }
+.inversapanel .k-scroll { max-height: 260px; overflow-y: auto; }
+
+/* option cards (connection type, vpn mode) */
+.inversapanel .k-opt { flex: 1 1 220px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 72px; padding: 12px 14px; border-radius: 12px; cursor: pointer; text-align: left; border: 1px solid var(--k-input); background: #fff; color: var(--k-text); }
+.inversapanel .k-opt b { font-size: 14px; }
+.inversapanel .k-opt span { font-size: 13px; color: var(--k-muted); }
+.inversapanel .k-opt.on { border-color: var(--k-accent); box-shadow: inset 0 0 0 1px var(--k-accent); background: var(--k-accent-soft); }
+
+/* schedules */
+.inversapanel .k-sched-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.inversapanel .k-title-input { font-size: 16px !important; font-weight: 600; border-color: transparent !important; background: transparent !important; margin-left: -12px; width: 100%; }
+.inversapanel .k-title-input:focus { border-color: var(--k-input) !important; background: #fff !important; }
+.inversapanel .k-week { display: flex; flex-direction: column; gap: 6px; background: var(--k-soft); border: 1px solid var(--k-line-2); border-radius: 12px; padding: 12px; }
+.inversapanel .k-week-row { display: flex; align-items: center; gap: 10px; }
+.inversapanel .k-week-row > span { width: 32px; font-size: 12px; font-weight: 600; color: var(--k-text-2); flex: none; }
+.inversapanel .k-week-bar { position: relative; flex: 1 1 auto; height: 16px; border-radius: 4px; background: var(--k-chip); }
+.inversapanel .k-week-bar i { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+.inversapanel .k-week-axis { display: flex; justify-content: space-between; padding-left: 42px; font-size: 11px; color: var(--k-muted); }
+
+/* network */
+.inversapanel .k-net-card { flex: 1 1 260px; }
+.inversapanel .k-add-card { flex: 1 1 260px; min-height: 180px; align-items: center; justify-content: center; text-align: center; border-style: dashed; border-color: var(--k-off); background: transparent; cursor: pointer; color: var(--k-text-2); }
+.inversapanel .k-edit { border-color: var(--k-accent); box-shadow: 0 0 0 3px #DCE6FB; }
+.inversapanel .k-countdown b { display: block; }
+/* a switch with what it switches right next to it (DHCP server, approval of new devices) */
+.inversapanel .k-addr { align-items: flex-start; gap: 16px 24px; }
+.inversapanel .k-dhcp { flex: 0 1 auto; min-width: 0; max-width: 100%; display: flex; flex-direction: column; gap: 8px; background: var(--k-soft); border: 1px solid var(--k-line); border-radius: 12px; padding: 10px 16px 12px 10px; }
+.inversapanel .k-dhcp.on { border-color: #C5D5F5; background: #F7F9FE; }
+.inversapanel .k-dhcp-main { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
+.inversapanel .k-dhcp-head { display: flex; align-items: center; gap: 6px; min-height: 44px; margin-right: 8px; }
+.inversapanel .k-dhcp-fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; min-width: 0; padding-left: 6px; }
+.inversapanel .k-dhcp-head b { font-weight: 600; }
+.inversapanel .k-dhcp > .muted { padding-left: 6px; max-width: 760px; }
+.inversapanel .k-dhcp .k-field input { max-width: 100%; }
+.inversapanel .k-switch[disabled] { opacity: .5; cursor: not-allowed; }
+.inversapanel .k-sep { height: 1px; background: var(--k-line-2); }
+.inversapanel .k-count.warn { background: var(--k-warn); color: #fff; }
+.inversapanel .k-wait { align-items: center; }
+.inversapanel .k-wait b { display: block; }
+.inversapanel table.k-matrix { border-collapse: separate; border-spacing: 6px; margin: 0; }
+.inversapanel .k-matrix th { font-size: 13px; font-weight: 700; padding: 4px 8px; white-space: nowrap; text-align: left; }
+.inversapanel .k-matrix thead th { text-align: center; }
+.inversapanel .k-cell { width: 100%; min-width: 100px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 600; border: 1px solid var(--k-line); background: var(--k-soft); color: var(--k-muted); cursor: pointer; }
+.inversapanel .k-cell.self { cursor: default; background: var(--k-bg); }
+.inversapanel .k-cell.allow { border-color: #A9D8B8; background: #EAF6EE; color: var(--k-ok-text); }
+.inversapanel .k-cell.deny { border-color: var(--k-warn-line); background: var(--k-warn-soft); color: var(--k-warn-text); }
+.inversapanel .k-ports { display: flex; flex-wrap: wrap; gap: 10px; background: #262D38; border-radius: 14px; padding: 16px; }
+.inversapanel .k-port { flex: 0 0 170px; display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 10px; background: #343C49; color: #C9D1DC; font-size: 12px; }
+.inversapanel .k-port b { color: #fff; font-size: 13px; }
+.inversapanel .k-port-top { display: flex; justify-content: space-between; align-items: center; }
+.inversapanel .k-jack { width: 44px; height: 34px; border-radius: 4px; background: #11161D; border: 2px solid #6B7482; margin: 6px 0; }
+.inversapanel .k-jack.up { border-color: var(--k-ok); }
+
+/* vpn */
+.inversapanel .k-qr { align-self: center; background: #fff; border: 1px solid var(--k-line); border-radius: 12px; padding: 8px; line-height: 0; }
+.inversapanel .k-qr svg { width: 240px; height: 240px; }
+.inversapanel .k-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: var(--k-text-2); }
+.inversapanel .k-modal { position: fixed; inset: 0; z-index: 2000; background: rgba(17, 22, 29, .45); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.inversapanel .k-modal-card { background: var(--k-card); border-radius: 16px; padding: 20px 24px; width: 100%; max-width: 420px; max-height: calc(100vh - 32px); overflow: auto; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 12px 40px rgba(0, 0, 0, .25); }
+.inversapanel .k-info-box { background: var(--k-bg); border-radius: 12px; padding: 12px 16px; display: flex; flex-direction: column; min-width: 0; }
+.inversapanel .k-info-box > b { font-size: 13px; margin-bottom: 2px; }
+.inversapanel .k-info-box .k-kv:last-child { border-bottom: none; }
+.inversapanel .k-info-box .k-kv > span:last-child { display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; }
+.inversapanel .k-field > .k-seg { align-self: flex-start; }
+.inversapanel .k-vpn-edit { display: flex; flex-direction: column; gap: 14px; padding: 14px 0; border-top: 1px solid var(--k-line-2); border-bottom: 1px solid var(--k-line-2); }
+
+/* country blocking: key and direction side by side */
+.inversapanel .k-geo-row { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--k-line-2); }
+.inversapanel .k-geo-key { flex: 1 1 340px; min-width: 0; max-width: 560px; }
+.inversapanel .k-warn-text { color: #9A3B0A; font-weight: 600; font-size: 13px; }
+
+/* OPNsense's own page heading ("Inversa Panel: Panel") only repeats what the header below already says */
+header.page-content-head { display: none; }

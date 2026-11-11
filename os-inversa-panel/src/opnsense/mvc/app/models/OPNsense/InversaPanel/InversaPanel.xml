@@ -1,0 +1,334 @@
+<model>
+    <mount>//OPNsense/InversaPanel</mount>
+    <version>0.2.0</version>
+    <description>Inversa Panel - easy management</description>
+    <items>
+        <general>
+            <enabled type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </enabled>
+            <language type="OptionField">
+                <Default>auto</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <auto>Automatic</auto>
+                    <tr>Türkçe</tr>
+                    <en>English</en>
+                </OptionValues>
+            </language>
+            <!-- internal networks Inversa Panel protects (blocking rules and DNS enforcement apply here) -->
+            <interfaces type="InterfaceField">
+                <Multiple>Y</Multiple>
+                <Default>lan</Default>
+                <Required>Y</Required>
+                <filters>
+                    <enable>/^(?!0).*$/</enable>
+                </filters>
+            </interfaces>
+            <!-- turn on Unbound query statistics (needed for the dashboard counters) -->
+            <dnsstats type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </dnsstats>
+            <!-- set once the user went through the welcome card; nothing is switched on before that -->
+            <welcomed type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </welcomed>
+        </general>
+        <devices>
+            <device type="ArrayField">
+                <mac type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/</Mask>
+                    <ValidationMessage>Invalid MAC address.</ValidationMessage>
+                    <Constraints>
+                        <check001>
+                            <ValidationMessage>This device already exists.</ValidationMessage>
+                            <type>UniqueConstraint</type>
+                        </check001>
+                    </Constraints>
+                </mac>
+                <name type="TextField">
+                    <Mask>/^[^\x00-\x1f&lt;&gt;"]{0,128}$/</Mask>
+                    <ValidationMessage>Invalid device name.</ValidationMessage>
+                </name>
+                <type type="OptionField">
+                    <Default>unknown</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <phone>Phone</phone>
+                        <tablet>Tablet</tablet>
+                        <laptop>Computer</laptop>
+                        <tv>TV</tv>
+                        <console>Game console</console>
+                        <printer>Printer</printer>
+                        <iot>Smart home</iot>
+                        <server>Server / NAS</server>
+                        <unknown>Other</unknown>
+                    </OptionValues>
+                </type>
+                <blocked type="BooleanField">
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </blocked>
+                <!-- may use networks on which new devices wait for approval (networks.network.approval) -->
+                <approved type="BooleanField">
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </approved>
+            </device>
+        </devices>
+        <filtering>
+            <ads type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </ads>
+            <malware type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </malware>
+            <adult type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </adult>
+            <gambling type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </gambling>
+            <bypass type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </bypass>
+            <safesearch type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </safesearch>
+            <forcedns type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </forcedns>
+            <apps type="OptionField">
+                <Multiple>Y</Multiple>
+                <OptionValues>
+                    <tiktok>TikTok</tiktok>
+                    <instagram>Instagram</instagram>
+                    <facebook>Facebook</facebook>
+                    <x>X</x>
+                    <youtube>YouTube</youtube>
+                    <netflix>Netflix</netflix>
+                    <twitch>Twitch</twitch>
+                    <discord>Discord</discord>
+                    <roblox>Roblox</roblox>
+                    <steam>Steam</steam>
+                    <whatsapp>WhatsApp</whatsapp>
+                    <telegram>Telegram</telegram>
+                </OptionValues>
+            </apps>
+            <allowlist type="CSVListField">
+                <Mask>/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i</Mask>
+                <MaskPerItem>Y</MaskPerItem>
+                <ValidationMessage>A valid domain must be specified.</ValidationMessage>
+            </allowlist>
+            <denylist type="CSVListField">
+                <Mask>/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i</Mask>
+                <MaskPerItem>Y</MaskPerItem>
+                <ValidationMessage>A valid domain must be specified.</ValidationMessage>
+            </denylist>
+            <response type="OptionField">
+                <Default>zero</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <zero>0.0.0.0</zero>
+                    <nxdomain>NXDOMAIN</nxdomain>
+                </OptionValues>
+            </response>
+        </filtering>
+        <!-- what Inversa Panel knows about each internal network (the interface itself lives in OPNsense) -->
+        <networks>
+            <network type="ArrayField">
+                <interface type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^(lan|opt[0-9]{1,3})$/</Mask>
+                </interface>
+                <kind type="OptionField">
+                    <Default>home</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <home>Home</home>
+                        <iot>IoT</iot>
+                        <guest>Guest</guest>
+                        <camera>Cameras</camera>
+                        <server>Servers</server>
+                    </OptionValues>
+                </kind>
+                <!-- created by Inversa Panel: only these may be deleted from Inversa Panel -->
+                <created type="BooleanField">
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </created>
+                <!-- devices on this network reach nothing but the firewall itself until they are approved -->
+                <approval type="BooleanField">
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </approval>
+            </network>
+        </networks>
+        <!-- access between networks: one entry per (from, to) pair; "wan" means the internet -->
+        <access>
+            <rule type="ArrayField">
+                <from type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^(lan|opt[0-9]{1,3})$/</Mask>
+                </from>
+                <to type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^(lan|opt[0-9]{1,3}|wan)$/</Mask>
+                </to>
+                <allow type="BooleanField">
+                    <Default>1</Default>
+                    <Required>Y</Required>
+                </allow>
+            </rule>
+        </access>
+        <schedules>
+            <schedule type="ArrayField">
+                <enabled type="BooleanField">
+                    <Default>1</Default>
+                    <Required>Y</Required>
+                </enabled>
+                <name type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^[^\x00-\x1f&lt;&gt;"]{1,64}$/</Mask>
+                </name>
+                <devices type="CSVListField">
+                    <Mask>/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/</Mask>
+                    <MaskPerItem>Y</MaskPerItem>
+                </devices>
+                <!-- 1 = Monday ... 7 = Sunday -->
+                <days type="CSVListField">
+                    <Mask>/^[1-7]$/</Mask>
+                    <MaskPerItem>Y</MaskPerItem>
+                </days>
+                <start type="TextField">
+                    <Required>Y</Required>
+                    <Default>21:00</Default>
+                    <Mask>/^([01][0-9]|2[0-3]):[0-5][0-9]$/</Mask>
+                </start>
+                <end type="TextField">
+                    <Required>Y</Required>
+                    <Default>07:00</Default>
+                    <Mask>/^([01][0-9]|2[0-3]):[0-5][0-9]$/</Mask>
+                </end>
+                <action type="OptionField">
+                    <Default>cut</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <cut>Cut internet</cut>
+                        <apps>Block apps</apps>
+                    </OptionValues>
+                </action>
+                <apps type="CSVListField">
+                    <Mask>/^[a-z0-9]{1,32}$/</Mask>
+                    <MaskPerItem>Y</MaskPerItem>
+                </apps>
+            </schedule>
+        </schedules>
+        <guest>
+            <limit type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </limit>
+            <down type="IntegerField">
+                <Default>20</Default>
+                <MinimumValue>1</MinimumValue>
+                <MaximumValue>10000</MaximumValue>
+                <Required>Y</Required>
+            </down>
+            <up type="IntegerField">
+                <Default>5</Default>
+                <MinimumValue>1</MinimumValue>
+                <MaximumValue>10000</MaximumValue>
+                <Required>Y</Required>
+            </up>
+        </guest>
+        <geo>
+            <enabled type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </enabled>
+            <direction type="OptionField">
+                <Default>in</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <in>Incoming only</in>
+                    <both>Incoming and outgoing</both>
+                </OptionValues>
+            </direction>
+            <countries type="CSVListField">
+                <Mask>/^[A-Z]{2}$/</Mask>
+                <MaskPerItem>Y</MaskPerItem>
+            </countries>
+        </geo>
+        <!--
+            VPN connections Inversa Panel manages; the WireGuard instance itself (keys, port, tunnel, peers)
+            lives in OPNsense's WireGuard models, referenced by its uuid.
+        -->
+        <vpns>
+            <connection type="ArrayField">
+                <server type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^[0-9a-f-]{36}$/</Mask>
+                </server>
+                <kind type="OptionField">
+                    <Default>remote</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <remote>Remote access</remote>
+                        <site>Site to site</site>
+                    </OptionValues>
+                </kind>
+                <!-- internal networks (interface keys) reachable through this connection -->
+                <networks type="CSVListField">
+                    <Mask>/^(lan|opt[0-9]{1,3})$/</Mask>
+                    <MaskPerItem>Y</MaskPerItem>
+                </networks>
+                <!-- remote access: full = all traffic through home, split = selected networks only -->
+                <mode type="OptionField">
+                    <Default>split</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <full>All traffic</full>
+                        <split>Selected networks only</split>
+                    </OptionValues>
+                </mode>
+                <!-- remote access: address devices use to reach home; empty = current WAN address -->
+                <endpoint type="HostnameField">
+                    <IpAllowed>Y</IpAllowed>
+                </endpoint>
+                <!-- site to site: networks behind the other side -->
+                <remote_networks type="CSVListField">
+                    <Mask>/^[0-9a-fA-F.:]+\/[0-9]{1,3}$/</Mask>
+                    <MaskPerItem>Y</MaskPerItem>
+                </remote_networks>
+            </connection>
+        </vpns>
+        <vpn>
+            <!-- 0.2 single-instance settings, migrated into vpns.connection on first use -->
+            <!-- full: all client traffic through home (ad blocking on the road); split: only home networks -->
+            <mode type="OptionField">
+                <Default>full</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <full>All traffic</full>
+                    <split>Home networks only</split>
+                </OptionValues>
+            </mode>
+            <!-- address phones use to reach home (public IP or DynDNS name); empty = current WAN address -->
+            <endpoint type="HostnameField">
+                <IpAllowed>Y</IpAllowed>
+            </endpoint>
+        </vpn>
+    </items>
+</model>

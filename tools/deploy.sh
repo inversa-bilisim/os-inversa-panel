@@ -10,7 +10,7 @@
 set -eu
 
 TARGET="${1:?usage: $0 root@<opnsense-ip>}"
-SRC="$(cd "$(dirname "$0")/../os-minnosh/src" && pwd)"
+SRC="$(cd "$(dirname "$0")/../os-inversa-panel/src" && pwd)"
 
 echo ">> copying files to ${TARGET}"
 tar -C "${SRC}" -cf - . | ssh "${TARGET}" 'tar -C /usr/local -xf -'
@@ -19,15 +19,15 @@ echo ">> checking and reloading on ${TARGET}"
 # root's login shell on OPNsense is csh: run the remote part explicitly with sh
 ssh "${TARGET}" /bin/sh -s <<'REMOTE'
 set -e
-chmod 0755 /usr/local/opnsense/scripts/OPNsense/Minnosh/*.py /usr/local/opnsense/scripts/OPNsense/Minnosh/*.sh /usr/local/opnsense/scripts/OPNsense/Minnosh/*.php
-for f in $(find /usr/local/opnsense/mvc/app -path "*Minnosh*" -name "*.php") /usr/local/opnsense/scripts/OPNsense/Minnosh/*.php /usr/local/etc/inc/plugins.inc.d/minnosh.inc; do
+chmod 0755 /usr/local/opnsense/scripts/OPNsense/InversaPanel/*.py /usr/local/opnsense/scripts/OPNsense/InversaPanel/*.sh /usr/local/opnsense/scripts/OPNsense/InversaPanel/*.php
+for f in $(find /usr/local/opnsense/mvc/app -path "*InversaPanel*" -name "*.php") /usr/local/opnsense/scripts/OPNsense/InversaPanel/*.php /usr/local/etc/inc/plugins.inc.d/inversapanel.inc; do
     php -l "$f" > /dev/null || { echo "syntax error in $f"; exit 1; }
 done
 # menu / ACL caches are rebuilt on next page load
 rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
-# configd must re-read actions_minnosh.conf
+# configd must re-read actions_inversapanel.conf
 service configd restart > /dev/null
-# pick up minnosh_cron() (schedules run every minute)
+# pick up inversapanel_cron() (schedules run every minute)
 configctl cron restart > /dev/null
-echo "ok: open https://<firewall>/ui/minnosh"
+echo "ok: open https://<firewall>/ui/inversapanel"
 REMOTE
