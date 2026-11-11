@@ -22,7 +22,7 @@ class Overview
     public const EVENTS = self::DIR . '/events.log';
     public const WATCH = self::DIR . '/watch.json';
     /* lines kept in the event log */
-    private const KEEP = 300;
+    private const KEEP = 50000;
     /* a WireGuard peer counts as connected this long after its last handshake */
     public const HANDSHAKE = 180;
 
@@ -84,16 +84,27 @@ class Overview
     }
 
     /**
-     * newest first
+     * newest first; logins and configuration changes are left to the logs page
      */
     public static function events($limit = 30)
     {
-        $lines = is_file(self::EVENTS) ? (@file(self::EVENTS, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: []) : [];
         $result = [];
-        foreach (array_reverse(array_slice($lines, -$limit)) as $line) {
-            $row = json_decode($line, true);
-            if (is_array($row) && isset($row['t'], $row['k'])) {
-                $result[] = $row;
+        if (is_file(self::EVENTS)) {
+            /* the file may hold 90 days: only its end is of interest here */
+            $handle = @fopen(self::EVENTS, 'r');
+            if ($handle) {
+                fseek($handle, max(0, filesize(self::EVENTS) - 65536));
+                $lines = explode("\n", (string)stream_get_contents($handle));
+                fclose($handle);
+                foreach (array_reverse($lines) as $line) {
+                    $row = json_decode($line, true);
+                    if (is_array($row) && isset($row['t'], $row['k']) && !in_array($row['k'], ['login_ok', 'login_fail', 'config'])) {
+                        $result[] = $row;
+                        if (count($result) >= $limit) {
+                            break;
+                        }
+                    }
+                }
             }
         }
         return $result;

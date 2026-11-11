@@ -10,6 +10,7 @@
         <Vpn order="30" VisibleName="VPN" url="/ui/inversapanel#vpn" cssClass="fa fa-lock fa-fw"/>
         <Devices order="40" VisibleName="Cihazlar" url="/ui/inversapanel#devices" cssClass="fa fa-laptop fa-fw"/>
         <Security order="50" VisibleName="Güvenlik" url="/ui/inversapanel#security" cssClass="fa fa-shield fa-fw"/>
+        <Logs order="55" VisibleName="Kayıtlar" url="/ui/inversapanel#logs" cssClass="fa fa-list fa-fw"/>
         <Settings order="60" VisibleName="Ayarlar" url="/ui/inversapanel#settings" cssClass="fa fa-sliders fa-fw"/>
     </Inversa>
 </menu>

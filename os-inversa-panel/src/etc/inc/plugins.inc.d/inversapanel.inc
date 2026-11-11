@@ -92,6 +92,22 @@ function inversapanel_firewall(\OPNsense\Firewall\Plugin $fw)
         }
     }
 
+    /* addresses somebody chose to refuse on the attacks page; logged, so further tries show up there */
+    $refused = array_values(array_filter($mdl->logs->blocked->getValues(), fn($ip) => filter_var($ip, FILTER_VALIDATE_IP)));
+    if (!empty($refused) && isset($mapping['wan'])) {
+        foreach ([['inet', FILTER_FLAG_IPV4], ['inet6', FILTER_FLAG_IPV6]] as list($family, $flag)) {
+            $list = array_filter($refused, fn($ip) => filter_var($ip, FILTER_VALIDATE_IP, $flag));
+            if (!empty($list)) {
+                $fw->registerFilterRule(100000, [
+                    'type' => 'block', 'interface' => 'wan', 'direction' => 'in', 'ipprotocol' => $family, 'quick' => true,
+                    'log' => true, 'from' => implode(',', $list),
+                    'descr' => 'Inversa Panel: blocked addresses', 'label' => inversapanel_label('blockip'),
+                    '#ref' => 'ui/inversapanel#attacks',
+                ]);
+            }
+        }
+    }
+
     inversapanel_firewall_access($fw, $mdl, $mapping);
     inversapanel_firewall_geo($fw, $mdl, $mapping, $protected);
     inversapanel_firewall_vpn($fw, $mdl, $mapping);
@@ -265,6 +281,8 @@ function inversapanel_firewall_geo(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping
             'quick' => true,
             'from' => '<' . \OPNsense\InversaPanel\Catalog::GEO_ALLOW_ALIAS . '>',
             'from_not' => true,
+            /* logged for the attacks page */
+            'log' => true,
             'descr' => 'Inversa Panel: only the allowed countries get in',
             'label' => inversapanel_label('geo-in'),
             '#ref' => 'ui/inversapanel#geo',
@@ -281,6 +299,7 @@ function inversapanel_firewall_geo(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping
         'ipprotocol' => 'inet46',
         'quick' => true,
         'from' => '<' . \OPNsense\InversaPanel\Catalog::GEO_ALIAS . '>',
+        'log' => true,
         'descr' => 'Inversa Panel: block countries (incoming)',
         'label' => inversapanel_label('geo-in'),
         '#ref' => 'ui/inversapanel#geo',
@@ -466,6 +485,8 @@ function inversapanel_cron()
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel schedule', '*']],
         /* data usage and events for the overview page */
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel watch', '*']],
+        /* attacks, logins and configuration changes for the logs pages */
+        ['autocron' => ['/usr/local/sbin/configctl -d inversapanel logcollect', '*']],
         /* free country database refresh (only acts when country blocking is on and no other source is set) */
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel geoip normal', '40', '4']],
     ];

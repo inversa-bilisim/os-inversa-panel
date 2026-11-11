@@ -15,6 +15,7 @@
     var ICONS = {
         shield: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',
         check: 'M9 12l2 2 4-4',
+        list: 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01',
         alert: 'M12 8v4M12 15.5h.01',
         dash: 'M3.3 19a9 9 0 1 1 17.4 0M12 14l4-4',
         devices: 'M3 4h12a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM6 19h6M18 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z',
@@ -61,6 +62,7 @@
         ['vpn', ['vpn']],
         ['devices', ['devices', 'sched']],
         ['security', ['filter', 'ips', 'geo', 'lists']],
+        ['logs', ['attacks', 'history', 'events']],
         ['settings', ['settings']]
     ];
     /* addresses of menu entries that no longer exist */
@@ -578,7 +580,7 @@
         var t = T();
         var labels = {
             dash: [t.tabDash, ICONS.dash], devices: [t.tabDevices, ICONS.devices], net: [t.tabNet, ICONS.net],
-            security: [t.tabSecurity, ICONS.shield], vpn: [t.tabVpn, ICONS.lock], settings: [t.tabSettings, ICONS.sliders]
+            security: [t.tabSecurity, ICONS.shield], logs: [t.tabLogs, ICONS.list], vpn: [t.tabVpn, ICONS.lock], settings: [t.tabSettings, ICONS.sliders]
         };
         var wait = waitingCount(), current = groupOf(S.tab);
         S.ui.waitShown = wait;

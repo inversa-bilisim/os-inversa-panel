@@ -606,3 +606,25 @@ header.page-content-head { display: none; }
 .inversapanel .k-fsum { display: flex; align-items: center; gap: 12px; margin-left: auto; white-space: nowrap; }
 .inversapanel .k-fsum .k-link { min-height: 32px; align-self: center; }
 
+/* logs */
+.inversapanel .k-lg-tops { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+.inversapanel .k-lg-top { gap: 8px; padding: 14px 18px; }
+.inversapanel .k-lg-top h2 { font-size: 13px; color: var(--k-muted); font-weight: 600; }
+.inversapanel .k-lg-toprow { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.inversapanel .k-lg-toprow > div:first-child { display: flex; justify-content: space-between; gap: 8px; }
+.inversapanel .k-lg-blocked { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.inversapanel table.k-lg { min-width: 860px; font-variant-numeric: tabular-nums; }
+.inversapanel .k-lg td { padding-top: 8px; padding-bottom: 8px; font-size: 13px; vertical-align: top; }
+.inversapanel .k-lg td:last-child { white-space: nowrap; }
+.inversapanel .k-lg-time { color: var(--k-muted); white-space: nowrap; }
+.inversapanel .k-lg-sub { display: block; font-size: 12px; color: var(--k-muted); overflow-wrap: anywhere; }
+.inversapanel .k-pill.k-lg-pill { min-height: 24px; font-size: 12px; padding: 0 10px; white-space: nowrap; }
+.inversapanel .k-lg .k-btn.small { min-height: 30px; }
+.inversapanel .k-lg-more { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 20px; border-top: 1px solid var(--k-line-2); }
+.inversapanel .k-lg-set { padding: 10px 14px; }
+.inversapanel .k-lg-setrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.inversapanel .k-lg-settext { flex: 1 1 280px; min-width: 0; }
+.inversapanel .k-lg-settext b { display: block; font-weight: 600; }
+.inversapanel .k-lg-set .k-chip { min-height: 36px; padding: 0 10px; font-size: 13px; gap: 6px; }
+.inversapanel .k-filterbar .k-fsum .k-btn { display: inline-flex; align-items: center; gap: 6px; }
+.inversapanel .k-lg-events th:last-child, .inversapanel .k-lg-events td:last-child { text-align: left; white-space: normal; }

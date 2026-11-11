@@ -450,6 +450,21 @@
                 </dns>
             </access>
         </vpns>
+        <logs>
+            <!-- the internet history page: off unless somebody wants it, and only for these networks -->
+            <history type="BooleanField">
+                <Default>0</Default>
+            </history>
+            <networks type="CSVListField">
+                <Mask>/^(lan|opt[0-9]{1,3})$/</Mask>
+                <MaskPerItem>Y</MaskPerItem>
+            </networks>
+            <!-- addresses from the internet that are refused (chosen on the attacks page) -->
+            <blocked type="CSVListField">
+                <Mask>/^[0-9a-fA-F.:]{3,45}$/</Mask>
+                <MaskPerItem>Y</MaskPerItem>
+            </blocked>
+        </logs>
         <vpn>
             <!-- 0.2 single-instance settings, migrated into vpns.connection on first use -->
             <!-- full: all client traffic through home (ad blocking on the road); split: only home networks -->
