@@ -59,12 +59,14 @@
      */
     var MENU = [
         ['dash', ['dash']],
+        ['net', ['net', 'nets', 'guest', 'ports', 'dns', 'pf']],
+        ['vpn', ['vpn']],
         ['devices', ['devices', 'sched']],
-        ['net', ['net', 'nets', 'guest', 'ports', 'dns']],
         ['security', ['filter', 'lists', 'geo', 'ips']],
-        ['remote', ['vpn', 'pf']],
         ['settings', ['settings']]
     ];
+    /* addresses of menu entries that no longer exist */
+    var MOVED = { remote: 'vpn' };
     var CORE_PAGES = ['dash', 'devices', 'filter', 'lists', 'settings'];
     var VIEWS = {};
     var TRAFFIC_MS = 5000;
@@ -171,6 +173,7 @@
 
     /* the page for an address: a page's own key, or a menu entry's key (its first page) */
     function pageFor(key) {
+        key = MOVED[key] || key;
         if (pagesOf(groupOf(key)).indexOf(key) >= 0) { return key; }
         return pagesOf(key)[0] || 'dash';
     }
@@ -567,7 +570,7 @@
         var t = T();
         var labels = {
             dash: [t.tabDash, ICONS.dash], devices: [t.tabDevices, ICONS.devices], net: [t.tabNet, ICONS.net],
-            security: [t.tabSecurity, ICONS.shield], remote: [t.tabRemote, ICONS.lock], settings: [t.tabSettings, ICONS.sliders]
+            security: [t.tabSecurity, ICONS.shield], vpn: [t.tabVpn, ICONS.lock], settings: [t.tabSettings, ICONS.sliders]
         };
         var wait = waitingCount(), current = groupOf(S.tab);
         S.ui.waitShown = wait;

@@ -10,7 +10,7 @@ window.InversaPanelI18n.en = {
     langName: 'English',
     locale: 'en-US',
     appSub: 'Easy management for OPNsense',
-    tabDash: 'Overview', tabDevices: 'Devices', tabSecurity: 'Security', tabRemote: 'Remote access', tabSettings: 'Settings',
+    tabDash: 'Overview', tabDevices: 'Devices', tabSecurity: 'Security', tabSettings: 'Settings',
     subFilter: 'Categories and apps', subLists: 'Allow / block list', subtabsAria: 'Pages of this section',
     protOn: 'Protection on', protPartial: 'Protection partly off', protOff: 'Inversa Panel disabled',
     protWhyTitle: 'Protections that are off:', protWhyOk: 'Ad blocking and malicious site blocking are on.',

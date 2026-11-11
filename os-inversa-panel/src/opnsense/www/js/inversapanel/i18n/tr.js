@@ -10,7 +10,7 @@ window.InversaPanelI18n.tr = {
     langName: 'Türkçe',
     locale: 'tr-TR',
     appSub: 'OPNsense için kolay yönetim',
-    tabDash: 'Genel bakış', tabDevices: 'Cihazlar', tabSecurity: 'Güvenlik', tabRemote: 'Uzaktan erişim', tabSettings: 'Ayarlar',
+    tabDash: 'Genel bakış', tabDevices: 'Cihazlar', tabSecurity: 'Güvenlik', tabSettings: 'Ayarlar',
     subFilter: 'Kategoriler ve uygulamalar', subLists: 'Beyaz / kara liste', subtabsAria: 'Bu bölümün sayfaları',
     protOn: 'Koruma açık', protPartial: 'Koruma kısmen kapalı', protOff: 'Inversa Panel kapalı',
     protWhyTitle: 'Kapalı olan korumalar:', protWhyOk: 'Reklam ve zararlı site engelleme açık.',
