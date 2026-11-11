@@ -456,6 +456,10 @@
 .inversapanel .k-pftable tr.dim td { opacity: .6; }
 .inversapanel .k-pftable td:last-child { text-align: right; padding-right: 0; }
 .inversapanel .k-pfacts { display: inline-flex; align-items: center; gap: 2px; }
+.inversapanel .k-vaddr { display: inline-flex; align-items: center; gap: 4px; }
+.inversapanel .k-vaddr .k-icon-btn { width: 30px; height: 30px; background: transparent; color: var(--k-muted); }
+.inversapanel .k-vaddr input { width: 132px; min-height: 34px; padding: 0 8px; }
+.inversapanel .k-addrow input.k-vaddr-new { flex: 0 1 150px; }
 .inversapanel .k-pfacts .k-icon-btn { width: 36px; height: 36px; background: transparent; }
 .inversapanel .k-pffoot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--k-line-2); }
 

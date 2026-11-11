@@ -106,7 +106,18 @@ class VpnController extends ApiControllerBase
     {
         $this->guard();
         $name = trim((string)$this->request->getPost('name')) ?: 'device';
-        return $this->change(fn($vpn, $mdl) => $vpn->addPeer($mdl, (string)$conn, $name));
+        $address = trim((string)$this->request->getPost('address'));
+        return $this->change(fn($vpn, $mdl) => $vpn->addPeer($mdl, (string)$conn, $name, $address));
+    }
+
+    /**
+     * another address inside the connection's block for a device
+     */
+    public function peeraddressAction($conn = null, $peer = null)
+    {
+        $this->guard();
+        $address = (string)$this->request->getPost('address');
+        return $this->change(fn($vpn, $mdl) => $vpn->setPeerAddress($mdl, (string)$conn, (string)$peer, $address));
     }
 
     /**

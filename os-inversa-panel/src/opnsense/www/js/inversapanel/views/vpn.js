@@ -23,7 +23,7 @@
     var PLUS = 'M12 5v14M5 12h14';
     var CHEV = 'M6 9l6 6 6-6';
 
-    var V = { data: null, busy: false, error: null, form: null, edit: null, names: {}, qr: null, sheet: null, open: null };
+    var V = { data: null, busy: false, error: null, form: null, edit: null, names: {}, ips: {}, addr: null, qr: null, sheet: null, open: null };
 
     function T() { return h.T(); }
 
@@ -263,11 +263,23 @@
             '<button type="button" class="k-btn small k-danger" style="margin:0" data-act="vpn:del" data-v="' + c.uuid + '"' + (V.busy ? ' disabled' : '') + '>' + h.esc(t.vpnDelete) + '</button>';
     }
 
+    /* a device's address: as text with a pencil, or the field to change it */
+    function addrCell(c, p) {
+        var t = T(), a = V.addr, ip = p.address.replace(/\/32$/, '');
+        if (a && a.conn === c.uuid && a.peer === p.uuid) {
+            return '<span class="k-vaddr"><input type="text" class="mono" inputmode="decimal" maxlength="15" data-input="vpn:addr" value="' + h.esc(a.value) + '" aria-label="' + h.esc(t.vpnAddrOf(p.name)) + '">' +
+                '<button type="button" class="k-btn small primary" data-act="vpn:addr-save"' + (V.busy ? ' disabled' : '') + '>' + h.esc(t.save) + '</button>' +
+                '<button type="button" class="k-btn small" data-act="vpn:addr-cancel">' + h.esc(t.discard) + '</button></span>';
+        }
+        return '<span class="k-vaddr">' + h.esc(ip) + '<button type="button" class="k-icon-btn" data-act="vpn:addr-edit" data-c="' + c.uuid + '" data-v="' + p.uuid + '"' +
+            (V.busy ? ' disabled' : '') + ' title="' + h.esc(t.vpnAddrEdit) + '" aria-label="' + h.esc(t.vpnAddrOf(p.name)) + '">' + h.icon(h.ICONS.pencil, 14) + '</button></span>';
+    }
+
     function devices(c) {
         var t = T(), name = V.names[c.uuid] || '';
         return (c.peers.length ? '<div style="overflow-x:auto"><table class="k-pftable"><thead><tr><th>' + h.esc(t.colDevice) + '</th><th>' + h.esc(t.netAddr) + '</th><th>' + h.esc(t.colSeen) + '</th><th></th></tr></thead><tbody>' +
             c.peers.map(function (p) {
-                return '<tr class="' + (p.enabled ? '' : 'dim') + '"><td><b>' + h.esc(p.name) + '</b></td><td class="mono">' + h.esc(p.address.replace(/\/32$/, '')) + '</td>' +
+                return '<tr class="' + (p.enabled ? '' : 'dim') + '"><td><b>' + h.esc(p.name) + '</b></td><td class="mono">' + addrCell(c, p) + '</td>' +
                     '<td><span class="k-dot' + (live(p) ? ' ok' : '') + '"></span> ' + h.esc(ago(p)) + '</td><td><span class="k-pfacts">' +
                     (p.has_config
                         ? '<button type="button" class="k-btn small" data-act="vpn:qr" data-c="' + c.uuid + '" data-v="' + p.uuid + '">' + h.icon(QR, 14) + 'QR</button>' +
@@ -276,7 +288,8 @@
                     '<button type="button" class="k-icon-btn" data-act="vpn:peer-del" data-c="' + c.uuid + '" data-v="' + p.uuid + '"' + (V.busy ? ' disabled' : '') + ' aria-label="' + h.esc(t.vpnRemove(p.name)) + '">' + h.icon(TRASH, 16) + '</button>' +
                     h.toggle(p.enabled, 'data-act="vpn:peer-toggle" data-c="' + c.uuid + '" data-v="' + p.uuid + '"' + (V.busy ? ' disabled' : ''), p.name) + '</span></td></tr>';
             }).join('') + '</tbody></table></div>' : '<div class="muted">' + h.esc(t.vpnNoPeers) + '</div>') +
-            '<div class="k-addrow" style="max-width:480px"><input type="text" maxlength="40" data-input="vpn:peer-name" data-c="' + c.uuid + '" value="' + h.esc(name) + '" placeholder="' + h.esc(t.vpnAddPh) + '" aria-label="' + h.esc(t.vpnAddPh) + '">' +
+            '<div class="k-addrow" style="max-width:640px"><input type="text" maxlength="40" data-input="vpn:peer-name" data-c="' + c.uuid + '" value="' + h.esc(name) + '" placeholder="' + h.esc(t.vpnAddPh) + '" aria-label="' + h.esc(t.vpnAddPh) + '">' +
+            '<input type="text" class="mono k-vaddr-new" inputmode="decimal" maxlength="15" data-input="vpn:peer-ip" data-c="' + c.uuid + '" value="' + h.esc(V.ips[c.uuid] || '') + '" placeholder="' + h.esc(t.vpnAddrPh) + '" title="' + h.esc(t.vpnAddrHint(c.tunnel_net)) + '" aria-label="' + h.esc(t.vpnAddrHint(c.tunnel_net)) + '">' +
             '<button type="button" class="k-btn primary" data-act="vpn:peer-add" data-c="' + c.uuid + '"' + (V.busy || !name.trim() ? ' disabled' : '') + '>' + h.icon(PLUS, 16) + h.esc(t.vpnAdd) + '</button></div>';
     }
 
@@ -317,6 +330,7 @@
         return '<div class="k-modal" role="dialog" aria-modal="true" aria-label="' + h.esc(t.qrTitle(q.name)) + '"><div class="k-modal-card">' +
             '<div class="k-card-head"><h2>' + h.esc(t.qrTitle(q.name)) + '</h2>' +
             '<button type="button" class="k-icon-btn" data-act="vpn:qr-close" aria-label="' + h.esc(t.close) + '">' + h.icon(h.ICONS.close, 18) + '</button></div>' +
+            (q.note ? '<div class="k-note">' + h.esc(q.note) + '</div>' : '') +
             '<div class="k-qr">' + qrSvg(q.config) + '</div>' +
             '<ol class="k-steps"><li>' + h.esc(t.qrStep1) + '</li><li>' + h.esc(t.qrStep2) + '</li><li>' + h.esc(t.qrStep3) + '</li></ol>' +
             '<button type="button" class="k-btn" data-act="vpn:qr-file">' + h.icon(DOWNLOAD, 16) + h.esc(t.qrDownload) + '</button>' +
@@ -412,8 +426,26 @@
                     });
                     return null;
                 case 'peer-add':
-                    call('POST', '/api/inversapanel/vpn/peeradd/' + c, { name: V.names[c] }).then(function (res) {
-                        if (res && res.status === 'ok') { V.names[c] = ''; V.qr = { name: res.name, config: res.config }; h.redraw('main'); }
+                    call('POST', '/api/inversapanel/vpn/peeradd/' + c, { name: V.names[c], address: V.ips[c] || '' }).then(function (res) {
+                        if (res && res.status === 'ok') { V.names[c] = ''; V.ips[c] = ''; V.qr = { name: res.name, config: res.config }; h.redraw('main'); }
+                    });
+                    return null;
+                case 'addr-edit':
+                    var ap = conn(c).peers.filter(function (p) { return p.uuid === v; })[0];
+                    V.addr = { conn: c, peer: v, value: ap.address.replace(/\/32$/, '') };
+                    return 'main';
+                case 'addr-cancel': V.addr = null; return 'main';
+                case 'addr-save':
+                    var a = V.addr;
+                    if (!a) { return null; }
+                    call('POST', '/api/inversapanel/vpn/peeraddress/' + a.conn + '/' + a.peer, { address: a.value }).then(function (res) {
+                        if (res && res.status === 'ok') {
+                            V.addr = null;
+                            /* the address is part of what the device holds: show it again right away */
+                            if (res.changed && res.config) { V.qr = { name: res.name, config: res.config, note: T().vpnAddrChanged }; }
+                            else if (res.changed) { h.notice('ok', T().vpnAddrChangedNoKey); }
+                            h.redraw('main');
+                        }
                     });
                     return null;
                 case 'peer-toggle':
@@ -449,6 +481,8 @@
                 if (btn) { btn.disabled = V.busy || !val.trim(); }
                 return null;
             }
+            if (name === 'peer-ip') { V.ips[el.getAttribute('data-c')] = val.trim(); return null; }
+            if (name === 'addr' && V.addr) { V.addr.value = val.trim(); return null; }
             if (name.indexOf('form-') === 0 && V.form) {
                 V.form[name.slice(5)] = name === 'form-port' ? val.replace(/[^0-9]/g, '') : val;
                 return type === 'change' ? 'main' : null;

@@ -559,6 +559,41 @@ class Vpn
     }
 
     /**
+     * an address somebody chose for a device: inside the connection's block, not the firewall's
+     * own end and not in use by another device
+     * @return string address/32
+     */
+    private static function checkAddress(Client $clients, $server, $value, $skipPeer = null)
+    {
+        $ip = trim(preg_replace('#/32$#', '', trim((string)$value)));
+        list($serverIp, $bits) = explode('/', explode(',', (string)$server->tunneladdress)[0]);
+        $block = self::cidrNetwork($serverIp . '/' . $bits);
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            throw new \InvalidArgumentException("invalid address: $value (this connection uses $block)");
+        }
+        $mask = (~0 << (32 - (int)$bits)) & 0xffffffff;
+        $base = ip2long($serverIp) & $mask;
+        $long = ip2long($ip);
+        if (($long & $mask) !== $base || $long === $base || $long === ($base | (~$mask & 0xffffffff))) {
+            throw new \InvalidArgumentException("address $ip is not inside this connection's block $block");
+        }
+        if ($ip === $serverIp) {
+            throw new \InvalidArgumentException("address $ip is the firewall's own end of this connection");
+        }
+        foreach ($clients->clients->client->iterateItems() as $uuid => $node) {
+            if ($uuid === $skipPeer) {
+                continue;
+            }
+            foreach (explode(',', (string)$node->tunneladdress) as $cidr) {
+                if (explode('/', $cidr)[0] === $ip) {
+                    throw new \InvalidArgumentException("address $ip is already used by " . (string)$node->name);
+                }
+            }
+        }
+        return $ip . '/32';
+    }
+
+    /**
      * WireGuard configuration for the device / other side behind a peer, or null when its private
      * key was not kept (peers added by Inversa Panel 0.2 or outside Inversa Panel)
      */
@@ -654,7 +689,7 @@ class Vpn
      * peer (privkey, as OPNsense's own peer generator can do) so the QR code / file can be
      * shown again later
      */
-    public function addPeer(InversaPanel $mdl, $connUuid, $name)
+    public function addPeer(InversaPanel $mdl, $connUuid, $name, $address = '')
     {
         $servers = new Server();
         $clients = new Client();
@@ -665,7 +700,7 @@ class Vpn
         list($conn, $server) = $all[$connUuid];
         $kp = $this->keypair();
         $psk = trim($this->backend->configdRun('wireguard gen_psk'));
-        $address = self::nextAddress($clients, $server);
+        $address = trim((string)$address) !== '' ? self::checkAddress($clients, $server, $address) : self::nextAddress($clients, $server);
 
         $node = $clients->clients->client->Add();
         $uuid = $node->getAttributes()['uuid'];
@@ -676,6 +711,28 @@ class Vpn
         $server->peers->setValue(implode(',', array_filter(array_merge(explode(',', (string)$server->peers), [$uuid]))));
         $this->save([$servers], [$clients], null);
         return ['uuid' => $uuid, 'name' => (string)$node->name, 'config' => self::buildConfig($conn, $server, $node)];
+    }
+
+    /**
+     * another address for a device of a remote access connection; the device needs its
+     * configuration again (the address is part of it)
+     */
+    public function setPeerAddress(InversaPanel $mdl, $connUuid, $peerUuid, $address)
+    {
+        $servers = new Server();
+        $clients = new Client();
+        $ctx = self::peerContext($mdl, $servers, $clients, $connUuid, $peerUuid);
+        if ($ctx === null || (string)$ctx[0]->kind !== 'remote') {
+            throw new \InvalidArgumentException('unknown VPN device');
+        }
+        list($conn, $server, $peer) = $ctx;
+        $new = self::checkAddress($clients, $server, $address, $peerUuid);
+        if ($new === explode(',', (string)$peer->tunneladdress)[0]) {
+            return ['changed' => false];
+        }
+        $peer->tunneladdress->setValue($new);
+        $this->save([], [$clients], null);
+        return ['changed' => true, 'name' => (string)$peer->name, 'config' => self::buildConfig($conn, $server, $peer)];
     }
 
     private static function ownedPeer(InversaPanel $mdl, Server $servers, $connUuid, $peerUuid)
