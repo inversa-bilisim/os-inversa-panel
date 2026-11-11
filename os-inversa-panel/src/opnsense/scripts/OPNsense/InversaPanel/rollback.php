@@ -35,7 +35,7 @@ if (!is_file($file) || strpos(realpath($file), '/conf/backup/') !== 0) {
     syslog(LOG_ERR, 'inversapanel: rollback backup missing, nothing restored');
     exit(1);
 }
-syslog(LOG_WARNING, 'inversapanel: network change not confirmed, restoring ' . basename($file));
+syslog(LOG_WARNING, 'inversapanel: change not confirmed, restoring ' . basename($file));
 $cfg = Config::getInstance();
 $cfg->restoreBackup($file);
 $cfg->save();

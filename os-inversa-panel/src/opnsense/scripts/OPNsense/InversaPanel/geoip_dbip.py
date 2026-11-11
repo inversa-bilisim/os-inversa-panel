@@ -23,6 +23,7 @@ import gzip
 import ipaddress
 import os
 import shutil
+import subprocess
 import sys
 import syslog
 import tempfile
@@ -130,3 +131,6 @@ if __name__ == '__main__':
             'timestamp': datetime.datetime.now().isoformat(timespec='seconds')
         }))
     syslog.syslog(syslog.LOG_NOTICE, 'inversapanel: db-ip country data %s installed (%d networks)' % (month, count))
+    # new data: fill the alias tables from it and (re)load the rules; "allow only these countries" is
+    # not enforced before there is data for a country it lets in
+    subprocess.run(['/usr/local/sbin/configctl', 'filter', 'reload'], capture_output=True)

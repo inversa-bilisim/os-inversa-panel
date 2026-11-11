@@ -363,7 +363,64 @@
             };
             S.draft = clone(S.saved);
             S.options = data.options;
+            /* a change is waiting for its confirmation (this page was reloaded, or somebody else made it) */
+            if (data.rollback && !S.ui.countdown) {
+                startCountdown(data.rollback.remaining);
+            }
         });
+    }
+
+    /* ------------------------------------------------------------------ confirm or put back */
+
+    /*
+     * Changes that can cut the administrator off (network settings, "only these countries get in") are
+     * put back by the firewall itself unless confirmed in time. While that runs a banner with the
+     * countdown shows on every page: S.ui.countdown = { left, expired, timer }.
+     */
+    function startCountdown(seconds) {
+        stopCountdown();
+        var c = S.ui.countdown = { left: Number(seconds) || 90, expired: false };
+        c.timer = setInterval(function () {
+            c.left -= 1;
+            var el = document.getElementById('k-confirm-left');
+            if (el) { el.textContent = String(Math.max(0, c.left)); }
+            if (c.left <= 0) {
+                clearInterval(c.timer);
+                c.expired = true;
+                renderConfirm();
+                /* the firewall restores the old settings: read them once it had time to do so */
+                setTimeout(function () {
+                    stopCountdown();
+                    loadState().then(function () {
+                        return VIEWS[S.tab] && VIEWS[S.tab].load ? VIEWS[S.tab].load() : null;
+                    }).then(render, render);
+                }, 20000);
+            }
+        }, 1000);
+        renderConfirm();
+    }
+
+    function stopCountdown() {
+        if (S.ui.countdown && S.ui.countdown.timer) { clearInterval(S.ui.countdown.timer); }
+        S.ui.countdown = null;
+    }
+
+    function confirmChange() {
+        api('POST', '/api/inversapanel/network/confirm', {}).then(function () {
+            stopCountdown();
+            S.ui.notice = { type: 'ok', text: T().netConfirmed, list: [] };
+            render();
+        }, function () {});
+    }
+
+    function renderConfirm() {
+        var slot = document.getElementById('k-confirm'), t = T(), c = S.ui.countdown;
+        if (!slot) { return; }
+        slot.innerHTML = !c ? '' : (c.expired ?
+            '<div class="k-banner warn">' + icon(ICONS.warn, 20) + '<span>' + esc(t.netReverted) + '</span></div>' :
+            '<div class="k-banner info k-countdown">' + icon(ICONS.info, 20) +
+            '<div style="flex:1 1 auto"><b>' + esc(t.netConfirmTitle) + '</b><div>' + esc(t.netConfirmText) + '</div></div>' +
+            '<button type="button" class="k-btn primary" data-act="confirm"><span>' + esc(t.netConfirmBtn) + ' (<span id="k-confirm-left">' + c.left + '</span>)</span></button></div>');
     }
 
     function loadHosts() {
@@ -428,10 +485,12 @@
             '<div id="k-header"></div>' +
             '<nav class="k-tabs" id="k-tabs" aria-label="Inversa Panel"></nav>' +
             '<div id="k-subtabs"></div>' +
+            '<div id="k-confirm"></div>' +
             '<div id="k-main"></div>';
         renderHeader();
         renderTabs();
         renderSubtabs();
+        renderConfirm();
         renderBanners();
         renderMain();
         syncMenu();
@@ -1071,6 +1130,12 @@
 
     function apply() {
         var t = T();
+        if (S.ui.countdown) {
+            /* putting the waiting change back would take this one along */
+            S.ui.notice = { type: 'err', text: t.confirmFirst, list: [] };
+            renderPending();
+            return;
+        }
         S.ui.applying = true;
         S.ui.notice = null;
         renderBanners();
@@ -1092,7 +1157,15 @@
             if (res.status === 'ok') {
                 S.ui.geoLicense = '';
                 S.ui.notice = { type: 'ok', text: t.applied, list: (res.messages || []).concat(res.auto_approved ? [t.apprAuto(res.auto_approved)] : []) };
+                if (res.confirm) {
+                    /* this change can cut you off: the firewall puts it back unless confirmed */
+                    startCountdown(res.confirm);
+                }
                 return loadState().then(loadHosts).then(loadDns);
+            }
+            if (res.pending_confirm) {
+                S.ui.notice = { type: 'err', text: t.confirmFirst, list: [] };
+                return;
             }
             var list = Object.keys(res.validations || {}).map(function (k) { return k + ': ' + res.validations[k]; });
             S.ui.notice = { type: 'err', text: t.validationFailed, list: list };
@@ -1215,6 +1288,9 @@
             case 'dismiss':
                 S.ui.notice = null;
                 break;
+            case 'confirm':
+                confirmChange();
+                return;
             case 'cleanup':
                 if (window.confirm(T().cleanupConfirm)) {
                     api('POST', '/api/inversapanel/service/cleanup', {}).then(function () {
@@ -1417,6 +1493,9 @@
         redraw: redraw,
         notice: function (type, text, list) { S.ui.notice = { type: type, text: text, list: list || [] }; renderPending(); },
         hosts: function () { return S.hosts; },
+        /* confirm-or-put-back countdown: the running one (or null), start one */
+        countdown: function () { return S.ui.countdown; },
+        startCountdown: startCountdown,
         loadHosts: loadHosts,
         reloadState: function () { return loadState().then(render); }
     };

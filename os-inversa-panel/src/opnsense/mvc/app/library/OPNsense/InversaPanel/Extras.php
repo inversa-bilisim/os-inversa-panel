@@ -10,10 +10,11 @@ namespace OPNsense\InversaPanel;
 use OPNsense\Core\Backend;
 use OPNsense\Core\Config;
 use OPNsense\Firewall\Alias;
+use OPNsense\Firewall\Util;
 use OPNsense\TrafficShaper\TrafficShaper;
 
 /**
- * Country blocking (GeoIP alias) and the guest speed limit (traffic shaper), both written
+ * Country rules (GeoIP alias) and the guest speed limit (traffic shaper), both written
  * to OPNsense's own models and tagged so Inversa Panel only touches what it created.
  */
 class Extras
@@ -34,8 +35,51 @@ class Extras
         $node->name->setValue(Catalog::GEO_ALIAS);
         $node->type->setValue('geoip');
         $node->proto->setValue('IPv4,IPv6');
-        $node->description->setValue('Inversa Panel: blocked countries (managed by Inversa Panel)');
         return $node;
+    }
+
+    /**
+     * "allow only" mode: the alias of everything that may get in, the chosen countries plus the
+     * addresses that belong to no country (Catalog::GEO_LOCAL). Removed again when the mode is off.
+     */
+    private static function geoAllowAlias(Alias $aliases, $on)
+    {
+        $found = null;
+        $node = null;
+        foreach ($aliases->aliases->alias->iterateItems() as $uuid => $item) {
+            if ((string)$item->name === Catalog::GEO_ALLOW_ALIAS) {
+                $found = $uuid;
+                $node = $item;
+                break;
+            }
+        }
+        if (!$on) {
+            if ($found !== null) {
+                $aliases->aliases->alias->del($found);
+            }
+            return;
+        }
+        $node = $node ?? $aliases->aliases->alias->Add();
+        $node->name->setValue(Catalog::GEO_ALLOW_ALIAS);
+        $node->type->setValue('network');
+        $node->enabled->setValue('1');
+        $node->description->setValue('Inversa Panel: allowed countries and local addresses (managed by Inversa Panel)');
+        $node->content->setValue(implode("\n", array_merge([Catalog::GEO_ALIAS], Catalog::GEO_LOCAL)));
+        /* the nested alias may be new in this very model: let the validation look here, not in the stored config */
+        Util::attachAliasObject($aliases);
+    }
+
+    /**
+     * country data is on disk for at least one of these countries (the files GeoIP aliases are filled from)
+     */
+    public static function geoDataFor(array $countries)
+    {
+        foreach ($countries as $cc) {
+            if (preg_match('/^[A-Z]{2}$/', $cc) && @filesize('/usr/local/share/GeoIP/alias/' . $cc . '-IPv4') > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static function geoStatus()
@@ -46,6 +90,8 @@ class Extras
         $rules = json_decode((new Backend())->configdRun('filter rule stats'), true) ?? [];
         /* counters of the incoming block rule registered by inversapanel_firewall_geo() */
         $blocked = (int)($rules[md5('inversapanel-geo-in')]['packets'] ?? 0);
+        $mdl = new InversaPanel();
+        $allowed = $mdl->geo->allowed->getValues();
         /* without a source in OPNsense, Inversa Panel installs the free DB-IP Lite data itself */
         $dbip = null;
         if ($url === '' && is_file('/usr/local/share/GeoIP/inversapanel-dbip.json')) {
@@ -62,6 +108,8 @@ class Extras
             'updated' => $url === '' ? ($dbip['timestamp'] ?? null) : (is_array($stats) ? ($stats['timestamp'] ?? null) : null),
             'month' => $dbip['month'] ?? null,
             'blocked_packets' => $blocked,
+            /* "allow only" is not enforced before there is data for a country it lets in */
+            'allow_data' => self::geoDataFor($allowed),
         ];
     }
 
@@ -86,13 +134,16 @@ class Extras
             $aliases->geoip->url->setValue(sprintf(Catalog::MAXMIND_URL, $licenseKey));
             $urlChanged = true;
         }
-        $countries = $mdl->geo->countries->getValues();
+        $allow = (string)$mdl->geo->mode === 'allow';
+        $countries = $allow ? $mdl->geo->allowed->getValues() : $mdl->geo->countries->getValues();
         $on = !$mdl->geo->enabled->isEmpty() && !empty($countries);
         $node = self::geoAlias($aliases, $on);
         if ($node !== null) {
             $node->enabled->setValue($on ? '1' : '0');
             $node->content->setValue(implode("\n", $countries));
+            $node->description->setValue(sprintf('Inversa Panel: %s countries (managed by Inversa Panel)', $allow ? 'allowed' : 'blocked'));
         }
+        self::geoAllowAlias($aliases, $on && $allow);
         return [$aliases, $urlChanged];
     }
 

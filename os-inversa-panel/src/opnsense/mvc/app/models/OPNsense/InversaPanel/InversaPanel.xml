@@ -270,6 +270,28 @@
                 <Mask>/^[A-Z]{2}$/</Mask>
                 <MaskPerItem>Y</MaskPerItem>
             </countries>
+            <!--
+                block: connections from "countries" are refused.
+                allow: only connections from "allowed" get in (incoming only, whatever "direction" says);
+                       each mode keeps its own list, so switching back and forth loses nothing.
+            -->
+            <mode type="OptionField">
+                <Default>block</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <block>Block the chosen countries</block>
+                    <allow>Allow only the chosen countries</allow>
+                </OptionValues>
+            </mode>
+            <allowed type="CSVListField">
+                <Mask>/^[A-Z]{2}$/</Mask>
+                <MaskPerItem>Y</MaskPerItem>
+            </allowed>
+            <!-- the VPN connections of this firewall can be reached from any country -->
+            <vpnexempt type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </vpnexempt>
         </geo>
         <!--
             Attack protection: Suricata (OPNsense's intrusion detection) on the protected networks.

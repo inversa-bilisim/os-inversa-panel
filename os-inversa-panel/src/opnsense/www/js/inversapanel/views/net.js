@@ -7,8 +7,8 @@
  * menu entry ("net", "nets", "ports") that share one state; their actions all go by "net:...".
  *
  * Changes to the connection and networks are applied with their own button and protected by
- * the firewall-side rollback: unless confirmed within the countdown, OPNsense restores the
- * previous configuration by itself. The access matrix, network kinds and "new devices wait for
+ * the firewall-side rollback: unless confirmed within the countdown (the banner of app.js),
+ * OPNsense restores the previous configuration by itself. The access matrix, network kinds and "new devices wait for
  * approval" are ordinary pending changes (header "Apply").
  */
 (function () {
@@ -21,7 +21,7 @@
     var KIND_COLOR = h.KIND_COLOR;
     var KINDS = ['home', 'iot', 'guest', 'camera', 'server'];
 
-    var N = { data: null, wan: null, add: null, edit: null, busy: false, countdown: null, test: null, testing: false, error: null };
+    var N = { data: null, wan: null, add: null, edit: null, busy: false, test: null, testing: false, error: null };
 
     function t() { return h.T(); }
     function draft() { return h.S().draft; }
@@ -49,35 +49,13 @@
             var w = data.wan || {};
             N.wan = { type: w.type, port: w.port, vlan: w.vlan || '', useVlan: !!w.vlan, username: w.username || '', password: '', ip: w.ip || '', gateway: w.gateway || '', ipv6: w.ipv6 === 'off' ? 'off' : 'auto' };
             N.wanOrig = JSON.stringify(N.wan);
-            if (data.rollback && !N.countdown) {
-                startCountdown(data.rollback.remaining);
+            if (data.rollback && !h.countdown()) {
+                h.startCountdown(data.rollback.remaining);
             }
         });
     }
 
-    /* ------------------------------------------------------------------ apply + rollback countdown */
-
-    function startCountdown(seconds) {
-        stopCountdown();
-        N.countdown = { left: seconds, expired: false };
-        N.countdown.timer = setInterval(function () {
-            N.countdown.left -= 1;
-            var el = document.getElementById('k-net-left');
-            if (el) { el.textContent = String(Math.max(0, N.countdown.left)); }
-            if (N.countdown.left <= 0) {
-                clearInterval(N.countdown.timer);
-                N.countdown.expired = true;
-                h.redraw('main');
-                /* the firewall restored the old settings: reload once it had time to do so */
-                setTimeout(function () { stopCountdown(); load().then(function () { h.reloadState(); }, function () {}); }, 20000);
-            }
-        }, 1000);
-    }
-
-    function stopCountdown() {
-        if (N.countdown && N.countdown.timer) { clearInterval(N.countdown.timer); }
-        N.countdown = null;
-    }
+    /* ------------------------------------------------------------------ apply (confirmed within the countdown or put back) */
 
     function netApply(payload) {
         N.busy = true;
@@ -88,7 +66,7 @@
             if (res.status === 'confirm') {
                 N.add = null;
                 N.edit = null;
-                startCountdown(res.remaining || 90);
+                h.startCountdown(res.remaining || 90);
                 return load().then(function () { return h.reloadState(); });
             }
             N.error = res.message || t().applyFailed;
@@ -98,25 +76,10 @@
         }).then(function () { h.redraw('main'); });
     }
 
-    function confirm() {
-        h.api('POST', '/api/inversapanel/network/confirm', {}).then(function () {
-            stopCountdown();
-            h.notice('ok', t().netConfirmed);
-            h.redraw('main');
-        });
-    }
-
     /* ------------------------------------------------------------------ rendering */
 
     function banners() {
-        var T = t(), html = '';
-        if (N.countdown) {
-            html += N.countdown.expired
-                ? '<div class="k-banner warn" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span>' + h.esc(T.netReverted) + '</span></div>'
-                : '<div class="k-banner info k-countdown" style="margin:0">' + h.icon(h.ICONS.info, 20) +
-                  '<div style="flex:1 1 auto"><b>' + h.esc(T.netConfirmTitle) + '</b><div>' + h.esc(T.netConfirmText) + '</div></div>' +
-                  '<button type="button" class="k-btn primary" data-act="net:confirm">' + h.esc(T.netConfirmBtn) + ' (<span id="k-net-left">' + N.countdown.left + '</span>)</button></div>';
-        }
+        var html = '';
         if (N.error) {
             html += '<div class="k-banner err" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span style="white-space:pre-line">' + h.esc(N.error) + '</span></div>';
         }
@@ -194,7 +157,7 @@
         var changed = JSON.stringify(N.wan) !== N.wanOrig;
         html += '<div class="k-row" style="justify-content:flex-end;align-items:center"><span class="muted">' + h.esc(T.netSafety) + '</span>' +
             '<button type="button" class="k-btn" data-act="net:wanreset"' + (changed ? '' : ' disabled') + '>' + h.esc(T.discard) + '</button>' +
-            '<button type="button" class="k-btn primary" data-act="net:wanapply"' + (changed && !N.busy && !N.countdown ? '' : ' disabled') + '>' + h.esc(N.busy ? T.applying : T.netApply) + '</button></div>';
+            '<button type="button" class="k-btn primary" data-act="net:wanapply"' + (changed && !N.busy && !h.countdown() ? '' : ' disabled') + '>' + h.esc(N.busy ? T.applying : T.netApply) + '</button></div>';
         return html + '</div>';
     }
 
@@ -277,8 +240,8 @@
             addrRow(e, 'edit', n.subnet) +
             (n.key === 'lan' ? '<div class="k-banner warn" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span>' + h.esc(T.lanChangeWarn) + '</span></div>' : '') +
             '<div class="k-row" style="justify-content:space-between;align-items:center">' +
-            (n.created ? '<button type="button" class="k-btn" style="color:#9A3B0A;border-color:#F2C99B" data-act="net:delete" data-v="' + n.key + '"' + (N.busy || N.countdown ? ' disabled' : '') + '>' + h.esc(T.edDelete) + '</button>' : '<span class="muted">' + h.esc(T.notCreated) + '</span>') +
-            '<button type="button" class="k-btn primary" data-act="net:editapply"' + (changed && !N.busy && !N.countdown ? '' : ' disabled') + '>' + h.esc(N.busy ? T.applying : T.netApply) + '</button></div></section>';
+            (n.created ? '<button type="button" class="k-btn" style="color:#9A3B0A;border-color:#F2C99B" data-act="net:delete" data-v="' + n.key + '"' + (N.busy || h.countdown() ? ' disabled' : '') + '>' + h.esc(T.edDelete) + '</button>' : '<span class="muted">' + h.esc(T.notCreated) + '</span>') +
+            '<button type="button" class="k-btn primary" data-act="net:editapply"' + (changed && !N.busy && !h.countdown() ? '' : ' disabled') + '>' + h.esc(N.busy ? T.applying : T.netApply) + '</button></div></section>';
     }
 
     function addPanel() {
@@ -299,7 +262,7 @@
             addrRow(a, 'add', 24) +
             '<div class="k-row" style="justify-content:flex-end;align-items:center"><span class="muted">' + h.esc(T.netSafety) + '</span>' +
             '<button type="button" class="k-btn" data-act="net:add-cancel">' + h.esc(T.discard) + '</button>' +
-            '<button type="button" class="k-btn primary" data-act="net:add-apply"' + (!N.busy && !N.countdown && a.port && a.ip ? '' : ' disabled') + '>' + h.esc(N.busy ? T.applying : T.netCreate) + '</button></div></section>';
+            '<button type="button" class="k-btn primary" data-act="net:add-apply"' + (!N.busy && !h.countdown() && a.port && a.ip ? '' : ' disabled') + '>' + h.esc(N.busy ? T.applying : T.netCreate) + '</button></div></section>';
     }
 
     function matrix() {
@@ -370,7 +333,6 @@
         act: function (name, el) {
             var v = el.getAttribute('data-v'), f = N.wan;
             switch (name) {
-                case 'confirm': confirm(); return null;
                 case 'test':
                     N.testing = true;
                     h.api('GET', '/api/inversapanel/network/test').then(function (r) { N.test = r; }, function () { N.test = { ok: false }; })

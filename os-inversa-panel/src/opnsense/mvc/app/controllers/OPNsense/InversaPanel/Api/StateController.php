@@ -11,6 +11,7 @@ use OPNsense\Base\ApiControllerBase;
 use OPNsense\InversaPanel\Catalog;
 use OPNsense\InversaPanel\Dhcp;
 use OPNsense\InversaPanel\InversaPanel;
+use OPNsense\InversaPanel\Rollback;
 
 /**
  * Read the complete Inversa Panel configuration in the shape the single page UI uses.
@@ -119,6 +120,9 @@ class StateController extends ApiControllerBase
                 'enabled' => !$mdl->geo->enabled->isEmpty(),
                 'direction' => (string)$mdl->geo->direction,
                 'countries' => $mdl->geo->countries->getValues(),
+                'mode' => (string)$mdl->geo->mode,
+                'allowed' => $mdl->geo->allowed->getValues(),
+                'vpnexempt' => !$mdl->geo->vpnexempt->isEmpty(),
             ],
             'ips' => [
                 'enabled' => !$mdl->ips->enabled->isEmpty(),
@@ -129,6 +133,8 @@ class StateController extends ApiControllerBase
                 'mode' => (string)$mdl->vpn->mode,
                 'endpoint' => (string)$mdl->vpn->endpoint,
             ],
+            /* a change that waits for its confirmation (seconds left), see Rollback */
+            'rollback' => Rollback::pending(),
             'options' => [
                 'interfaces' => $interfaces,
                 'apps' => $apps,

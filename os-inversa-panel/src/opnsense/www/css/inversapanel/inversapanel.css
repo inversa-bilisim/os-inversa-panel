@@ -357,9 +357,9 @@
 .inversapanel .k-field > .k-seg { align-self: flex-start; }
 .inversapanel .k-vpn-edit { display: flex; flex-direction: column; gap: 14px; padding: 14px 0; border-top: 1px solid var(--k-line-2); border-bottom: 1px solid var(--k-line-2); }
 
-/* country blocking: key and direction side by side */
-.inversapanel .k-geo-row { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--k-line-2); }
-.inversapanel .k-geo-key { flex: 1 1 340px; min-width: 0; max-width: 560px; }
+/* countries: the licence key field (or the link that opens it) in the row of the country database */
+.inversapanel .k-geo-key { flex: 0 1 340px; min-width: 0; align-items: flex-end; }
+.inversapanel .k-geo-key input { width: 100%; }
 .inversapanel .k-warn-text { color: #9A3B0A; font-weight: 600; font-size: 13px; }
 
 /* OPNsense's own page heading ("Inversa Panel: Panel") only repeats what the header below already says */

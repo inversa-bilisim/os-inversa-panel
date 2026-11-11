@@ -15,6 +15,7 @@ use OPNsense\InversaPanel\Dhcp;
 use OPNsense\InversaPanel\Integration;
 use OPNsense\InversaPanel\InversaPanel;
 use OPNsense\InversaPanel\Ips;
+use OPNsense\InversaPanel\Rollback;
 
 /**
  * "Apply" button: store all pending UI changes at once and push them into OPNsense.
@@ -37,6 +38,31 @@ class ServiceController extends ApiControllerBase
             fn($item) => strtolower(trim((string)$item)),
             $value
         ))));
+    }
+
+    /**
+     * what "only these countries get in" lets in, null while it lets everything in
+     * @return array|null [countries, vpn connections exempt]
+     */
+    private static function geoAllowState(InversaPanel $mdl)
+    {
+        $allowed = $mdl->geo->allowed->getValues();
+        if ($mdl->geo->enabled->isEmpty() || (string)$mdl->geo->mode !== 'allow' || empty($allowed)) {
+            return null;
+        }
+        return [$allowed, !$mdl->geo->vpnexempt->isEmpty()];
+    }
+
+    /**
+     * Does this change shut out somebody who got in before? Then it is applied like a network change:
+     * confirmed within the countdown or put back (the administrator may be the one shut out).
+     */
+    private static function geoTightened($before, $after)
+    {
+        if ($after === null) {
+            return false;
+        }
+        return $before === null || !empty(array_diff($before[0], $after[0])) || ($before[1] && !$after[1]);
     }
 
     /**
@@ -96,7 +122,7 @@ class ServiceController extends ApiControllerBase
         $mdl->general->enabled->setValue('0');
         $aliases = new \OPNsense\Firewall\Alias();
         foreach (iterator_to_array($aliases->aliases->alias->iterateItems()) as $uuid => $node) {
-            if (in_array((string)$node->name, [Catalog::BLOCKED_ALIAS, Catalog::APPROVED_ALIAS, Catalog::GEO_ALIAS])) {
+            if (in_array((string)$node->name, [Catalog::BLOCKED_ALIAS, Catalog::APPROVED_ALIAS, Catalog::GEO_ALLOW_ALIAS, Catalog::GEO_ALIAS])) {
                 $aliases->aliases->alias->del($uuid);
             }
         }
@@ -232,7 +258,7 @@ class ServiceController extends ApiControllerBase
         }
 
         foreach (['guest' => ['limit' => 'flag', 'down' => 'int', 'up' => 'int'],
-                  'geo' => ['enabled' => 'flag', 'direction' => 'str'],
+                  'geo' => ['enabled' => 'flag', 'direction' => 'str', 'mode' => 'str', 'vpnexempt' => 'flag'],
                   'ips' => ['enabled' => 'flag', 'mode' => 'str'],
                   'vpn' => ['mode' => 'str', 'endpoint' => 'str']] as $section => $fields) {
             $data = $this->request->getPost($section);
@@ -245,8 +271,10 @@ class ServiceController extends ApiControllerBase
                     $mdl->$section->$field->setValue($value);
                 }
             }
-            if ($section === 'geo' && isset($data['countries'])) {
-                $mdl->geo->countries->setValue(implode(',', array_map('strtoupper', self::stringList($data['countries']))));
+            foreach ($section === 'geo' ? ['countries', 'allowed'] : [] as $list) {
+                if (array_key_exists($list, $data)) {
+                    $mdl->geo->$list->setValue(implode(',', array_map('strtoupper', self::stringList($data[$list]))));
+                }
             }
             if ($section === 'ips' && isset($data['groups'])) {
                 $mdl->ips->groups->setValue(implode(',', self::stringList($data['groups'])));
@@ -268,7 +296,13 @@ class ServiceController extends ApiControllerBase
         $this->throwReadOnly();
         $this->throwNotFullAdmin();
 
+        /* a change waiting for its confirmation would take this one along when it is put back */
+        if (Rollback::pending() !== null) {
+            return ['status' => 'failed', 'pending_confirm' => true];
+        }
+
         $mdl = new InversaPanel();
+        $geoBefore = self::geoAllowState($mdl);
         /* approval of new devices: what was held back before this change, to see who is newly held back */
         $approvalBefore = $mdl->getApprovalInterfaces();
         $heldBefore = Approval::heldIps($mdl);
@@ -371,6 +405,9 @@ class ServiceController extends ApiControllerBase
             }
         }
 
+        /* the copy to go back to, taken before anything is written */
+        $backup = self::geoTightened($geoBefore, self::geoAllowState($mdl)) ? Rollback::prepare() : null;
+
         try {
             $result = (new Integration($mdl))->apply([
                 'geo_license' => trim((string)$this->request->getPost('geo_license')),
@@ -383,6 +420,11 @@ class ServiceController extends ApiControllerBase
         }
         if ($dhcpChanged) {
             (new \OPNsense\Core\Backend())->configdRun('dnsmasq restart');
+        }
+        if ($backup !== null) {
+            /* unless confirmed in time, everything of this "Apply" is put back */
+            $state = Rollback::arm($backup);
+            $result['confirm'] = $state['deadline'] - time();
         }
         return $result;
     }

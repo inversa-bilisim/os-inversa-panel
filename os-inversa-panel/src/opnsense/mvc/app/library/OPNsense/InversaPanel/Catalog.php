@@ -24,8 +24,24 @@ class Catalog
     /* per-schedule app blocking policies: description prefix + schedule name */
     const SCHED_POLICY_PREFIX = 'Inversa Panel schedule: ';
 
-    /* GeoIP alias for country blocking */
+    /* GeoIP alias with the chosen countries (the blocked ones, or the allowed ones in "allow only" mode) */
     const GEO_ALIAS = 'inversapanel_geo';
+
+    /*
+     * "allow only" mode: everything that may get in, the countries above plus GEO_LOCAL.
+     * Exists only while that mode is on.
+     */
+    const GEO_ALLOW_ALIAS = 'inversapanel_geo_allow';
+
+    /*
+     * Addresses that belong to no country and must not be shut out by "allow only these countries":
+     * private networks (a modem in front of the firewall), carrier NAT, link-local (IPv6 neighbour
+     * discovery, DHCPv6), multicast.
+     */
+    const GEO_LOCAL = [
+        '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '100.64.0.0/10', '169.254.0.0/16', '224.0.0.0/4',
+        'fc00::/7', 'fe80::/10', 'ff00::/8',
+    ];
 
     /* traffic shaper objects for the guest speed limit carry this description prefix */
     const SHAPER_PREFIX = 'Inversa Panel guest';

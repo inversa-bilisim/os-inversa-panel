@@ -11,9 +11,10 @@ use OPNsense\Core\Backend;
 use OPNsense\Core\Config;
 
 /**
- * Safety net for network changes (OPNsense core has none): a copy of the configuration is
- * taken before the change; unless the user confirms within the timeout, a background job
- * puts that copy back and reloads all services.
+ * Safety net for changes that can cut the administrator off (network settings, "only these
+ * countries get in"); OPNsense core has none. A copy of the configuration is taken before the
+ * change; unless the user confirms within the timeout, a background job puts that copy back and
+ * reloads all services.
  */
 class Rollback
 {
@@ -46,11 +47,16 @@ class Rollback
             return null;
         }
         $state = json_decode(file_get_contents(self::STATE), true);
-        return is_array($state) ? ['deadline' => $state['deadline'], 'remaining' => max(0, $state['deadline'] - time())] : null;
+        if (!is_array($state) || time() > (int)$state['deadline'] + 60) {
+            /* the background job removes the file when the time is up; one that is still here was left behind */
+            @unlink(self::STATE);
+            return null;
+        }
+        return ['deadline' => $state['deadline'], 'remaining' => max(0, $state['deadline'] - time())];
     }
 
     /**
-     * user confirmed the network still works: keep the new configuration
+     * user confirmed everything still works: keep the new configuration
      */
     public static function confirm()
     {

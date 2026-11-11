@@ -208,8 +208,9 @@ class Integration
         $backend = new Backend();
         Extras::applyShaper();
         if ($geoUrlChanged) {
+            /* a source set in OPNsense (MaxMind key): fetched in the background, the rules are loaded again after it */
             $backend->configdRun('template reload OPNsense/Filter');
-            $backend->configdRun('filter update geoip', true);
+            $backend->configdRun('inversapanel geoupdate', true);
         } elseif (!$this->inversapanel->geo->enabled->isEmpty() && (string)$aliasMdl->geoip->url === '') {
             /* no source configured in OPNsense: free DB-IP data (fetched once, then monthly) */
             $backend->configdpRun('inversapanel geoip', ['normal'], true);

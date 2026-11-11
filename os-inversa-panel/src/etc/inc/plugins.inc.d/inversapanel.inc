@@ -147,11 +147,42 @@ function inversapanel_firewall_access(\OPNsense\Firewall\Plugin $fw, $mdl, $mapp
 }
 
 /**
- * Country blocking via the inversapanel_geo GeoIP alias (kept up to date by OPNsense's alias job).
+ * Countries, via the inversapanel_geo GeoIP alias (kept up to date by OPNsense's alias job).
+ *  - block:      what comes from the chosen countries is refused (optionally also what goes there)
+ *  - allow only: what comes in from anywhere but the chosen countries is refused. Incoming only;
+ *                connections started from inside are answered through their state, so the
+ *                internal networks keep reaching the whole internet.
  */
 function inversapanel_firewall_geo(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping, $protected)
 {
-    if ($mdl->geo->enabled->isEmpty() || empty($mdl->geo->countries->getValues()) || !isset($mapping['wan'])) {
+    if ($mdl->geo->enabled->isEmpty() || !isset($mapping['wan'])) {
+        return;
+    }
+    if ((string)$mdl->geo->mode === 'allow') {
+        $allowed = $mdl->geo->allowed->getValues();
+        /*
+         * Without country data the table of allowed addresses holds the local ranges only and this rule
+         * would shut the whole internet out. Until the data is there (first download, a country that
+         * has none) nothing is restricted; the page says so.
+         */
+        if (empty($allowed) || !\OPNsense\InversaPanel\Extras::geoDataFor($allowed)) {
+            return;
+        }
+        $fw->registerFilterRule(100000, [
+            'type' => 'block',
+            'interface' => 'wan',
+            'direction' => 'in',
+            'ipprotocol' => 'inet46',
+            'quick' => true,
+            'from' => '<' . \OPNsense\InversaPanel\Catalog::GEO_ALLOW_ALIAS . '>',
+            'from_not' => true,
+            'descr' => 'Inversa Panel: only the allowed countries get in',
+            'label' => inversapanel_label('geo-in'),
+            '#ref' => 'ui/inversapanel#geo',
+        ]);
+        return;
+    }
+    if (empty($mdl->geo->countries->getValues())) {
         return;
     }
     $fw->registerFilterRule(100000, [
@@ -201,6 +232,11 @@ function inversapanel_firewall_vpn(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping
     }
     $servers = new \OPNsense\Wireguard\Server();
     \OPNsense\InversaPanel\Vpn::migrate($mdl, $servers);
+    /*
+     * the listen ports are opened right where the country rules are (same priority, registered after
+     * them), so a country rule decides first; "VPN connections are exempt" opens them before it
+     */
+    $listenPrio = !$mdl->geo->enabled->isEmpty() && !$mdl->geo->vpnexempt->isEmpty() ? 99000 : 100000;
     $internal = [];
     foreach ($mdl->getProtectedInterfaces() as $key) {
         if (isset($mapping[$key])) {
@@ -227,7 +263,7 @@ function inversapanel_firewall_vpn(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping
         $chosen = array_values(array_intersect($conn->networks->getValues(), $internal));
         $base = ['interface' => 'wireguard', 'direction' => 'in', 'ipprotocol' => 'inet', 'quick' => true, '#ref' => 'ui/inversapanel#vpn'];
 
-        $fw->registerFilterRule(100000, [
+        $fw->registerFilterRule($listenPrio, [
             'type' => 'pass', 'interface' => 'wan', 'direction' => 'in', 'ipprotocol' => 'inet', 'protocol' => 'udp',
             'quick' => true, 'to' => '(self)', 'to_port' => (string)$server->port,
             'descr' => "Inversa Panel: VPN {$name}", 'label' => inversapanel_label("vpn-wan-{$id}"), '#ref' => 'ui/inversapanel#vpn',
