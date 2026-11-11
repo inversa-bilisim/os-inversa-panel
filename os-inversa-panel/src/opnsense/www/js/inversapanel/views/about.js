@@ -10,6 +10,7 @@
     var h = window.InversaPanelApp.h;
     var COPY = 'M9 9h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1';
     var REPO = 'https://github.com/inversa-bilisim/os-inversa-panel';
+    var SITE = 'https://inversa.com.tr';
     var MAIL = 'yazilim@inversa.com.tr';
     var PARTS = [
         ['OPNsense', 'https://opnsense.org', 'aboutOpnsense'],
@@ -83,7 +84,8 @@
                 }).join('') + '</div></section></div>' +
 
                 '<section class="k-card"><h2>Inversa Bilişim</h2><div class="muted" style="font-size:14px">' + h.esc(T.aboutCompany) + '</div>' +
-                '<div>' + kv(T.aboutMail, '<span class="mono">' + h.esc(MAIL) + '</span>') +
+                '<div>' + kv(T.aboutWeb, link(SITE, 'inversa.com.tr')) +
+                kv(T.aboutMail, '<span class="mono">' + h.esc(MAIL) + '</span>') +
                 kv(T.aboutIssues, link(REPO + '/issues', T.aboutIssuesLink)) + '</div>' +
                 '<div class="k-about-support"><div><b>' + h.esc(T.aboutSupport) + '</b><span class="muted">' + h.esc(T.aboutSupportSub) + '</span></div>' +
                 '<button type="button" class="k-btn" data-act="about:copy">' + h.icon(A.copied ? h.ICONS.ok : COPY, 16) + h.esc(A.copied ? T.aboutCopied : T.aboutCopy) + '</button></div>' +

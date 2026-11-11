@@ -70,7 +70,7 @@ window.InversaPanelI18n.tr = {
     tabAbout: 'Hakkımızda', aboutSub: 'Kurulu sürüm, kimin geliştirdiği, nereye başvuracağınız ve panelin üzerine kurulduğu yazılımlar.',
     aboutVersion: 'Sürüm', aboutRunsOn: 'Üzerinde çalıştığı sistem', aboutLicense: 'Lisans', aboutSource: 'Kaynak kodu',
     aboutCompany: 'Inversa Panel, OPNsense’in en çok kullanılan ayarlarını tek ekrandan yönetmek için Inversa Bilişim tarafından geliştirilen açık kaynaklı bir eklentidir.',
-    aboutMail: 'E-posta', aboutIssues: 'Hata ve istek bildirimi', aboutIssuesLink: 'GitHub’da bildir',
+    aboutWeb: 'Web sitesi', aboutMail: 'E-posta', aboutIssues: 'Hata ve istek bildirimi', aboutIssuesLink: 'GitHub’da bildir',
     aboutSupport: 'Destek bilgileri', aboutSupportSub: 'Destek isterken bu özeti iletin. Parola, anahtar ya da cihaz adresi içermez.',
     aboutCopy: 'Destek bilgilerini kopyala', aboutCopied: 'Kopyalandı',
     aboutBuiltOn: 'Üzerine kurulduğu yazılımlar', aboutBuiltOnSub: 'Inversa Panel bu açık kaynaklı projelerin sunduklarını tek ekranda toplar.',

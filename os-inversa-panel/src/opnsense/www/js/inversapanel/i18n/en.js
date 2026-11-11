@@ -70,7 +70,7 @@ window.InversaPanelI18n.en = {
     tabAbout: 'About', aboutSub: 'The installed version, who makes it, where to turn to and the software the panel is built on.',
     aboutVersion: 'Version', aboutRunsOn: 'Runs on', aboutLicense: 'Licence', aboutSource: 'Source code',
     aboutCompany: 'Inversa Panel is an open source plugin by Inversa Bilişim for managing the most used settings of OPNsense from one screen.',
-    aboutMail: 'E-mail', aboutIssues: 'Bugs and requests', aboutIssuesLink: 'Report on GitHub',
+    aboutWeb: 'Website', aboutMail: 'E-mail', aboutIssues: 'Bugs and requests', aboutIssuesLink: 'Report on GitHub',
     aboutSupport: 'Support information', aboutSupportSub: 'Send this summary when you ask for help. It holds no passwords, keys or device addresses.',
     aboutCopy: 'Copy support information', aboutCopied: 'Copied',
     aboutBuiltOn: 'Built on', aboutBuiltOnSub: 'Inversa Panel brings together what these open source projects offer.',
