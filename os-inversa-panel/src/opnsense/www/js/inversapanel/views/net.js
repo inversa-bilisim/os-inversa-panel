@@ -238,7 +238,8 @@
         };
         return '<section class="k-card k-net-card" style="border-top:4px solid ' + h.esc(n.color) + '">' +
             '<div class="k-setting" style="padding:0;border:none">' + dot(n.color) +
-            '<div class="k-setting-text"><b style="font-size:16px">' + h.esc(n.name) + '</b><span class="muted">' + h.esc((n.key === 'lan' ? T.netMain + ' · ' : '') + T.netDevCount(online(n.key))) + '</span></div>' +
+            '<div class="k-setting-text"><b style="font-size:16px">' + h.esc(n.name) + '</b><span class="muted">' + h.esc(n.key === 'lan' ? T.netMain + ' · ' : '') +
+            '<button type="button" class="k-devlink" data-act="show-net" data-v="' + h.esc(n.key) + '" data-n="' + h.esc(n.name) + '" title="' + h.esc(T.fNetworkShow) + '">' + h.esc(T.netDevCount(online(n.key))) + '</button></span></div>' +
             (n.readonly ? '<span class="k-badge">' + h.esc(T.readonly) + '</span>' :
                 '<button type="button" class="k-btn small" data-act="net:edit" data-v="' + n.key + '">' + h.esc(editing ? T.close : T.netEdit) + '</button>') + '</div>' +
             '<div>' +

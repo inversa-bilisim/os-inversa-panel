@@ -589,3 +589,10 @@ header.page-content-head { display: none; }
 .inversapanel .k-ov-tight .k-kv { padding: 7px 0; align-items: center; }
 .inversapanel .k-ov-tight .k-kv:last-child { border-bottom: none; }
 .inversapanel a.k-ov-pill { min-height: 24px; font-size: 12px; padding: 0 10px; text-decoration: none; }
+
+/* a device count that opens the device list for its network */
+.inversapanel button.k-devlink { border: none; background: transparent; padding: 0; font: inherit; color: var(--k-accent); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.inversapanel button.k-badge.k-devlink { padding: 2px 8px; background: var(--k-accent-soft); text-decoration: none; font-size: 12px; }
+.inversapanel button.k-devlink:hover { color: #163A94; }
+.inversapanel .k-tag.k-netfilter { min-height: 44px; padding-left: 12px; font-size: 14px; font-weight: 600; background: var(--k-accent-soft); color: var(--k-accent); border: 1px solid var(--k-accent); border-radius: 10px; }
+

@@ -80,6 +80,7 @@ window.InversaPanelI18n.en = {
     devTitle: 'Devices',
     devSub: 'Devices seen on protected networks. Click a device name to edit it. A device with internet cut can still reach the firewall (DNS, DHCP).',
     search: 'Search name, network, IP or MAC', fAll: 'All', fOnline: 'Online', fBlocked: 'Internet cut', fWaiting: 'Waiting for approval',
+    fNetwork: function (n) { return 'Network: ' + n; }, fNetworkClear: 'Remove the network filter', fNetworkShow: 'Show the devices on this network',
     sortHint: 'Click to sort',
     colDevice: 'Device', colNetwork: 'Network', colIp: 'IP address', colMac: 'MAC address', colSeen: 'Status', colConns: 'Connections', colNet: 'Internet',
     online: 'Online', offline: 'Offline',

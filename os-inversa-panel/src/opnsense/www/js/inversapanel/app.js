@@ -934,7 +934,7 @@
                 var count = S.hosts.filter(function (h) { return h.online && h.network_key === n.key; }).length, r = ifr[n.key];
                 return '<div class="k-list-row"><span class="k-ov-col" style="background:' + esc(n.color) + '"></span>' +
                     '<div class="k-ov-grow"><b>' + esc(n.name) + '</b><span class="muted mono">' + esc(n.cidr || '') + (n.isolated ? ' · ' + esc(o.isolated) : '') + '</span></div>' +
-                    '<span class="k-badge">' + esc(o.devs(count)) + '</span>' +
+                    '<button type="button" class="k-badge k-devlink" data-act="show-net" data-v="' + esc(n.key) + '" data-n="' + esc(n.name) + '" title="' + esc(t.fNetworkShow) + '">' + esc(o.devs(count)) + '</button>' +
                     '<span class="k-ov-rate"><span>↓ ' + esc(r ? fmt(r.down, 1) : '—') + '</span><span>↑ ' + esc(r ? fmt(r.up, 1) : '—') + '</span></span></div>';
             }).join('') : '<div class="muted">' + esc(S.ov ? o.none : '…') + '</div>') + '</div>' + link(t.subNets, 'nets') + '</section>';
 
@@ -1019,6 +1019,7 @@
         var q = S.ui.search.trim().toLowerCase();
         return S.hosts.filter(function (h) {
             var cfg = devCfg(h.mac);
+            if (S.ui.net && h.network_key !== S.ui.net.key) { return false; }
             if (S.ui.filter === 'online' && !h.online) { return false; }
             if (S.ui.filter === 'blocked' && !cfg.blocked) { return false; }
             if (S.ui.filter === 'waiting' && !waiting(h)) { return false; }
@@ -1192,11 +1193,13 @@
 
     function viewDevices() {
         var t = T();
+        /* a network chosen on another page narrows the list; the numbers on the filters follow it */
+        var net = S.ui.net, pool = S.hosts.filter(function (h) { return !net || h.network_key === net.key; });
         var counts = {
-            all: S.hosts.length,
-            online: S.hosts.filter(function (h) { return h.online; }).length,
-            blocked: S.hosts.filter(function (h) { return devCfg(h.mac).blocked; }).length,
-            waiting: waitingCount()
+            all: pool.length,
+            online: pool.filter(function (h) { return h.online; }).length,
+            blocked: pool.filter(function (h) { return devCfg(h.mac).blocked; }).length,
+            waiting: pool.filter(function (h) { return waiting(h); }).length
         };
         var anyApproval = Object.keys(S.saved.approval || {}).some(function (k) { return S.saved.approval[k]; });
         if (S.ui.filter === 'waiting' && !anyApproval) { S.ui.filter = 'all'; }
@@ -1211,7 +1214,9 @@
             (S.hostsLoaded && S.source !== 'discovery' ? '<div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.discoveryHint) + '</span></div>' : '') +
             '<div class="k-toolbar"><label class="k-search">' + icon(ICONS.search) +
             '<input type="search" data-input="search" value="' + esc(S.ui.search) + '" placeholder="' + esc(t.search) + '" aria-label="' + esc(t.search) + '"></label>' +
-            '<div class="k-chips" role="group" aria-label="' + esc(t.devTitle) + '">' + filters + '</div></div>' +
+            '<div class="k-chips" role="group" aria-label="' + esc(t.devTitle) + '">' +
+            (net ? '<span class="k-tag k-netfilter">' + esc(t.fNetwork(net.name)) + '<button type="button" data-act="net-clear" aria-label="' + esc(t.fNetworkClear) + '" title="' + esc(t.fNetworkClear) + '">' + icon(ICONS.close, 14) + '</button></span>' : '') +
+            filters + '</div></div>' +
             '<div class="k-row"><div class="k-table-box k-grow"><table class="k-table"><thead><tr>' +
             sortHead('name', t.colDevice) + sortHead('network', t.colNetwork) + sortHead('ip', t.colIp) + sortHead('mac', t.colMac) +
             sortHead('seen', t.colSeen) + sortHead('conns', t.colConns) + sortHead('net', t.colNet) +
@@ -1442,8 +1447,23 @@
             case 'approval':
                 setDev(mac, { approved: !devCfg(mac).approved });
                 break;
+            case 'show-net':
+                /* from a network's "n devices connected": the devices of that network that are there now */
+                S.ui.net = { key: v, name: el.getAttribute('data-n') || v.toUpperCase() };
+                S.ui.filter = 'online';
+                S.ui.search = '';
+                S.ui.sel = null;
+                S.tab = 'devices';
+                if (history.replaceState) { history.replaceState(null, '', '#devices'); }
+                loadHosts().then(refreshView, function () {});
+                full = true;
+                break;
+            case 'net-clear':
+                S.ui.net = null;
+                break;
             case 'show-waiting':
                 S.ui.filter = 'waiting';
+                S.ui.net = null;
                 S.ui.sel = null;
                 if (S.tab !== 'devices') {
                     S.tab = 'devices';
