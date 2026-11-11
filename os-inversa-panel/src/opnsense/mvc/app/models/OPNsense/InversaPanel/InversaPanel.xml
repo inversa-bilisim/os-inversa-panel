@@ -358,15 +358,18 @@
             </groups>
         </ips>
         <!--
-            VPN connections Inversa Panel manages; the WireGuard instance itself (keys, port, tunnel, peers)
-            lives in OPNsense's WireGuard models, referenced by its uuid.
+            VPN connections Inversa Panel manages. A WireGuard one (remote access or site to site) refers to
+            its instance in OPNsense's WireGuard models (keys, port, tunnel, peers) by uuid in "server";
+            an IPsec one (site to site) refers to its connection in OPNsense's IPsec models in "ipsec".
         -->
         <vpns>
             <connection type="ArrayField">
                 <server type="TextField">
-                    <Required>Y</Required>
                     <Mask>/^[0-9a-f-]{36}$/</Mask>
                 </server>
+                <ipsec type="TextField">
+                    <Mask>/^[0-9a-f-]{36}$/</Mask>
+                </ipsec>
                 <kind type="OptionField">
                     <Default>remote</Default>
                     <Required>Y</Required>
@@ -389,7 +392,7 @@
                         <split>Selected networks only</split>
                     </OptionValues>
                 </mode>
-                <!-- remote access: address devices use to reach home; empty = current WAN address -->
+                <!-- address the other end uses to reach this firewall (remote access devices, IPsec); empty = current WAN address -->
                 <endpoint type="HostnameField">
                     <IpAllowed>Y</IpAllowed>
                 </endpoint>

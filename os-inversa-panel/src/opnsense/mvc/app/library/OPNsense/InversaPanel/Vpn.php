@@ -15,7 +15,7 @@ use OPNsense\Wireguard\General;
 use OPNsense\Wireguard\Server;
 
 /**
- * WireGuard VPN connections on top of OPNsense's own WireGuard models.
+ * WireGuard VPN connections on top of OPNsense's own WireGuard models (IPsec site to site: see Ipsec).
  *
  * Every Inversa Panel connection is one WireGuard instance (own port, own tunnel network):
  *  - remote: road warrior, devices get a QR code; reachable internal networks are chosen,
@@ -201,7 +201,8 @@ class Vpn
     {
         $result = [];
         foreach ($mdl->vpns->connection->iterateItems() as $uuid => $conn) {
-            $server = $servers->getNodeByReference('servers.server.' . (string)$conn->server);
+            /* connections without an instance are IPsec ones (see Ipsec) */
+            $server = (string)$conn->server !== '' ? $servers->getNodeByReference('servers.server.' . (string)$conn->server) : null;
             if ($server !== null) {
                 $result[$uuid] = [$conn, $server];
             }

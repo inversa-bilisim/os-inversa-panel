@@ -10,6 +10,7 @@ namespace OPNsense\InversaPanel\Api;
 use OPNsense\Base\ApiControllerBase;
 use OPNsense\Base\UserException;
 use OPNsense\InversaPanel\InversaPanel;
+use OPNsense\InversaPanel\Ipsec;
 use OPNsense\InversaPanel\Vpn;
 
 /**
@@ -23,7 +24,23 @@ class VpnController extends ApiControllerBase
         if (!class_exists('\OPNsense\Wireguard\Server')) {
             return ['available' => false];
         }
-        return array_merge(['available' => true], (new Vpn())->status(new InversaPanel()));
+        $mdl = new InversaPanel();
+        $status = array_merge(['available' => true, 'ipsec_available' => Ipsec::available(), 'ipsec_others' => []], (new Vpn())->status($mdl));
+        if (Ipsec::available()) {
+            list($list, $others) = (new Ipsec())->status($mdl);
+            $status['connections'] = array_merge($status['connections'], $list);
+            $status['ipsec_others'] = $others;
+        }
+        return $status;
+    }
+
+    /**
+     * the engine a connection runs on: WireGuard, or IPsec for site to site with other vendors
+     */
+    private static function isIpsec(InversaPanel $mdl, $uuid)
+    {
+        $conn = $mdl->getNodeByReference('vpns.connection.' . (string)$uuid);
+        return $conn !== null && (string)$conn->ipsec !== '';
     }
 
     private function guard($post = true)
@@ -38,9 +55,9 @@ class VpnController extends ApiControllerBase
     /**
      * run a change, apply WireGuard + firewall, report validation problems readably
      */
-    private function change(callable $fn)
+    private function change(callable $fn, $ipsec = false)
     {
-        $vpn = new Vpn();
+        $vpn = $ipsec ? new Ipsec() : new Vpn();
         try {
             $result = $fn($vpn, new InversaPanel());
             $vpn->apply();
@@ -54,14 +71,15 @@ class VpnController extends ApiControllerBase
     {
         $this->guard();
         $req = $this->request->getPost();
-        return $this->change(fn($vpn, $mdl) => ['uuid' => $vpn->create($mdl, is_array($req) ? $req : [])]);
+        $ipsec = is_array($req) && ($req['type'] ?? '') === 'ipsec' && Ipsec::available();
+        return $this->change(fn($vpn, $mdl) => ['uuid' => $vpn->create($mdl, is_array($req) ? $req : [])], $ipsec);
     }
 
     public function updateAction($uuid = null)
     {
         $this->guard();
         $req = $this->request->getPost();
-        return $this->change(fn($vpn, $mdl) => $vpn->update($mdl, (string)$uuid, is_array($req) ? $req : []));
+        return $this->change(fn($vpn, $mdl) => $vpn->update($mdl, (string)$uuid, is_array($req) ? $req : []), self::isIpsec(new InversaPanel(), $uuid));
     }
 
     public function deleteAction($uuid = null)
@@ -71,7 +89,17 @@ class VpnController extends ApiControllerBase
             if (!$vpn->delete($mdl, (string)$uuid)) {
                 throw new \InvalidArgumentException('unknown VPN connection');
             }
-        });
+        }, self::isIpsec(new InversaPanel(), $uuid));
+    }
+
+    /**
+     * what to enter on the other side of an IPsec connection, incl. the shared key: full admins only
+     */
+    public function ipsecconfigAction($uuid = null)
+    {
+        $this->guard(false);
+        $cfg = Ipsec::available() ? (new Ipsec())->config(new InversaPanel(), (string)$uuid) : null;
+        return $cfg === null ? ['status' => 'failed'] : array_merge(['status' => 'ok'], $cfg);
     }
 
     public function peeraddAction($conn = null)

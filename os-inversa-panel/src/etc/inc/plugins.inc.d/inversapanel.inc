@@ -95,6 +95,95 @@ function inversapanel_firewall(\OPNsense\Firewall\Plugin $fw)
     inversapanel_firewall_access($fw, $mdl, $mapping);
     inversapanel_firewall_geo($fw, $mdl, $mapping, $protected);
     inversapanel_firewall_vpn($fw, $mdl, $mapping);
+    inversapanel_firewall_ipsec($fw, $mdl, $mapping);
+}
+
+/**
+ * the priority at which VPN listen ports are opened on WAN: right where the country rules are (same
+ * priority, registered after them), so a country rule decides first; "VPN connections are exempt"
+ * opens them before it
+ */
+function inversapanel_vpn_listen_prio($mdl)
+{
+    return !$mdl->geo->enabled->isEmpty() && !$mdl->geo->vpnexempt->isEmpty() ? 99000 : 100000;
+}
+
+/**
+ * is this IPv4 address inside the network the device itself is in (no gateway in between)?
+ */
+function inversapanel_directly_connected($device, $ip)
+{
+    if (!preg_match('/^[a-z0-9_.]+$/i', (string)$device) || !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        return false;
+    }
+    $out = [];
+    exec('/sbin/ifconfig ' . escapeshellarg($device) . ' inet 2>/dev/null', $out);
+    foreach ($out as $line) {
+        if (preg_match('/inet (\S+) netmask (0x[0-9a-f]{8})/', $line, $m)) {
+            $mask = hexdec($m[2]);
+            if ((ip2long($m[1]) & $mask) === (ip2long($ip) & $mask)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * IPsec site to site connections (OPNsense adds no rules for connections of this kind):
+ *  - IKE, NAT traversal and ESP from the other side reach the firewall
+ *  - what arrives through the tunnel (interface "enc0") reaches the chosen local networks,
+ *    and those reach the networks of the other side
+ */
+function inversapanel_firewall_ipsec(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping)
+{
+    if (!\OPNsense\InversaPanel\Ipsec::available() || !isset($mapping['wan'])) {
+        return;
+    }
+    $prio = inversapanel_vpn_listen_prio($mdl);
+    foreach (\OPNsense\InversaPanel\Ipsec::connections($mdl, new \OPNsense\IPsec\Swanctl()) as $cuuid => list($conn, $node)) {
+        if ($node->enabled->isEmpty()) {
+            continue;
+        }
+        $id = substr($cuuid, 0, 8);
+        $name = (string)$node->description;
+        $host = (string)$node->remote_addrs;
+        /* a name may point somewhere else tomorrow: only an address is used to narrow the rule */
+        $from = filter_var($host, FILTER_VALIDATE_IP) ? ['from' => $host] : [];
+        if (!empty($from) && inversapanel_directly_connected($mapping['wan']['if'] ?? '', $host)) {
+            /* the other side sits in the WAN network itself: answers go straight to it, not to the gateway */
+            $from['disablereplyto'] = true;
+        }
+        $wan = ['type' => 'pass', 'interface' => 'wan', 'direction' => 'in', 'ipprotocol' => 'inet', 'quick' => true,
+            'to' => '(self)', 'descr' => "Inversa Panel: VPN {$name} (IPsec)", '#ref' => 'ui/inversapanel#vpn'];
+        $fw->registerFilterRule($prio, array_merge($wan, $from, ['protocol' => 'udp', 'to_port' => '500', 'label' => inversapanel_label("ipsec-ike-{$id}")]));
+        $fw->registerFilterRule($prio, array_merge($wan, $from, ['protocol' => 'udp', 'to_port' => '4500', 'label' => inversapanel_label("ipsec-natt-{$id}")]));
+        $fw->registerFilterRule($prio, array_merge($wan, $from, ['protocol' => 'esp', 'label' => inversapanel_label("ipsec-esp-{$id}")]));
+
+        $remote = $conn->remote_networks->getValues();
+        if (empty($remote)) {
+            continue;
+        }
+        foreach ($conn->networks->getValues() as $key) {
+            if (!isset($mapping[$key])) {
+                continue;
+            }
+            if (isset($mapping['enc0'])) {
+                $fw->registerFilterRule(105000, [
+                    'type' => 'pass', 'interface' => 'enc0', 'direction' => 'in', 'ipprotocol' => 'inet', 'quick' => true,
+                    'from' => implode(',', $remote), 'to' => $key,
+                    'descr' => "Inversa Panel: VPN {$name} remote to {$key}", 'label' => inversapanel_label("ipsec-in-{$id}-{$key}"),
+                    '#ref' => 'ui/inversapanel#vpn',
+                ]);
+            }
+            $fw->registerFilterRule(105000, [
+                'type' => 'pass', 'interface' => $key, 'direction' => 'in', 'ipprotocol' => 'inet', 'quick' => true,
+                'from' => $key, 'to' => implode(',', $remote),
+                'descr' => "Inversa Panel: VPN {$name} {$key} to remote", 'label' => inversapanel_label("ipsec-out-{$id}-{$key}"),
+                '#ref' => 'ui/inversapanel#vpn',
+            ]);
+        }
+    }
 }
 
 /**
@@ -232,11 +321,7 @@ function inversapanel_firewall_vpn(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping
     }
     $servers = new \OPNsense\Wireguard\Server();
     \OPNsense\InversaPanel\Vpn::migrate($mdl, $servers);
-    /*
-     * the listen ports are opened right where the country rules are (same priority, registered after
-     * them), so a country rule decides first; "VPN connections are exempt" opens them before it
-     */
-    $listenPrio = !$mdl->geo->enabled->isEmpty() && !$mdl->geo->vpnexempt->isEmpty() ? 99000 : 100000;
+    $listenPrio = inversapanel_vpn_listen_prio($mdl);
     $internal = [];
     foreach ($mdl->getProtectedInterfaces() as $key) {
         if (isset($mapping[$key])) {
