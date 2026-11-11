@@ -640,7 +640,7 @@ header.page-content-head { display: none; }
 
 /* about */
 .inversapanel button.k-brand { border: none; background: transparent; padding: 0; text-align: left; cursor: pointer; color: inherit; font: inherit; }
-.inversapanel .k-about { display: grid; grid-template-columns: minmax(0, 23fr) minmax(0, 37fr); gap: 16px; align-items: start; }
+.inversapanel .k-about { display: grid; grid-template-columns: minmax(0, 207fr) minmax(0, 393fr); gap: 16px; align-items: start; }
 .inversapanel .k-about-left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 @media (max-width: 900px) { .inversapanel .k-about { grid-template-columns: minmax(0, 1fr); } }
 .inversapanel .k-about-brand { display: flex; align-items: center; gap: 14px; }
@@ -656,6 +656,6 @@ header.page-content-head { display: none; }
 .inversapanel .k-about-part { flex: 0 0 110px; font-weight: 600; }
 .inversapanel .k-about-co { display: flex; flex-direction: column; gap: 12px; }
 .inversapanel .k-about-co h2 { font-size: 22px; letter-spacing: -0.01em; }
-.inversapanel .k-about-co p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--k-text-2); max-width: 78ch; }
-.inversapanel .k-about-co .k-kv { font-size: 16px; padding: 12px 0; }
+.inversapanel .k-about-co p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--k-text-2); }
+.inversapanel .k-about-co .k-kv { font-size: 16px; padding: 7px 0; }
 .inversapanel .k-about-co .k-kv .muted, .inversapanel .k-about-co .k-kv .mono { font-size: 16px; }
