@@ -66,6 +66,7 @@ window.InversaPanelI18n.en = {
     lgEventsSearch: 'Search person, device or setting', lgEventsNone: 'No records in this period.', lgEvent: 'Event', lgWhoWhat: 'Who / what', lgDetail: 'Detail', lgType: 'Kind',
     lgTypeLogin: 'Panel login', lgTypeConfig: 'Setting change', lgSystem: 'System',
     lgLogin: 'Login to the panel', lgLoginOk: 'Successful', lgLoginTry: 'Login attempt', lgLoginBad: 'Wrong password', lgConfig: 'Setting changed',
+    pgRange: function (a, b, n) { return a + '–' + b + ' of ' + n; }, pgSize: 'Per page', pgPrev: 'Previous page', pgNext: 'Next page', pgPages: 'Pages', pgPage: function (n) { return 'Page ' + n; },
     tabDash: 'Overview', tabDevices: 'Devices', tabSecurity: 'Security', tabSettings: 'Settings',
     subFilter: 'Categories and apps', subLists: 'Allow / block list', subtabsAria: 'Pages of this section',
     protOn: 'Protection on', protPartial: 'Protection partly off', protOff: 'Inversa Panel disabled',

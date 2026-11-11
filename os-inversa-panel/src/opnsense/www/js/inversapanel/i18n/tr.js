@@ -66,6 +66,7 @@ window.InversaPanelI18n.tr = {
     lgEventsSearch: 'Kişi, cihaz ya da ayar ara', lgEventsNone: 'Bu aralıkta kayıt yok.', lgEvent: 'Olay', lgWhoWhat: 'Kim / ne', lgDetail: 'Ayrıntı', lgType: 'Tür',
     lgTypeLogin: 'Panel girişi', lgTypeConfig: 'Ayar değişikliği', lgSystem: 'Sistem',
     lgLogin: 'Panele giriş', lgLoginOk: 'Başarılı', lgLoginTry: 'Panele giriş denemesi', lgLoginBad: 'Yanlış parola', lgConfig: 'Ayar değişti',
+    pgRange: function (a, b, n) { return a + '–' + b + ' / ' + n; }, pgSize: 'Sayfa başına', pgPrev: 'Önceki sayfa', pgNext: 'Sonraki sayfa', pgPages: 'Sayfalar', pgPage: function (n) { return 'Sayfa ' + n; },
     tabDash: 'Genel bakış', tabDevices: 'Cihazlar', tabSecurity: 'Güvenlik', tabSettings: 'Ayarlar',
     subFilter: 'Kategoriler ve uygulamalar', subLists: 'Beyaz / kara liste', subtabsAria: 'Bu bölümün sayfaları',
     protOn: 'Koruma açık', protPartial: 'Koruma kısmen kapalı', protOff: 'Inversa Panel kapalı',

@@ -153,6 +153,37 @@
         return t.agoDay(Math.round(sec / 86400));
     }
 
+    var PAGE_SIZES = [25, 50, 100];
+
+    /*
+     * A long list is shown a page at a time: which rows these are, the pages around the open one,
+     * how many rows a page holds. Nothing when everything fits the smallest page.
+     * act: the action a button sends (data-v = page, counted from 0); act + 'size' for the page size.
+     */
+    function pager(total, page, size, act) {
+        var t = T(), pages = Math.max(1, Math.ceil(total / size));
+        if (total <= PAGE_SIZES[0]) { return ''; }
+        page = Math.max(0, Math.min(page, pages - 1));
+        var btn = function (i, label, opts) {
+            return '<button type="button" class="k-pg' + (opts.on ? ' on' : '') + '" data-act="' + act + '" data-v="' + i + '"' + (opts.off ? ' disabled' : '') +
+                (opts.aria ? ' aria-label="' + esc(opts.aria) + '" title="' + esc(opts.aria) + '"' : '') + (opts.on ? ' aria-current="page"' : '') + '>' + label + '</button>';
+        };
+        var nums = [], last = -1;
+        for (var i = 0; i < pages; i++) {
+            if (i === 0 || i === pages - 1 || Math.abs(i - page) <= 1) {
+                if (last >= 0 && i - last > 1) { nums.push('<span class="k-pg-gap">…</span>'); }
+                nums.push(btn(i, fmt(i + 1), { on: i === page, aria: t.pgPage(fmt(i + 1)) }));
+                last = i;
+            }
+        }
+        return '<div class="k-pager"><span class="muted">' + esc(t.pgRange(fmt(page * size + 1), fmt(Math.min(total, (page + 1) * size)), fmt(total))) + '</span>' +
+            '<div class="k-pager-nav" role="navigation" aria-label="' + esc(t.pgPages) + '">' +
+            btn(page - 1, '‹', { off: page === 0, aria: t.pgPrev }) + nums.join('') + btn(page + 1, '›', { off: page >= pages - 1, aria: t.pgNext }) + '</div>' +
+            '<div class="k-fgroup"><span class="k-flabel">' + esc(t.pgSize) + '</span><div class="k-seg">' + PAGE_SIZES.map(function (n) {
+                return '<button type="button" class="' + (n === size ? 'on' : '') + '" data-act="' + act + 'size" data-v="' + n + '">' + n + '</button>';
+            }).join('') + '</div></div></div>';
+    }
+
     /* the pages of a menu entry that exist here */
     function pagesOf(group) {
         for (var i = 0; i < MENU.length; i++) {
@@ -1093,8 +1124,22 @@
             esc(h.network) + '</span>';
     }
 
+    /* the devices on the open page; a changed filter, search or order starts at the first page again */
+    function devicePage() {
+        var rows = filteredHosts(), ui = S.ui;
+        var sig = [ui.filter, ui.net ? ui.net.key : '', ui.search, ui.sort ? ui.sort.col + ui.sort.dir : ''].join('|');
+        if (sig !== ui.pageSig) { ui.pageSig = sig; ui.page = 0; }
+        ui.size = ui.size || 50;
+        ui.page = Math.max(0, Math.min(ui.page || 0, Math.ceil(rows.length / ui.size) - 1));
+        return { total: rows.length, rows: rows.slice(ui.page * ui.size, (ui.page + 1) * ui.size) };
+    }
+
+    function devicePager() {
+        return pager(devicePage().total, S.ui.page, S.ui.size, 'devpage');
+    }
+
     function deviceRows() {
-        var t = T(), rows = filteredHosts();
+        var t = T(), rows = devicePage().rows;
         if (!rows.length) {
             return '<tr><td colspan="7" class="k-empty" style="text-align:center">' +
                 esc(S.hosts.length ? t.noResult : (S.hostsLoaded ? t.noDevicesYet : '…')) + '</td></tr>';
@@ -1235,7 +1280,7 @@
             '<div class="k-row"><div class="k-table-box k-grow"><table class="k-table"><thead><tr>' +
             sortHead('name', t.colDevice) + sortHead('network', t.colNetwork) + sortHead('ip', t.colIp) + sortHead('mac', t.colMac) +
             sortHead('seen', t.colSeen) + sortHead('conns', t.colConns) + sortHead('net', t.colNet) +
-            '</tr></thead><tbody id="k-devrows">' + deviceRows() + '</tbody></table></div>' +
+            '</tr></thead><tbody id="k-devrows">' + deviceRows() + '</tbody></table><div id="k-devpager">' + devicePager() + '</div></div>' +
             devicePanel() + '</div></div>';
     }
 
@@ -1502,6 +1547,13 @@
             case 'filter':
                 S.ui.filter = v;
                 break;
+            case 'devpage':
+                S.ui.page = Number(v);
+                break;
+            case 'devpagesize':
+                S.ui.size = Number(v);
+                S.ui.page = 0;
+                break;
             case 'sort':
                 var sort = S.ui.sort;
                 S.ui.sort = !sort || sort.col !== v ? { col: v, dir: 1 } : (sort.dir === 1 ? { col: v, dir: -1 } : null);
@@ -1621,6 +1673,7 @@
         if (kind === 'search') {
             S.ui.search = el.value;
             document.getElementById('k-devrows').innerHTML = deviceRows();
+            if (document.getElementById('k-devpager')) { document.getElementById('k-devpager').innerHTML = devicePager(); }
         } else if (kind === 'devname') {
             setDev(el.getAttribute('data-mac'), { name: el.value.replace(/[\x00-\x1f<>"]/g, '') });
             renderBanners();
@@ -1743,7 +1796,7 @@
 
     var helpers = {
         esc: esc, icon: icon, toggle: toggle, api: api, fmt: fmt, ago: ago, clone: clone,
-        toggleInList: toggleInList, devName: devName, hostByMac: hostByMac, ICONS: ICONS,
+        toggleInList: toggleInList, pager: pager, devName: devName, hostByMac: hostByMac, ICONS: ICONS,
         T: function () { return T(); },
         S: function () { return S; },
         redraw: redraw,

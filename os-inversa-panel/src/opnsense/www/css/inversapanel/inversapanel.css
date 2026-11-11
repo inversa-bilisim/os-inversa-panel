@@ -628,3 +628,12 @@ header.page-content-head { display: none; }
 .inversapanel .k-lg-set .k-chip { min-height: 36px; padding: 0 10px; font-size: 13px; gap: 6px; }
 .inversapanel .k-filterbar .k-fsum .k-btn { display: inline-flex; align-items: center; gap: 6px; }
 .inversapanel .k-lg-events th:last-child, .inversapanel .k-lg-events td:last-child { text-align: left; white-space: normal; }
+
+/* a list in pages */
+.inversapanel .k-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 8px 20px; border-top: 1px solid var(--k-line-2); font-variant-numeric: tabular-nums; }
+.inversapanel .k-pager-nav { display: flex; align-items: center; gap: 4px; }
+.inversapanel .k-pg { min-width: 34px; height: 34px; padding: 0 8px; border: 1px solid var(--k-input); border-radius: 8px; background: #fff; color: var(--k-text-2); font-size: 13px; font-weight: 500; cursor: pointer; }
+.inversapanel .k-pg.on { border-color: var(--k-accent); background: var(--k-accent-soft); color: var(--k-accent); font-weight: 600; }
+.inversapanel .k-pg[disabled] { opacity: .45; cursor: not-allowed; }
+.inversapanel .k-pg-gap { color: var(--k-muted); padding: 0 2px; }
+.inversapanel .k-pager .k-seg button { min-height: 34px; padding: 0 10px; font-size: 13px; }

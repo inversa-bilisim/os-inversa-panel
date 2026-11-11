@@ -10,16 +10,16 @@
     var h = window.InversaPanelApp.h;
     var SEARCH = 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM21 21l-4.3-4.3';
     var DOWNLOAD = 'M12 4v12M7 11l5 5 5-5M5 20h14';
-    var PAGE = 100;
+    var PAGE = 50;
     var PORTS = { 21: 'FTP', 22: 'SSH', 23: 'Telnet', 25: 'SMTP', 53: 'DNS', 80: 'Web', 110: 'POP3', 123: 'NTP', 143: 'IMAP', 443: 'Web (HTTPS)', 445: 'SMB',
         1433: 'MSSQL', 1723: 'PPTP', 3306: 'MySQL', 3389: 'RDP', 5060: 'SIP', 5432: 'PostgreSQL', 5900: 'VNC', 8080: 'Web (8080)', 8443: 'Web (8443)', 51820: 'WireGuard' };
     var CODES = ('AD AE AF AG AI AL AM AO AR AT AU AZ BA BD BE BG BH BR BY CA CH CL CN CO CY CZ DE DK DZ EC EE EG ES FI FR GB GE GR HK HR HU ID IE IL IN IQ IR IS IT JO JP ' +
         'KE KG KP KR KW KZ LB LT LU LV LY MA MD MK MX MY NG NL NO NZ PA PE PH PK PL PT QA RO RS RU SA SC SE SG SI SK SY TH TN TR TW UA US UZ VN ZA').split(' ');
 
     var L = {
-        attacks: { days: 7, kind: '', q: '', limit: PAGE, data: null, busy: false },
-        history: { hours: 24, result: '', q: '', limit: PAGE, data: null, busy: false },
-        events: { days: 7, type: '', q: '', limit: PAGE, data: null, busy: false },
+        attacks: { days: 7, kind: '', q: '', page: 0, size: PAGE, data: null, busy: false },
+        history: { hours: 24, result: '', q: '', page: 0, size: PAGE, data: null, busy: false },
+        events: { days: 7, type: '', q: '', page: 0, size: PAGE, data: null, busy: false },
         timer: null
     };
 
@@ -59,19 +59,19 @@
             .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(obj[k]); }).join('&');
     }
 
-    function request(page, limit) {
+    function request(page, limit, offset) {
         var s = L[page], q = s.q.trim().toLocaleLowerCase(t().locale), p;
         if (page === 'attacks') {
-            p = { days: s.days, kind: s.kind, q: s.q.trim(), limit: limit };
+            p = { days: s.days, kind: s.kind, q: s.q.trim(), limit: limit, offset: offset || 0 };
             if (q) {
                 p.q_dst = ipsByName(q).join(',');
                 p.q_cc = CODES.filter(function (c) { return country(c).toLocaleLowerCase(t().locale).indexOf(q) >= 0; }).slice(0, 20).join(',');
                 p.q_ports = Object.keys(PORTS).filter(function (k) { return PORTS[k].toLowerCase().indexOf(q) >= 0; }).join(',');
             }
         } else if (page === 'history') {
-            p = { hours: s.hours, result: s.result, q: s.q.trim(), limit: limit, clients: q ? ipsByName(q).join(',') : '' };
+            p = { hours: s.hours, result: s.result, q: s.q.trim(), limit: limit, offset: offset || 0, clients: q ? ipsByName(q).join(',') : '' };
         } else {
-            p = { days: s.days, type: s.type, q: s.q.trim(), limit: limit };
+            p = { days: s.days, type: s.type, q: s.q.trim(), limit: limit, offset: offset || 0 };
         }
         return h.api('GET', '/api/inversapanel/logs/' + page + '?' + params(p));
     }
@@ -79,7 +79,16 @@
     function load(page) {
         var s = L[page];
         s.busy = true;
-        return request(page, s.limit).then(function (data) { s.data = data; s.busy = false; }, function () { s.data = { error: true, rows: [], total: 0 }; s.busy = false; });
+        /* only the open page is fetched, however long the list is */
+        return request(page, s.size, s.page * s.size).then(function (data) {
+            s.data = data;
+            s.busy = false;
+            /* the list got shorter meanwhile: back to its last page */
+            if (!(data.rows || []).length && s.page > 0 && data.total > 0) {
+                s.page = Math.ceil(data.total / s.size) - 1;
+                return load(page);
+            }
+        }, function () { s.data = { error: true, rows: [], total: 0 }; s.busy = false; });
     }
 
     function reload(page, keepFocus) {
@@ -112,8 +121,7 @@
         if (!rows.length) { return '<div class="k-card k-empty">' + h.esc(empty) + '</div>'; }
         return '<div class="k-table-box"><table class="k-table k-lg k-lg-' + page + '"><thead><tr>' + heads.map(function (x) { return '<th>' + h.esc(x) + '</th>'; }).join('') + '</tr></thead><tbody>' +
             rows.map(function (r) { return '<tr>' + r.map(function (c) { return '<td>' + c + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>' +
-            '<div class="k-lg-more"><span class="muted">' + h.esc(T.lgShown(h.fmt(rows.length), h.fmt(d.total))) + '</span>' +
-            (d.total > rows.length ? '<button type="button" class="k-btn small" data-act="' + page + ':more"' + (s.busy ? ' disabled' : '') + '>' + h.esc(T.lgMore) + '</button>' : '') + '</div></div>';
+            h.pager(d.total, s.page, s.size, page + ':page') + '</div>';
     }
 
     function head(title, sub) {
@@ -153,18 +161,19 @@
         if (name === 'set') {
             var f = el.getAttribute('data-f');
             s[f] = (f === 'days' || f === 'hours') ? Number(v) : v;
-            s.limit = PAGE;
+            s.page = 0;
             reload(page);
             return true;
         }
-        if (name === 'more') { s.limit += PAGE; reload(page); return true; }
+        if (name === 'page') { s.page = Math.max(0, Number(v)); reload(page); return true; }
+        if (name === 'pagesize') { s.size = Number(v); s.page = 0; reload(page); return true; }
         return false;
     }
 
     function commonInput(page, name, el) {
         if (name !== 'q') { return; }
         L[page].q = el.value;
-        L[page].limit = PAGE;
+        L[page].page = 0;
         clearTimeout(L.timer);
         L.timer = setTimeout(function () { reload(page, true); }, 450);
     }
@@ -360,7 +369,7 @@
         window.InversaPanelApp.register({
             key: page,
             label: label,
-            load: function () { L[page].limit = PAGE; return load(page); },
+            load: function () { L[page].page = 0; return load(page); },
             render: render,
             act: function (name, el) {
                 if (commonAct(page, name, el)) { return null; }
