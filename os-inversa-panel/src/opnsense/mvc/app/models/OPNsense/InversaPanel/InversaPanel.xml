@@ -338,6 +338,7 @@
                     <cloudflare>Cloudflare</cloudflare>
                     <google>Google</google>
                     <quad9>Quad9</quad9>
+                    <adguard>AdGuard DNS</adguard>
                     <custom>Own servers</custom>
                 </OptionValues>
             </upstream>

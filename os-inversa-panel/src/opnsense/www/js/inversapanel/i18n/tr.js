@@ -389,6 +389,7 @@ window.InversaPanelI18n.tr = {
         cloudflare: ['Cloudflare', 'Hızlı, filtresiz.'],
         google: ['Google', 'Filtresiz.'],
         quad9: ['Quad9', 'Bilinen zararlı siteleri kendisi de engeller.'],
+        adguard: ['AdGuard DNS', 'Reklamları ve izleyicileri kendisi de engeller.'],
         custom: ['Özel', 'Kullanılacak sunucuların adreslerini siz yazın.']
     },
     dnsServers: 'Sunucu adresleri', dnsServersHint: 'IP adreslerini virgülle ayırın. En az iki sunucu yazmanız önerilir.',

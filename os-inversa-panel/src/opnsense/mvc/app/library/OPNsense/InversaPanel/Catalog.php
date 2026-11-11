@@ -51,6 +51,7 @@ class Catalog
         'cloudflare' => ['servers' => ['1.1.1.1', '1.0.0.1'], 'tls' => 'cloudflare-dns.com'],
         'google' => ['servers' => ['8.8.8.8', '8.8.4.4'], 'tls' => 'dns.google'],
         'quad9' => ['servers' => ['9.9.9.9', '149.112.112.112'], 'tls' => 'dns.quad9.net'],
+        'adguard' => ['servers' => ['94.140.14.14', '94.140.15.15'], 'tls' => 'dns.adguard-dns.com'],
     ];
 
     /* traffic shaper objects of the speed limits carry this description prefix ("guest": they were for guest networks only) */

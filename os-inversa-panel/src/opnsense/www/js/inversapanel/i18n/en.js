@@ -391,6 +391,7 @@ window.InversaPanelI18n.en = {
         cloudflare: ['Cloudflare', 'Fast, unfiltered.'],
         google: ['Google', 'Unfiltered.'],
         quad9: ['Quad9', 'Also blocks known malicious sites itself.'],
+        adguard: ['AdGuard DNS', 'Also blocks ads and trackers itself.'],
         custom: ['Own servers', 'You enter the addresses of the servers to use.']
     },
     dnsServers: 'Server addresses', dnsServersHint: 'Separate IP addresses with commas. At least two servers are recommended.',
