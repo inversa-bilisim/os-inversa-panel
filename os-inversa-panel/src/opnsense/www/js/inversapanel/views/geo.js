@@ -108,12 +108,13 @@
             var avail = CODES.filter(function (c) {
                 return list.indexOf(c) < 0 && (!q || (c + ' ' + name(c)).toLocaleLowerCase(T.locale).indexOf(q) >= 0);
             }).sort(function (a, b) { return name(a).localeCompare(name(b), T.locale); });
-            html += '<section class="k-card k-compact"><div class="k-geo-head"><h2>' + h.esc(allow ? T.geoAllowed : T.geoBlocked) + '</h2><span class="muted small">' + h.esc(T.geoCount(list.length)) + '</span>' +
-                '<label class="k-search">' + h.icon(h.ICONS.search, 16) + '<input type="search" data-input="geo:search" value="' + h.esc(Q.search) + '" placeholder="' + h.esc(T.geoSearch) + '" aria-label="' + h.esc(T.geoSearch) + '"></label></div>' +
+            html += '<section class="k-card k-compact"><div class="k-geo-head"><h2>' + h.esc(allow ? T.geoAllowed : T.geoBlocked) + '</h2><span class="muted small">' + h.esc(T.geoCount(list.length)) + '</span></div>' +
+                /* the search on the left, what is chosen right beside it */
+                '<div class="k-geo-pick"><label class="k-search">' + h.icon(h.ICONS.search, 16) + '<input type="search" data-input="geo:search" value="' + h.esc(Q.search) + '" placeholder="' + h.esc(T.geoSearch) + '" aria-label="' + h.esc(T.geoSearch) + '"></label>' +
                 (list.length ? '<div class="k-chips k-small">' + list.map(function (c) {
                     return '<span class="k-tag ' + (allow ? 'allow' : 'deny') + '"><b class="mono small">' + c + '</b>&nbsp;' + h.esc(name(c)) +
                         '<button type="button" data-act="geo:del" data-v="' + c + '" aria-label="' + h.esc(T.removeAria(name(c))) + '">' + h.icon(h.ICONS.close, 14) + '</button></span>';
-                }).join('') + '</div>' : '<div class="muted">' + h.esc(allow ? T.geoAllowPick : T.geoBlockPick) + '</div>') +
+                }).join('') + '</div>' : '<div class="muted">' + h.esc(allow ? T.geoAllowPick : T.geoBlockPick) + '</div>') + '</div>' +
                 '<div class="k-chips k-small k-scroll">' + avail.map(function (c) {
                     return '<button type="button" class="k-chip" data-act="geo:add" data-v="' + c + '"><b class="mono small">' + c + '</b>' + h.esc(name(c)) + '</button>';
                 }).join('') + '</div></section>';

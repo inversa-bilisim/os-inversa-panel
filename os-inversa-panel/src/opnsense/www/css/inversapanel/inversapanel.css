@@ -514,8 +514,10 @@
 .inversapanel .k-geo-count { flex: 0 1 260px; justify-content: center; }
 .inversapanel .k-geo-count .k-kpi-value { font-size: 28px; }
 .inversapanel .k-geo-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.inversapanel .k-geo-head .k-search { margin-left: auto; width: 260px; max-width: 100%; min-height: 34px; }
-.inversapanel .k-geo-head .k-search input { min-height: 30px; }
+.inversapanel .k-geo-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.inversapanel .k-geo-pick .k-search { flex: 0 1 260px; width: auto; min-height: 34px; }
+.inversapanel .k-geo-pick .k-search input { min-height: 30px; }
+.inversapanel .k-geo-pick > .k-chips, .inversapanel .k-geo-pick > .muted { flex: 1 1 300px; min-width: 0; }
 /* attack protection: one alert per line */
 .inversapanel .k-alert { display: flex; align-items: center; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--k-line-2); min-width: 0; }
 .inversapanel .k-alert:last-child { border-bottom: none; }
