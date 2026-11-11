@@ -118,7 +118,7 @@ window.InversaPanelI18n.en = {
     wanTest: 'Test connection', wanTesting: 'Testing…', chkGateway: 'Gateway', chkInternet: 'Internet', chkDns: 'Name resolution (DNS)',
     wanMulti: 'This system has more than one internet connection (multi-WAN). To avoid confusion, connection settings can only be changed in the OPNsense menus.',
     wanComplex: 'Your internet connection uses a type Inversa Panel does not support; change it in the OPNsense menus.',
-    wanType: 'Connection type',
+    wanType: 'Connection type', wanSettings: function (type) { return type + ' · settings'; },
     wt: {
         dhcp: ['Behind a modem / router', 'OPNsense gets its address from the modem automatically.'],
         pppoe: ['Fiber or VDSL (PPPoE)', 'Modem in bridge mode or fiber terminal (ONT); OPNsense does the modem’s job.'],

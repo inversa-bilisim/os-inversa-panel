@@ -116,7 +116,7 @@ window.InversaPanelI18n.tr = {
     wanTest: 'Bağlantıyı test et', wanTesting: 'Test ediliyor…', chkGateway: 'Ağ geçidi', chkInternet: 'İnternet', chkDns: 'Alan adı çözümleme (DNS)',
     wanMulti: 'Bu sistemde birden fazla internet bağlantısı (çoklu WAN) var. Karışıklık olmaması için bağlantı ayarları yalnızca OPNsense menülerinden değiştirilebilir.',
     wanComplex: 'İnternet bağlantınız Inversa Panel’in desteklemediği bir türde yapılandırılmış; ayarlar yalnızca OPNsense menülerinden değiştirilebilir.',
-    wanType: 'Bağlantı türü',
+    wanType: 'Bağlantı türü', wanSettings: function (type) { return type + ' · ayarlar'; },
     wt: {
         dhcp: ['Modem / router arkasında', 'OPNsense adresini modemden otomatik alır.'],
         pppoe: ['Fiber veya VDSL (PPPoE)', 'Modem köprü modunda ya da fiber terminaline (ONT) bağlı; modemin işini OPNsense yapar.'],
