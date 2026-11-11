@@ -69,7 +69,12 @@ window.InversaPanelI18n.tr = {
     pgRange: function (a, b, n) { return a + '–' + b + ' / ' + n; }, pgSize: 'Sayfa başına', pgPrev: 'Önceki sayfa', pgNext: 'Sonraki sayfa', pgPages: 'Sayfalar', pgPage: function (n) { return 'Sayfa ' + n; },
     tabAbout: 'Hakkımızda', aboutSub: 'Kurulu sürüm, kimin geliştirdiği, nereye başvuracağınız ve panelin üzerine kurulduğu yazılımlar.',
     aboutVersion: 'Sürüm', aboutRunsOn: 'Üzerinde çalıştığı sistem', aboutLicense: 'Lisans', aboutSource: 'Kaynak kodu',
-    aboutCompany: 'Inversa Panel, OPNsense’in en çok kullanılan ayarlarını tek ekrandan yönetmek için Inversa Bilişim tarafından geliştirilen açık kaynaklı bir eklentidir.',
+    aboutCompany: [
+        'Inversa Panel, OPNsense’in en çok kullanılan ayarlarını tek ekrandan yönetmek için Inversa Bilişim tarafından geliştirilen açık kaynaklı bir eklentidir.',
+        'Amacımız, güçlü bir güvenlik duvarını ağ uzmanı olmayanların da rahatça kullanabilmesi. Cihazlar, internet filtresi, VPN, saldırı önleme ve kayıtlar aynı sade ekranda bir araya gelir; günlük işler için OPNsense menülerinde dolaşmanız gerekmez.',
+        'Panel, OPNsense’in kendi ayarlarıyla çalışır: mevcut ayarlarınızı okur, yalnızca değiştirdiğiniz yeri günceller. İstediğiniz zaman OPNsense’in kendi sayfalarına dönebilirsiniz.',
+        'Öneri ve hata bildirimleriniz paneli geliştirmemize yardımcı olur; bize aşağıdaki adreslerden ulaşabilirsiniz.'
+    ],
     aboutWeb: 'Web sitesi', aboutMail: 'E-posta', aboutIssues: 'Hata ve istek bildirimi', aboutIssuesLink: 'GitHub’da bildir',
     aboutSupport: 'Destek bilgileri', aboutSupportSub: 'Destek isterken bu özeti iletin. Parola, anahtar ya da cihaz adresi içermez.',
     aboutCopy: 'Destek bilgilerini kopyala', aboutCopied: 'Kopyalandı',

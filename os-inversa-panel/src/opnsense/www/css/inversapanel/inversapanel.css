@@ -654,3 +654,8 @@ header.page-content-head { display: none; }
 .inversapanel .k-about-support .k-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: 13px; }
 .inversapanel .k-about-pre { margin: 0; padding: 10px 12px; background: var(--k-soft); border: 1px solid var(--k-line); border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; color: var(--k-text-2); white-space: pre-wrap; overflow-wrap: anywhere; }
 .inversapanel .k-about-part { flex: 0 0 110px; font-weight: 600; }
+.inversapanel .k-about-co { display: flex; flex-direction: column; gap: 12px; }
+.inversapanel .k-about-co h2 { font-size: 22px; letter-spacing: -0.01em; }
+.inversapanel .k-about-co p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--k-text-2); max-width: 78ch; }
+.inversapanel .k-about-co .k-kv { font-size: 16px; padding: 12px 0; }
+.inversapanel .k-about-co .k-kv .muted, .inversapanel .k-about-co .k-kv .mono { font-size: 16px; }

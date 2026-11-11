@@ -69,7 +69,12 @@ window.InversaPanelI18n.en = {
     pgRange: function (a, b, n) { return a + '–' + b + ' of ' + n; }, pgSize: 'Per page', pgPrev: 'Previous page', pgNext: 'Next page', pgPages: 'Pages', pgPage: function (n) { return 'Page ' + n; },
     tabAbout: 'About', aboutSub: 'The installed version, who makes it, where to turn to and the software the panel is built on.',
     aboutVersion: 'Version', aboutRunsOn: 'Runs on', aboutLicense: 'Licence', aboutSource: 'Source code',
-    aboutCompany: 'Inversa Panel is an open source plugin by Inversa Bilişim for managing the most used settings of OPNsense from one screen.',
+    aboutCompany: [
+        'Inversa Panel is an open source plugin by Inversa Bilişim for managing the most used settings of OPNsense from one screen.',
+        'Our aim is a powerful firewall that people who are not network specialists can use with ease. Devices, the internet filter, VPN, attack protection and logs come together on one plain screen, with no need to find your way through OPNsense’s menus for everyday work.',
+        'The panel works with OPNsense’s own settings: it reads what is there and only updates what you change. You can go back to OPNsense’s own pages at any time.',
+        'Your suggestions and bug reports help us make the panel better; you can reach us at the addresses below.'
+    ],
     aboutWeb: 'Website', aboutMail: 'E-mail', aboutIssues: 'Bugs and requests', aboutIssuesLink: 'Report on GitHub',
     aboutSupport: 'Support information', aboutSupportSub: 'Send this summary when you ask for help. It holds no passwords, keys or device addresses.',
     aboutCopy: 'Copy support information', aboutCopied: 'Copied',

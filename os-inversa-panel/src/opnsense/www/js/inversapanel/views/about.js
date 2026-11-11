@@ -83,10 +83,11 @@
                     return '<div class="k-list-row"><span class="k-about-part">' + link(p[1], p[0]) + '</span><span class="muted">' + h.esc(T[p[2]]) + '</span></div>';
                 }).join('') + '</div></section></div>' +
 
-                '<section class="k-card"><h2>Inversa Bilişim</h2><div class="muted" style="font-size:14px">' + h.esc(T.aboutCompany) + '</div>' +
+                '<section class="k-card"><div class="k-about-co"><h2>Inversa Bilişim</h2>' +
+                T.aboutCompany.map(function (p) { return '<p>' + h.esc(p) + '</p>'; }).join('') +
                 '<div>' + kv(T.aboutWeb, link(SITE, 'inversa.com.tr')) +
                 kv(T.aboutMail, '<span class="mono">' + h.esc(MAIL) + '</span>') +
-                kv(T.aboutIssues, link(REPO + '/issues', T.aboutIssuesLink)) + '</div>' +
+                kv(T.aboutIssues, link(REPO + '/issues', T.aboutIssuesLink)) + '</div></div>' +
                 '<div class="k-about-support"><div><b>' + h.esc(T.aboutSupport) + '</b><span class="muted">' + h.esc(T.aboutSupportSub) + '</span></div>' +
                 '<button type="button" class="k-btn" data-act="about:copy">' + h.icon(A.copied ? h.ICONS.ok : COPY, 16) + h.esc(A.copied ? T.aboutCopied : T.aboutCopy) + '</button></div>' +
                 '<pre class="k-about-pre">' + h.esc(supportText()) + '</pre></section>' + '</div></div>';
