@@ -432,6 +432,23 @@
                     <MaskPerItem>Y</MaskPerItem>
                 </remote_networks>
             </connection>
+            <!--
+                remote access devices (WireGuard peers) that may reach certain addresses only; a device
+                without an entry reaches what its connection reaches. targets: address or address:port
+            -->
+            <access type="ArrayField">
+                <peer type="TextField">
+                    <Mask>/^[0-9a-f-]{36}$/</Mask>
+                    <Required>Y</Required>
+                </peer>
+                <targets type="CSVListField">
+                    <Mask>/^[0-9]{1,3}(\.[0-9]{1,3}){3}(:[0-9]{1,5})?$/</Mask>
+                    <MaskPerItem>Y</MaskPerItem>
+                </targets>
+                <dns type="BooleanField">
+                    <Default>1</Default>
+                </dns>
+            </access>
         </vpns>
         <vpn>
             <!-- 0.2 single-instance settings, migrated into vpns.connection on first use -->

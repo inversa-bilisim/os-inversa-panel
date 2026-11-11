@@ -255,6 +255,7 @@ class Vpn
         }
 
         $wan = self::wanAddress();
+        $access = self::accessMap($mdl);
         $list = [];
         $owned = [];
         foreach (self::connections($mdl, $servers) as $cuuid => list($conn, $server)) {
@@ -278,6 +279,8 @@ class Vpn
                     'handshake' => $hs['latest-handshake'] ?? 0,
                     'rx' => $hs['transfer-rx'] ?? 0,
                     'tx' => $hs['transfer-tx'] ?? 0,
+                    /* null: what the connection reaches; otherwise only these addresses */
+                    'access' => isset($access[$puuid]) ? ['targets' => $access[$puuid]['targets'], 'dns' => $access[$puuid]['dns']] : null,
                 ];
             }
             $tunnel = explode(',', (string)$server->tunneladdress)[0];
@@ -531,6 +534,7 @@ class Vpn
         }
         $servers->servers->server->del($server->getAttributes()['uuid']);
         $mdl->vpns->connection->del($uuid);
+        self::pruneAccess($mdl, $clients);
         $this->save([$servers], [$clients], $mdl);
         return true;
     }
@@ -556,6 +560,110 @@ class Vpn
             }
         }
         throw new \RuntimeException('VPN network is full');
+    }
+
+    /* ------------------------------------------------------------------ what a device may reach */
+
+    /**
+     * devices limited to certain addresses: [peer uuid => [entry uuid, targets, dns]]
+     */
+    public static function accessMap(InversaPanel $mdl)
+    {
+        $map = [];
+        foreach ($mdl->vpns->access->iterateItems() as $uuid => $node) {
+            $map[(string)$node->peer] = [
+                'uuid' => $uuid,
+                'targets' => array_values(array_filter($node->targets->getValues())),
+                'dns' => !$node->dns->isEmpty(),
+            ];
+        }
+        return $map;
+    }
+
+    /**
+     * whether $ip lies in one of the networks (interface keys)
+     */
+    public static function inNetworks($ip, array $keys)
+    {
+        $long = ip2long($ip);
+        foreach ($keys as $key) {
+            $cidr = self::interfaceNetwork($key);
+            if ($cidr !== null && $long !== false) {
+                list($net, $bits) = explode('/', $cidr);
+                $mask = (~0 << (32 - (int)$bits)) & 0xffffffff;
+                if (($long & $mask) === (ip2long($net) & $mask)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * entries of devices that are gone
+     */
+    private static function pruneAccess(InversaPanel $mdl, Client $clients)
+    {
+        foreach (self::accessMap($mdl) as $peer => $entry) {
+            if ($clients->getNodeByReference('clients.client.' . $peer) === null) {
+                $mdl->vpns->access->del($entry['uuid']);
+            }
+        }
+    }
+
+    /**
+     * limit a device of a remote access connection to certain addresses (address or address:port,
+     * inside the connection's networks), or lift the limit. The rules are made by the firewall
+     * hook from the device's tunnel address, which WireGuard ties to its key: what the device
+     * holds as configuration does not matter.
+     * @return array the device's tunnel address (its open connections are cut by the caller)
+     */
+    public function setPeerAccess(InversaPanel $mdl, $connUuid, $peerUuid, $restricted, array $targets, $dns)
+    {
+        $servers = new Server();
+        $clients = new Client();
+        $ctx = self::peerContext($mdl, $servers, $clients, $connUuid, $peerUuid);
+        if ($ctx === null || (string)$ctx[0]->kind !== 'remote') {
+            throw new \InvalidArgumentException('unknown VPN device');
+        }
+        list($conn, , $peer) = $ctx;
+        $existing = self::accessMap($mdl)[$peerUuid] ?? null;
+        if (!$restricted) {
+            if ($existing !== null) {
+                $mdl->vpns->access->del($existing['uuid']);
+            }
+        } else {
+            $clean = [];
+            foreach ($targets as $target) {
+                $target = trim((string)$target);
+                if ($target === '') {
+                    continue;
+                }
+                if (!preg_match('/^(\d{1,3}(?:\.\d{1,3}){3})(?::(\d{1,5}))?$/', $target, $m) || !filter_var($m[1], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                    throw new \InvalidArgumentException("invalid address: $target (examples: 10.0.0.20 or 10.0.0.20:3389)");
+                }
+                if (isset($m[2]) && ((int)$m[2] < 1 || (int)$m[2] > 65535)) {
+                    throw new \InvalidArgumentException("invalid port: $target");
+                }
+                if (!self::inNetworks($m[1], $conn->networks->getValues())) {
+                    throw new \InvalidArgumentException("address {$m[1]} is not in a network this connection reaches");
+                }
+                $clean[] = $m[1] . (isset($m[2]) ? ':' . (int)$m[2] : '');
+            }
+            $clean = array_values(array_unique($clean));
+            if (empty($clean)) {
+                throw new \InvalidArgumentException('add at least one address the device may reach');
+            }
+            if (count($clean) > 32) {
+                throw new \InvalidArgumentException('at most 32 addresses per device');
+            }
+            $node = $existing !== null ? $mdl->getNodeByReference('vpns.access.' . $existing['uuid']) : $mdl->vpns->access->Add();
+            $node->peer->setValue($peerUuid);
+            $node->targets->setValue(implode(',', $clean));
+            $node->dns->setValue($dns ? '1' : '0');
+        }
+        $this->save([], [], $mdl);
+        return ['address' => explode('/', explode(',', (string)$peer->tunneladdress)[0])[0]];
     }
 
     /**
@@ -755,7 +863,8 @@ class Vpn
         }
         $server->peers->setValue(implode(',', array_diff(explode(',', (string)$server->peers), [$peerUuid])));
         $clients->clients->client->del($peerUuid);
-        $this->save([$servers], [$clients], null);
+        self::pruneAccess($mdl, $clients);
+        $this->save([$servers], [$clients], $mdl);
         return true;
     }
 

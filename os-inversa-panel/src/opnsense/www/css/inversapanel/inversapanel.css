@@ -460,6 +460,27 @@
 .inversapanel .k-vaddr .k-icon-btn { width: 30px; height: 30px; background: transparent; color: var(--k-muted); }
 .inversapanel .k-vaddr input { width: 132px; min-height: 34px; padding: 0 8px; }
 .inversapanel .k-addrow input.k-vaddr-new { flex: 0 1 150px; }
+/* VPN: what a device may reach */
+.inversapanel .k-vdevs { min-width: 760px; }
+.inversapanel .k-vacc { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.inversapanel .k-vacc .k-icon-btn { width: 30px; height: 30px; background: transparent; color: var(--k-muted); }
+.inversapanel .k-vacc-t { display: inline-flex; align-items: baseline; gap: 6px; padding: 3px 8px; border-radius: 8px; background: var(--k-accent-soft); color: #1E3A7B; font-size: 13px; white-space: nowrap; }
+.inversapanel .k-vacc-t b { font-weight: 600; }
+.inversapanel .k-vacc-t .mono { font-size: 12px; }
+.inversapanel .k-pftable tr.k-vacc-on td { border-bottom: none; }
+.inversapanel .k-pftable tr.k-vacc-row td { padding: 0 0 10px; text-align: left; }
+.inversapanel .k-vacc-ed { display: flex; flex-direction: column; gap: 10px; background: var(--k-soft); border: 1px solid var(--k-line); border-radius: 12px; padding: 12px 14px; }
+.inversapanel .k-vacc-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.inversapanel .k-vacc-head .k-seg button { min-height: 34px; padding: 0 12px; font-size: 13px; }
+.inversapanel .k-tag.k-vacc-tag { background: #fff; border: 1px solid var(--k-input); color: var(--k-text); gap: 6px; }
+.inversapanel .k-vacc-tag b { font-weight: 600; }
+.inversapanel .k-vacc-add { max-width: 640px; }
+.inversapanel .k-addrow input.k-vacc-port { flex: 0 1 130px; }
+.inversapanel .k-vacc-opt { display: flex; align-items: center; gap: 4px; }
+.inversapanel .k-vacc-opt .k-switch { width: 50px; }
+.inversapanel .k-vacc-opt b { display: block; font-weight: 600; font-size: 13px; }
+.inversapanel .k-vacc-opt .muted { font-size: 12px; }
+.inversapanel .k-vacc-foot { display: flex; justify-content: flex-end; gap: 8px; }
 .inversapanel .k-pfacts .k-icon-btn { width: 36px; height: 36px; background: transparent; }
 .inversapanel .k-pffoot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--k-line-2); }
 

@@ -321,6 +321,8 @@ function inversapanel_firewall_vpn(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping
     }
     $servers = new \OPNsense\Wireguard\Server();
     \OPNsense\InversaPanel\Vpn::migrate($mdl, $servers);
+    $clients = new \OPNsense\Wireguard\Client();
+    $access = \OPNsense\InversaPanel\Vpn::accessMap($mdl);
     $listenPrio = inversapanel_vpn_listen_prio($mdl);
     $internal = [];
     foreach ($mdl->getProtectedInterfaces() as $key) {
@@ -378,6 +380,47 @@ function inversapanel_firewall_vpn(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping
         }
 
         /* remote access */
+        /*
+         * devices limited to certain addresses come first: their tunnel address may reach those
+         * (and the firewall's DNS when allowed), then nothing else. WireGuard accepts a device's
+         * packets only from its own tunnel address, so the device cannot pose as another one.
+         */
+        $linked = array_filter(explode(',', (string)$server->peers));
+        foreach ($clients->clients->client->iterateItems() as $puuid => $peer) {
+            if (!isset($access[$puuid]) || !in_array($puuid, $linked) || $peer->enabled->isEmpty()) {
+                continue;
+            }
+            $ip = explode('/', explode(',', (string)$peer->tunneladdress)[0])[0];
+            if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                continue;
+            }
+            $pid = substr($puuid, 0, 8);
+            $pname = (string)$peer->name;
+            if ($access[$puuid]['dns']) {
+                $fw->registerFilterRule(105000, array_merge($base, [
+                    'type' => 'pass', 'protocol' => 'tcp/udp', 'from' => $ip, 'to' => '(self)', 'to_port' => '53',
+                    'descr' => "Inversa Panel: VPN {$name} {$pname} DNS", 'label' => inversapanel_label("vpn-peer-{$pid}-dns"),
+                ]));
+            }
+            foreach ($access[$puuid]['targets'] as $i => $target) {
+                list($tip, $tport) = array_pad(explode(':', $target), 2, '');
+                /* an address in a network the connection no longer reaches stays closed */
+                if (!\OPNsense\InversaPanel\Vpn::inNetworks($tip, $chosen)) {
+                    continue;
+                }
+                $rule = ['type' => 'pass', 'from' => $ip, 'to' => $tip,
+                    'descr' => "Inversa Panel: VPN {$name} {$pname} to {$target}", 'label' => inversapanel_label("vpn-peer-{$pid}-{$i}")];
+                if ($tport !== '') {
+                    $rule['protocol'] = 'tcp/udp';
+                    $rule['to_port'] = $tport;
+                }
+                $fw->registerFilterRule(105000, array_merge($base, $rule));
+            }
+            $fw->registerFilterRule(105000, array_merge($base, [
+                'type' => 'block', 'from' => $ip,
+                'descr' => "Inversa Panel: VPN {$name} {$pname} nothing else", 'label' => inversapanel_label("vpn-peer-{$pid}-deny"),
+            ]));
+        }
         $fw->registerFilterRule(105000, array_merge($base, [
             'type' => 'pass', 'protocol' => 'tcp/udp', 'from' => $tunnel, 'to' => '(self)', 'to_port' => '53',
             'descr' => "Inversa Panel: VPN {$name} DNS", 'label' => inversapanel_label("vpn-dns-{$id}"),

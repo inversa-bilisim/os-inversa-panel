@@ -9,6 +9,7 @@ namespace OPNsense\InversaPanel\Api;
 
 use OPNsense\Base\ApiControllerBase;
 use OPNsense\Base\UserException;
+use OPNsense\Core\Backend;
 use OPNsense\InversaPanel\InversaPanel;
 use OPNsense\InversaPanel\Ipsec;
 use OPNsense\InversaPanel\Vpn;
@@ -131,6 +132,24 @@ class VpnController extends ApiControllerBase
             return ['status' => 'failed'];
         }
         return array_merge(['status' => $cfg['config'] === null ? 'nokey' : 'ok'], $cfg);
+    }
+
+    /**
+     * limit a device to certain addresses, or let it reach what its connection reaches
+     */
+    public function peeraccessAction($conn = null, $peer = null)
+    {
+        $this->guard();
+        $targets = $this->request->getPost('targets');
+        $targets = is_array($targets) ? $targets : preg_split('/[\s,]+/', (string)$targets, -1, PREG_SPLIT_NO_EMPTY);
+        $restricted = !empty($this->request->getPost('restricted'));
+        $dns = !empty($this->request->getPost('dns'));
+        $result = $this->change(fn($vpn, $mdl) => $vpn->setPeerAccess($mdl, (string)$conn, (string)$peer, $restricted, $targets, $dns));
+        if ($result['status'] === 'ok' && !empty($result['address'])) {
+            /* connections the device has open must not outlive the new limits */
+            (new Backend())->configdpRun('inversapanel killstates', [$result['address']]);
+        }
+        return $result;
     }
 
     public function peerrenewAction($conn = null, $peer = null)
