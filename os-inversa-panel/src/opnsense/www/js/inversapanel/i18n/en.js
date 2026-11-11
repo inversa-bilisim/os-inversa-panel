@@ -204,6 +204,21 @@ window.InversaPanelI18n.en = {
     vpnDevCount: function (n) { return n === 1 ? '1 device' : n + ' devices'; },
     vpnOthers: function (l) { return 'Other WireGuard setups exist, Inversa Panel leaves them alone: ' + l; },
     vpnBehindModem: 'If OPNsense is behind a modem, forward each connection’s UDP port (for IPsec UDP 500 and 4500) to OPNsense on the modem.',
+    vpnStepKind: 'Kind', vpnStepSet: 'Settings', vpnBack: 'Back',
+    vpnAdvRemote: 'Advanced: port, IP block, address to connect to', vpnAdvSite: 'Advanced: port, IP block, key of the other side', vpnAdvIpsec: 'Advanced: shared key, address of this side',
+    vpnLiveCount: function (n) { return n + ' connected'; }, vpnNoLive: 'No device connected',
+    vpnTraffic: 'Traffic', vpnOurNets: 'Our networks',
+    wgSecret: 'The QR code and the .conf file contain the private key of the other side. Pass them on only to the administrator of the other side, over a safe channel.',
+    wgText: function (c) {
+        return ['WireGuard connection: ' + c.name,
+            'These values are entered on the device of the OTHER SIDE.', '',
+            'Address to connect to (Endpoint) : ' + c.address,
+            'Public key of this firewall      : ' + c.pubkey,
+            'Tunnel address of this side      : ' + c.tunnel,
+            'Allowed networks (AllowedIPs)    : ' + [c.tunnel.split('/')[0] + '/32'].concat(c.networks).join(', '),
+            'Networks of the other side       : ' + c.remote_networks.join(', '),
+            'Public key of the other side     : ' + (c.remote_pubkey || '—')].join('\n');
+    },
     /* IPsec site to site */
     ipcProto: 'Protocol',
     ipcProtoWg: 'When the other side speaks WireGuard too (OPNsense, pfSense, MikroTik, Linux).',

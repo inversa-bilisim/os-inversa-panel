@@ -21,8 +21,9 @@
     var QR = 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2';
     var COPY = 'M9 9h11v11H9zM5 15H4V4h11v1';
     var PLUS = 'M12 5v14M5 12h14';
+    var CHEV = 'M6 9l6 6 6-6';
 
-    var V = { data: null, busy: false, error: null, form: null, edit: null, names: {}, qr: null, sheet: null };
+    var V = { data: null, busy: false, error: null, form: null, edit: null, names: {}, qr: null, sheet: null, open: null };
 
     function T() { return h.T(); }
 
@@ -141,6 +142,14 @@
         }, function (err) { V.error = (err && err.errorMessage) || T().applyFailed; h.redraw('main'); });
     }
 
+    /* the same for a WireGuard site to site connection, from what the status already holds */
+    function showWgSheet(c) {
+        var p = c.peers[0] || {};
+        var nets = (V.data.networks || []).filter(function (n) { return c.networks.indexOf(n.key) >= 0; }).map(function (n) { return n.cidr; });
+        V.sheet = { name: label(c), text: T().wgText({ name: label(c), pubkey: c.pubkey, address: c.address, tunnel: c.tunnel, networks: nets, remote_networks: c.remote_networks, remote_pubkey: p.pubkey || '' }),
+            conn: p.has_config ? c.uuid : null, peer: p.has_config ? p.uuid : null };
+    }
+
     function sheetDialog() {
         var t = T(), s = V.sheet;
         return '<div class="k-modal" role="dialog" aria-modal="true" aria-label="' + h.esc(t.ipcSheet) + '"><div class="k-modal-card" style="max-width:560px">' +
@@ -148,8 +157,10 @@
             '<button type="button" class="k-icon-btn" data-act="vpn:sheet-close" aria-label="' + h.esc(t.close) + '">' + h.icon(h.ICONS.close, 18) + '</button></div>' +
             '<pre class="k-sheet">' + h.esc(s.text) + '</pre>' +
             '<div class="k-btns"><button type="button" class="k-btn" data-act="vpn:copy" data-v="' + h.esc(s.text) + '">' + h.icon(COPY, 16) + h.esc(t.copy) + '</button>' +
-            '<button type="button" class="k-btn" data-act="vpn:sheet-file">' + h.icon(DOWNLOAD, 16) + h.esc(t.ipcDownload) + '</button></div>' +
-            '<div class="muted small">' + h.esc(t.ipcSecret) + '</div></div></div>';
+            '<button type="button" class="k-btn" data-act="vpn:sheet-file">' + h.icon(DOWNLOAD, 16) + h.esc(t.ipcDownload) + '</button>' +
+            (s.peer ? '<button type="button" class="k-btn" data-act="vpn:qr" data-c="' + s.conn + '" data-v="' + s.peer + '">' + h.icon(QR, 16) + 'QR</button>' +
+                '<button type="button" class="k-btn" data-act="vpn:file" data-c="' + s.conn + '" data-v="' + s.peer + '">' + h.icon(DOWNLOAD, 16) + '.conf</button>' : '') + '</div>' +
+            '<div class="muted small">' + h.esc(s.peer ? t.wgSecret : t.ipcSecret) + '</div></div></div>';
     }
 
     /* site to site over IPsec: the form fields that replace port, tunnel block and public key */
@@ -162,56 +173,54 @@
             '<div class="muted small">' + h.esc(t.ipcHint) + '</div>';
     }
 
-    function ipsecInfo(c) {
-        var t = T(), up = c.enabled && c.connected > 0;
-        return '<div class="k-row">' +
-            '<div class="k-info-box" style="flex:1 1 320px"><b>' + h.esc(t.ipcThisSide) + '</b>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.vpnAddr) + '</span><span class="mono">' + h.esc(c.address || '—') + (c.address ? copyBtn(c.address) : '') + '</span></div>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.ipcId) + '</span><span class="mono">' + h.esc(c.local_id) + '</span></div>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.vpnSiteShare) + '</span><span>' + h.esc(c.networks.map(netName).join(', ') || '—') + '</span></div></div>' +
-            '<div class="k-info-box" style="flex:1 1 320px"><b>' + h.esc(t.vpnOtherSide) + '</b>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.colSeen) + '</span><span><span class="k-dot' + (up ? ' ok' : '') + '"></span> ' + h.esc(!c.enabled ? t.vpnDisabled : (up ? t.vpnConnected : t.ipcDown)) + '</span></div>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.vpnRemoteEndpoint) + '</span><span class="mono">' + h.esc(c.remote_endpoint) + '</span></div>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.vpnRemoteNets) + '</span><span class="mono">' + h.esc(c.remote_networks.join(', ')) + '</span></div></div></div>' +
-            '<div class="k-row" style="align-items:center"><span class="muted">' + h.esc(t.ipcSheetHint) + '</span>' +
-            '<button type="button" class="k-btn small" data-act="vpn:sheet" data-v="' + c.uuid + '">' + h.esc(t.ipcSheetBtn) + '</button></div>';
+    function field(label, name, value, placeholder, grow, hint) {
+        return '<label class="k-nf' + (grow ? ' k-pfgrow' : '') + '"><span class="k-nl">' + h.esc(label) + '</span><input type="text"' + (name === 'name' ? ' maxlength="40"' : ' class="mono"') +
+            ' data-input="vpn:form-' + name + '" value="' + h.esc(value) + '" placeholder="' + h.esc(placeholder || '') + '"' + (hint ? ' title="' + h.esc(hint) + '"' : '') +
+            (grow ? '' : ' style="width:150px"') + ' autocomplete="off" spellcheck="false"></label>';
     }
 
+    /* a new connection in two steps: what kind, then only what that kind needs; the rest under "Advanced" */
     function formCard() {
-        var t = T(), f = V.form;
-        var html = '<section class="k-card k-edit"><div class="k-card-head"><h2>' + h.esc(t.vpnNew) + '</h2>' +
-            '<button type="button" class="k-icon-btn" data-act="vpn:form-close" aria-label="' + h.esc(t.close) + '">' + h.icon(h.ICONS.close, 18) + '</button></div>' +
-            '<div class="k-row">' + [['remote', t.vpnKindRemote, t.vpnKindRemoteDesc], ['site', t.vpnKindSite, t.vpnKindSiteDesc]].map(function (o) {
-                return '<button type="button" class="k-opt' + (f.kind === o[0] ? ' on' : '') + '" style="min-height:0" data-act="vpn:form-kind" data-v="' + o[0] + '" aria-pressed="' + (f.kind === o[0]) + '"><b>' + h.esc(o[1]) + '</b><span>' + h.esc(o[2]) + '</span></button>';
-            }).join('') + '</div>' +
-            (f.kind === 'site' && V.data.ipsec_available ? '<div class="k-field"><span>' + h.esc(t.ipcProto) + '</span><div class="k-seg">' + [['wireguard', 'WireGuard'], ['ipsec', 'IPsec']].map(function (o) {
-                return '<button type="button" class="' + (f.type === o[0] ? 'on' : '') + '" data-act="vpn:form-type" data-v="' + o[0] + '" aria-pressed="' + (f.type === o[0]) + '">' + o[1] + '</button>';
-            }).join('') + '</div><span class="muted small" style="font-weight:400">' + h.esc(f.type === 'ipsec' ? t.ipcProtoIpsec : t.ipcProtoWg) + '</span></div>' : '') +
-            '<div class="k-row" style="align-items:flex-end"><label class="k-field" style="flex:1 1 240px"><span>' + h.esc(t.vpnName) + '</span><input type="text" maxlength="40" data-input="vpn:form-name" value="' + h.esc(f.name) + '"></label>' +
-            (isIpsec(f) ? '' : '<label class="k-field" style="flex:0 0 110px"><span>' + h.esc(t.vpnPort) + '</span><input type="text" inputmode="numeric" class="mono" data-input="vpn:form-port" value="' + h.esc(f.port) + '"></label>' +
-            tunnelField(f.tunnel, V.data.next_tunnel ? V.data.next_tunnel[f.kind] : '', 'form-tunnel')) + '</div>' +
-            '<div class="k-row" style="align-items:flex-start;gap:16px 32px"><div class="k-field" style="flex:0 1 auto"><span>' + h.esc(f.kind === 'site' ? t.vpnSiteShare : t.vpnReach) + '</span>' + netChips(f.networks, 'form-net') + '</div>' +
-            (f.kind === 'remote' ? modeSeg(f.mode, 'form-mode') : '') + '</div>';
-        var ok = f.name.trim() && valid(f.kind, f.mode, f.networks, f.remote_networks) && (!isIpsec(f) || f.remote_endpoint.trim());
-        var btn = '<button type="button" class="k-btn primary" style="margin-left:auto" data-act="vpn:form-create"' + (ok && !V.busy ? '' : ' disabled') + '>' + h.esc(V.busy ? t.applying : t.vpnCreate) + '</button>';
-        if (f.kind === 'remote') {
-            html += modeHint(f.mode, f.networks) +
-                '<div class="k-row" style="align-items:flex-end"><label class="k-field" style="flex:0 1 380px"><span>' + h.esc(t.vpnEndpoint) + '</span><input type="text" class="mono" data-input="vpn:form-endpoint" value="' + h.esc(f.endpoint) + '" placeholder="' + h.esc(V.data.wan_address || 'ev.ornek-ddns.net') + '" title="' + h.esc(t.vpnEndpointHint) + '"></label>' + btn + '</div>';
-        } else if (isIpsec(f)) {
-            html += ipsecFields(f, 'form', btn);
-        } else {
-            html += '<div class="k-row" style="align-items:flex-end"><label class="k-field" style="flex:1 1 240px"><span>' + h.esc(t.vpnRemoteEndpoint) + '</span><input type="text" class="mono" data-input="vpn:form-remote_endpoint" value="' + h.esc(f.remote_endpoint) + '" placeholder="sube.ornek.com:51820"></label>' +
-                '<label class="k-field" style="flex:1 1 240px"><span>' + h.esc(t.vpnRemoteNets) + '</span><input type="text" class="mono" data-input="vpn:form-remote_networks" value="' + h.esc(f.remote_networks) + '" placeholder="192.168.50.0/24, 10.20.0.0/16"></label></div>' +
-                '<div class="k-row" style="align-items:flex-end"><label class="k-field" style="flex:1 1 360px"><span>' + h.esc(t.vpnRemoteKey) + '</span><input type="text" class="mono" data-input="vpn:form-remote_pubkey" value="' + h.esc(f.remote_pubkey) + '" placeholder="' + h.esc(t.vpnRemoteKeyPh) + '" title="' + h.esc(t.vpnRemoteKeyHint) + '" autocomplete="off" spellcheck="false"></label>' + btn + '</div>';
+        var t = T(), f = V.form, d = V.data;
+        var kinds = [['remote', 'wireguard', t.vpnKindRemote, t.vpnKindRemoteDesc], ['site', 'wireguard', t.vpnKindSite + ' · WireGuard', t.ipcProtoWg]]
+            .concat(d.ipsec_available ? [['site', 'ipsec', t.vpnKindSite + ' · IPsec', t.ipcProtoIpsec]] : []);
+        var head = function (title, step) {
+            return '<div class="k-card-head"><h2>' + h.esc(title) + '</h2><span class="k-vsteps">' + (step === 1 ? '<b>1 ' + h.esc(t.vpnStepKind) + '</b> › 2 ' + h.esc(t.vpnStepSet) : '1 ' + h.esc(t.vpnStepKind) + ' › <b>2 ' + h.esc(t.vpnStepSet) + '</b>') +
+                '</span><button type="button" class="k-icon-btn" style="width:34px;height:34px" data-act="vpn:form-close" aria-label="' + h.esc(t.close) + '">' + h.icon(h.ICONS.close, 16) + '</button></div>';
+        };
+        if (f.step === 1) {
+            return '<section class="k-card k-nform k-edit">' + head(t.vpnNew, 1) + '<div class="k-row">' + kinds.map(function (k) {
+                return '<button type="button" class="k-opt" style="min-height:0" data-act="vpn:form-pick" data-v="' + k[0] + '" data-t="' + k[1] + '"><b>' + h.esc(k[2]) + '</b><span>' + h.esc(k[3]) + '</span></button>';
+            }).join('') + '</div></section>';
         }
-        return html + '</section>';
+        var ipsec = isIpsec(f), site = f.kind === 'site';
+        var title = site ? t.vpnKindSite + ' · ' + (ipsec ? 'IPsec' : 'WireGuard') : t.vpnKindRemote;
+        var ok = f.name.trim() && valid(f.kind, f.mode, f.networks, f.remote_networks) && (!ipsec || f.remote_endpoint.trim()) && !V.busy;
+        var html = '<section class="k-card k-nform k-edit">' + head(title, 2) +
+            '<div class="k-pfline">' + field(t.vpnName, 'name', f.name, '', true) +
+            (site ? field(t.vpnRemoteEndpoint, 'remote_endpoint', f.remote_endpoint, ipsec ? '203.0.113.10' : 'sube.ornek.com:51820', true) +
+                field(t.vpnRemoteNets, 'remote_networks', f.remote_networks, '192.168.50.0/24', true) : '') + '</div>' +
+            '<div class="k-row" style="align-items:flex-start;gap:12px 32px"><div class="k-nf"><span class="k-nl">' + h.esc(site ? t.vpnSiteShare : t.vpnReach) + '</span>' + netChips(f.networks, 'form-net') + '</div>' +
+            (site ? '' : modeSeg(f.mode, 'form-mode')) + '</div>' +
+            (site ? '' : modeHint(f.mode, f.networks));
+        if (f.adv) {
+            html += '<div class="k-pfline">' + (ipsec ?
+                field(t.ipcKey, 'psk', f.psk, t.ipcKeyPh, true, t.ipcKeyHint) + field(t.ipcOurs, 'endpoint', f.endpoint, d.wan_address || '', true, t.ipcOursHint) :
+                field(t.vpnPort, 'port', f.port, '', false) + field(t.vpnTunnel, 'tunnel', f.tunnel, d.next_tunnel ? d.next_tunnel[f.kind] : '', false, t.vpnTunnelHint) +
+                (site ? field(t.vpnRemoteKey, 'remote_pubkey', f.remote_pubkey, t.vpnRemoteKeyPh, true, t.vpnRemoteKeyHint) :
+                    field(t.vpnEndpoint, 'endpoint', f.endpoint, d.wan_address || 'ev.ornek-ddns.net', true, t.vpnEndpointHint))) + '</div>';
+        }
+        return html + '<div class="k-nfoot"><button type="button" class="k-link k-vadv" data-act="vpn:form-adv" aria-expanded="' + !!f.adv + '">' +
+            '<span class="k-vchev' + (f.adv ? ' open' : '') + '">' + h.icon(CHEV, 14) + '</span>' + h.esc(ipsec ? t.vpnAdvIpsec : (site ? t.vpnAdvSite : t.vpnAdvRemote)) + '</button>' +
+            '<button type="button" class="k-btn" data-act="vpn:form-back">' + h.esc(t.vpnBack) + '</button>' +
+            '<button type="button" class="k-btn primary" data-act="vpn:form-create"' + (ok ? '' : ' disabled') + '>' + h.esc(V.busy ? t.applying : t.vpnCreate) + '</button></div></section>';
     }
 
     function editPanel(c) {
         var t = T(), e = V.edit;
         var btns = '<div class="k-btns" style="margin-left:auto;display:flex;gap:8px"><button type="button" class="k-btn" data-act="vpn:edit-close">' + h.esc(t.discard) + '</button>' +
             '<button type="button" class="k-btn primary" data-act="vpn:edit-save" data-v="' + c.uuid + '"' + (V.busy || !valid(c.kind, e.mode, e.networks, c.kind === 'site' ? e.remote_networks : '') || (isIpsec(c) && !e.remote_endpoint.trim()) ? ' disabled' : '') + '>' + h.esc(t.save) + '</button></div>';
-        var html = '<div class="k-vpn-edit"><div class="k-row" style="align-items:flex-start;gap:16px 32px"><div class="k-field" style="flex:0 1 auto"><span>' + h.esc(c.kind === 'site' ? t.vpnSiteShare : t.vpnReach) + '</span>' + netChips(e.networks, 'edit-net') + '</div>' +
+        var html = '<div class="k-vedit"><div class="k-row" style="align-items:flex-start;gap:12px 32px"><div class="k-nf"><span class="k-nl">' + h.esc(c.kind === 'site' ? t.vpnSiteShare : t.vpnReach) + '</span>' + netChips(e.networks, 'edit-net') + '</div>' +
             (c.kind === 'remote' ? modeSeg(e.mode, 'edit-mode') : '') + '</div>';
         if (isIpsec(c)) {
             return html + ipsecFields(e, 'edit', btns) + '</div>';
@@ -228,61 +237,79 @@
         return html + '<div class="muted small">' + h.esc(t.vpnModeHint) + '</div></div>';
     }
 
-    function devices(c) {
+    function live(p) {
+        return !!(p.enabled && p.handshake && V.data.now - p.handshake < 180);
+    }
+
+    /* whether the other end is there: [text, connected] */
+    function state(c) {
         var t = T();
-        var html = c.peers.length ? c.peers.map(function (p) {
-            var live = p.enabled && p.handshake && V.data.now - p.handshake < 180;
-            return '<div class="k-list-row"><span class="k-dot' + (live ? ' ok' : '') + '"></span><div class="k-grow-text"><b>' + h.esc(p.name) + '</b>' +
-                '<div class="muted">' + h.esc(p.address + ' · ' + ago(p)) + '</div></div>' +
-                (p.has_config
-                    ? '<button type="button" class="k-btn small" data-act="vpn:qr" data-c="' + c.uuid + '" data-v="' + p.uuid + '">' + h.icon(QR, 15) + 'QR</button>' +
-                      '<button type="button" class="k-btn small" data-act="vpn:file" data-c="' + c.uuid + '" data-v="' + p.uuid + '">' + h.icon(DOWNLOAD, 15) + '.conf</button>'
-                    : '<button type="button" class="k-btn small" data-act="vpn:renew" data-c="' + c.uuid + '" data-v="' + p.uuid + '" title="' + h.esc(t.vpnRenewHint) + '"' + (V.busy ? ' disabled' : '') + '>' + h.esc(t.vpnRenew) + '</button>') +
-                '<button type="button" class="k-icon-btn" style="background:transparent" data-act="vpn:peer-del" data-c="' + c.uuid + '" data-v="' + p.uuid + '"' + (V.busy ? ' disabled' : '') + ' aria-label="' + h.esc(t.vpnRemove(p.name)) + '">' + h.icon(TRASH, 18) + '</button>' +
-                h.toggle(p.enabled, 'data-act="vpn:peer-toggle" data-c="' + c.uuid + '" data-v="' + p.uuid + '"' + (V.busy ? ' disabled' : ''), p.name) + '</div>';
-        }).join('') : '<div class="muted">' + h.esc(t.vpnNoPeers) + '</div>';
-        var name = V.names[c.uuid] || '';
-        return html + '<div class="k-addrow"><input type="text" maxlength="40" data-input="vpn:peer-name" data-c="' + c.uuid + '" value="' + h.esc(name) + '" placeholder="' + h.esc(t.vpnAddPh) + '" aria-label="' + h.esc(t.vpnAddPh) + '">' +
+        if (!c.enabled) { return [t.vpnDisabled, false]; }
+        if (isIpsec(c)) { return c.connected > 0 ? [t.vpnConnected, true] : [t.ipcDown, false]; }
+        if (c.kind === 'site') { return live(c.peers[0] || {}) ? [t.vpnConnected, true] : [t.ipcDown, false]; }
+        var n = c.peers.filter(live).length;
+        return n ? [t.vpnLiveCount(n), true] : [t.vpnNoLive, false];
+    }
+
+    function meta(pairs, buttons) {
+        return '<div class="k-vmeta">' + pairs.map(function (kv) {
+            return '<span><span class="muted">' + h.esc(kv[0]) + '</span> <b' + (kv[2] ? ' class="mono"' : '') + '>' + h.esc(kv[1]) + '</b></span>';
+        }).join('') + '<span class="k-vbtns">' + buttons + '</span></div>';
+    }
+
+    function bodyButtons(c, extra) {
+        var t = T();
+        return (extra || '') + '<button type="button" class="k-btn small" data-act="vpn:edit" data-v="' + c.uuid + '">' + h.esc(t.netEdit) + '</button>' +
+            '<button type="button" class="k-btn small k-danger" style="margin:0" data-act="vpn:del" data-v="' + c.uuid + '"' + (V.busy ? ' disabled' : '') + '>' + h.esc(t.vpnDelete) + '</button>';
+    }
+
+    function devices(c) {
+        var t = T(), name = V.names[c.uuid] || '';
+        return (c.peers.length ? '<div style="overflow-x:auto"><table class="k-pftable"><thead><tr><th>' + h.esc(t.colDevice) + '</th><th>' + h.esc(t.netAddr) + '</th><th>' + h.esc(t.colSeen) + '</th><th></th></tr></thead><tbody>' +
+            c.peers.map(function (p) {
+                return '<tr class="' + (p.enabled ? '' : 'dim') + '"><td><b>' + h.esc(p.name) + '</b></td><td class="mono">' + h.esc(p.address.replace(/\/32$/, '')) + '</td>' +
+                    '<td><span class="k-dot' + (live(p) ? ' ok' : '') + '"></span> ' + h.esc(ago(p)) + '</td><td><span class="k-pfacts">' +
+                    (p.has_config
+                        ? '<button type="button" class="k-btn small" data-act="vpn:qr" data-c="' + c.uuid + '" data-v="' + p.uuid + '">' + h.icon(QR, 14) + 'QR</button>' +
+                          '<button type="button" class="k-btn small" data-act="vpn:file" data-c="' + c.uuid + '" data-v="' + p.uuid + '">' + h.icon(DOWNLOAD, 14) + '.conf</button>'
+                        : '<button type="button" class="k-btn small" data-act="vpn:renew" data-c="' + c.uuid + '" data-v="' + p.uuid + '" title="' + h.esc(t.vpnRenewHint) + '"' + (V.busy ? ' disabled' : '') + '>' + h.esc(t.vpnRenew) + '</button>') +
+                    '<button type="button" class="k-icon-btn" data-act="vpn:peer-del" data-c="' + c.uuid + '" data-v="' + p.uuid + '"' + (V.busy ? ' disabled' : '') + ' aria-label="' + h.esc(t.vpnRemove(p.name)) + '">' + h.icon(TRASH, 16) + '</button>' +
+                    h.toggle(p.enabled, 'data-act="vpn:peer-toggle" data-c="' + c.uuid + '" data-v="' + p.uuid + '"' + (V.busy ? ' disabled' : ''), p.name) + '</span></td></tr>';
+            }).join('') + '</tbody></table></div>' : '<div class="muted">' + h.esc(t.vpnNoPeers) + '</div>') +
+            '<div class="k-addrow" style="max-width:480px"><input type="text" maxlength="40" data-input="vpn:peer-name" data-c="' + c.uuid + '" value="' + h.esc(name) + '" placeholder="' + h.esc(t.vpnAddPh) + '" aria-label="' + h.esc(t.vpnAddPh) + '">' +
             '<button type="button" class="k-btn primary" data-act="vpn:peer-add" data-c="' + c.uuid + '"' + (V.busy || !name.trim() ? ' disabled' : '') + '>' + h.icon(PLUS, 16) + h.esc(t.vpnAdd) + '</button></div>';
     }
 
-    function siteInfo(c) {
-        var t = T(), p = c.peers[0] || {};
-        var live = p.enabled && p.handshake && V.data.now - p.handshake < 180;
-        var html = '<div class="k-row">' +
-            '<div class="k-info-box" style="flex:1 1 320px"><b>' + h.esc(t.vpnThisSide) + '</b>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.vpnPubKey) + '</span><span class="mono small">' + h.esc(c.pubkey) + copyBtn(c.pubkey) + '</span></div>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.vpnAddr) + '</span><span class="mono">' + h.esc(c.address) + copyBtn(c.address) + '</span></div>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.vpnTunnelIp) + '</span><span class="mono">' + h.esc(c.tunnel) + '</span></div>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.vpnSiteShare) + '</span><span>' + h.esc(c.networks.map(netName).join(', ') || '—') + '</span></div></div>' +
-            '<div class="k-info-box" style="flex:1 1 320px"><b>' + h.esc(t.vpnOtherSide) + '</b>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.colSeen) + '</span><span><span class="k-dot' + (live ? ' ok' : '') + '"></span> ' + h.esc(ago(p)) + '</span></div>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.vpnRemoteEndpoint) + '</span><span class="mono">' + h.esc(p.endpoint || t.vpnWaitsForThem) + '</span></div>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.vpnRemoteNets) + '</span><span class="mono">' + h.esc(c.remote_networks.join(', ')) + '</span></div>' +
-            '<div class="k-kv"><span class="muted">' + h.esc(t.vpnPubKey) + '</span><span class="mono small">' + h.esc(p.pubkey || '') + '</span></div></div></div>';
-        if (p.has_config) {
-            html += '<div class="k-row" style="align-items:center"><span class="muted">' + h.esc(t.vpnOtherConf) + '</span>' +
-                '<button type="button" class="k-btn small" data-act="vpn:qr" data-c="' + c.uuid + '" data-v="' + p.uuid + '">' + h.icon(QR, 15) + 'QR</button>' +
-                '<button type="button" class="k-btn small" data-act="vpn:file" data-c="' + c.uuid + '" data-v="' + p.uuid + '">' + h.icon(DOWNLOAD, 15) + '.conf</button></div>';
+    /* what shows below an opened connection */
+    function body(c) {
+        var t = T(), nets = c.networks.map(netName).join(', ') || '—';
+        if (V.edit && V.edit.uuid === c.uuid) { return editPanel(c); }
+        if (c.kind === 'remote') {
+            return meta([[t.vpnReach, c.mode === 'full' && !c.networks.length ? t.vpnInternetOnly : nets], [t.vpnTraffic, c.mode === 'full' ? t.modeFull : t.modeSplit], [t.vpnAddr, c.address, true]], bodyButtons(c)) + devices(c);
         }
-        return html;
+        var sheet = '<button type="button" class="k-btn small" data-act="' + (isIpsec(c) ? 'vpn:sheet' : 'vpn:wgsheet') + '" data-v="' + c.uuid + '">' + h.esc(t.ipcSheetBtn) + '</button>';
+        var other = isIpsec(c) ? c.remote_endpoint : ((c.peers[0] || {}).endpoint || t.vpnWaitsForThem);
+        return meta([[t.vpnOurNets, nets], [t.vpnRemoteNets, c.remote_networks.join(', '), true], [t.vpnRemoteEndpoint, other, true]], bodyButtons(c, sheet));
     }
 
-    function connCard(c) {
-        var t = T(), editing = V.edit && V.edit.uuid === c.uuid;
+    /* a connection: one line, opened by a click on it */
+    function connRow(c) {
+        var t = T(), open = V.open === c.uuid, st = state(c);
         var reach = c.mode === 'full' && !c.networks.length ? t.vpnInternetOnly : (c.mode === 'full' ? t.modeFull + ' · ' : '') + c.networks.map(netName).join(', ');
-        var summary = c.kind === 'site'
-            ? t.vpnKindSite + ' · ' + (isIpsec(c) ? 'IPsec' : 'WireGuard') + ' · ' + c.networks.map(netName).join(', ') + ' ⇄ ' + c.remote_networks.join(', ')
-            : t.vpnKindRemote + ' · ' + reach + ' · ' + t.vpnDevCount(c.peers.length);
-        return '<section class="k-card' + (c.enabled ? '' : ' dim') + '"><div class="k-setting" style="padding:0;border:none;flex-wrap:wrap">' +
-            '<div class="k-ibox big' + (c.enabled ? ' on' : '') + '">' + h.icon(c.kind === 'site' ? LINK : ICON, 22) + '</div>' +
-            '<div class="k-setting-text"><b style="font-size:16px">' + h.esc(label(c)) + '</b><div class="muted">' + h.esc(summary) +
-            (isIpsec(c) ? '' : ' · <span class="mono small">UDP ' + h.esc(c.port) + ' · ' + h.esc(c.tunnel_net || c.tunnel) + '</span>') + '</div></div>' +
-            '<button type="button" class="k-btn small" data-act="vpn:edit" data-v="' + c.uuid + '">' + h.esc(editing ? t.close : t.netEdit) + '</button>' +
-            '<button type="button" class="k-icon-btn" style="background:transparent" data-act="vpn:del" data-v="' + c.uuid + '"' + (V.busy ? ' disabled' : '') + ' aria-label="' + h.esc(t.vpnDelete) + '">' + h.icon(TRASH, 18) + '</button>' +
+        var summary = c.kind === 'site' ? c.networks.map(netName).join(', ') + ' ⇄ ' + c.remote_networks.join(', ') : reach + ' · ' + t.vpnDevCount(c.peers.length);
+        return '<div class="k-vitem' + (open ? ' open' : '') + (c.enabled ? '' : ' dim') + '"><div class="k-vrow">' +
+            '<button type="button" class="k-vhead" data-act="vpn:open" data-v="' + c.uuid + '" aria-expanded="' + open + '">' +
+            '<span class="k-vchev' + (open ? ' open' : '') + '">' + h.icon(CHEV, 16) + '</span>' +
+            '<span class="k-ibox' + (c.enabled ? ' on' : '') + '">' + h.icon(c.kind === 'site' ? LINK : ICON, 18) + '</span>' +
+            '<span class="k-vname"><b>' + h.esc(label(c)) + '</b>' + (c.kind === 'site' ? '<span class="k-badge">' + (isIpsec(c) ? 'IPsec' : 'WireGuard') + '</span>' : '') + '</span>' +
+            '<span class="k-vsum muted">' + h.esc(summary) + '</span>' +
+            '<span class="k-vstate"><span class="k-dot' + (st[1] ? ' ok' : '') + '"></span>' + h.esc(st[0]) + '</span></button>' +
             h.toggle(c.enabled, 'data-act="vpn:enable" data-v="' + c.uuid + '"' + (V.busy ? ' disabled' : ''), label(c)) + '</div>' +
-            (editing ? editPanel(c) : '') +
-            (isIpsec(c) ? ipsecInfo(c) : (c.kind === 'site' ? siteInfo(c) : devices(c))) + '</section>';
+            (open ? '<div class="k-vbody">' + body(c) + '</div>' : '') + '</div>';
+    }
+
+    function group(title, list) {
+        return list.length ? '<div class="k-vgroup"><h2>' + h.esc(title) + '</h2>' + list.map(connRow).join('') + '</div>' : '';
     }
 
     function qrDialog() {
@@ -310,14 +337,16 @@
             if (!d.available) { return html + '<div class="k-banner warn" style="margin:0">' + h.esc(t.vpnUnavailable) + '</div></div>'; }
             if (V.error) { html += '<div class="k-banner err" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span style="white-space:pre-line">' + h.esc(V.error) + '</span></div>'; }
             if (V.form) { html += formCard(); }
-            html += d.connections.length ? d.connections.map(connCard).join('') : (V.form ? '' : '<div class="k-card k-empty" style="border-style:dashed">' + h.esc(t.vpnNone) + '</div>');
-            if ((d.ipsec_others || []).length) {
-                html += '<div class="muted small">' + h.esc(t.ipcOthers(d.ipsec_others.join(', '))) + '</div>';
-            }
-            if (d.other_instances.length) {
-                html += '<div class="muted small">' + h.esc(t.vpnOthers(d.other_instances.map(function (o) { return o.name + ' (UDP ' + o.port + ')'; }).join(', '))) + '</div>';
-            }
-            html += '<div class="k-banner info" style="margin:0">' + h.icon(h.ICONS.info, 20) + '<span>' + h.esc(t.vpnBehindModem) + '</span></div>';
+            /* a single connection needs no click to show what it holds */
+            if (d.connections.length === 1 && V.open === null) { V.open = d.connections[0].uuid; }
+            html += group(t.vpnKindRemote, d.connections.filter(function (c) { return c.kind !== 'site'; })) +
+                group(t.vpnKindSite, d.connections.filter(function (c) { return c.kind === 'site'; }));
+            if (!d.connections.length && !V.form) { html += '<div class="k-card k-empty" style="border-style:dashed">' + h.esc(t.vpnNone) + '</div>'; }
+            var notes = [];
+            if ((d.ipsec_others || []).length) { notes.push(t.ipcOthers(d.ipsec_others.join(', '))); }
+            if (d.other_instances.length) { notes.push(t.vpnOthers(d.other_instances.map(function (o) { return o.name + ' (UDP ' + o.port + ')'; }).join(', '))); }
+            notes.push(t.vpnBehindModem);
+            html += notes.map(function (n) { return '<div class="muted small">' + h.esc(n) + '</div>'; }).join('');
             if (V.qr) { html += qrDialog(); }
             if (V.sheet) { html += sheetDialog(); }
             return html + '</div>';
@@ -327,12 +356,22 @@
             var conn = function (uuid) { return d.connections.filter(function (x) { return x.uuid === uuid; })[0]; };
             switch (name) {
                 case 'form-open':
-                    V.form = { kind: 'remote', type: 'wireguard', psk: '', name: '', port: String(d.next_port), networks: (d.networks[0] ? [d.networks[0].key] : []), mode: 'split', tunnel: '',
+                    V.form = { step: 1, adv: false, kind: 'remote', type: 'wireguard', psk: '', name: '', port: String(d.next_port), networks: (d.networks[0] ? [d.networks[0].key] : []), mode: 'split', tunnel: '',
                         endpoint: '', remote_endpoint: '', remote_networks: '', remote_pubkey: '' };
                     return 'main';
                 case 'form-close': V.form = null; return 'main';
-                case 'form-kind': f.kind = v; f.tunnel = ''; return 'main';
-                case 'form-type': f.type = v === 'ipsec' ? 'ipsec' : 'wireguard'; f.remote_endpoint = ''; return 'main';
+                case 'form-pick':
+                    f.kind = v === 'site' ? 'site' : 'remote';
+                    f.type = el.getAttribute('data-t') === 'ipsec' ? 'ipsec' : 'wireguard';
+                    f.step = 2;
+                    return 'main';
+                case 'form-back': f.step = 1; return 'main';
+                case 'form-adv': f.adv = !f.adv; return 'main';
+                case 'open':
+                    V.open = V.open === v ? '' : v;
+                    V.edit = null;
+                    return 'main';
+                case 'wgsheet': showWgSheet(conn(v)); return 'main';
                 case 'sheet': showSheet(v); return null;
                 case 'sheet-close': V.sheet = null; return 'main';
                 case 'sheet-file': download('ipsec-' + V.sheet.name, V.sheet.text, '.txt'); return null;
@@ -343,7 +382,7 @@
                         kind: f.kind, type: isIpsec(f) ? 'ipsec' : 'wireguard', psk: f.psk, name: f.name, port: f.port, tunnel: f.tunnel, networks: f.networks, mode: f.mode, endpoint: f.endpoint,
                         remote_endpoint: f.remote_endpoint, remote_pubkey: f.remote_pubkey,
                         remote_networks: f.remote_networks.split(/[\s,]+/).filter(Boolean)
-                    }).then(function (res) { if (res && res.status === 'ok') { V.form = null; h.redraw('main'); } });
+                    }).then(function (res) { if (res && res.status === 'ok') { V.form = null; V.open = res.uuid || V.open; h.redraw('main'); } });
                     return null;
                 case 'enable': call('POST', '/api/inversapanel/vpn/update/' + v, { enabled: !conn(v).enabled }); return null;
                 case 'del':
@@ -351,6 +390,7 @@
                     return null;
                 case 'edit':
                     var x = conn(v);
+                    V.open = v;
                     V.edit = V.edit && V.edit.uuid === v ? null : { uuid: v, networks: x.networks.slice(), mode: x.mode, endpoint: x.endpoint, tunnel: x.tunnel_net, psk: '',
                         remote_endpoint: isIpsec(x) ? x.remote_endpoint : (x.peers[0] || {}).endpoint || '', remote_networks: x.remote_networks.join(', ') };
                     return 'main';

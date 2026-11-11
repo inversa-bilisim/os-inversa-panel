@@ -202,6 +202,21 @@ window.InversaPanelI18n.tr = {
     vpnDevCount: function (n) { return n + ' cihaz'; },
     vpnOthers: function (l) { return 'Başka WireGuard kurulumları da var, Inversa Panel bunlara dokunmaz: ' + l; },
     vpnBehindModem: 'OPNsense bir modemin arkasındaysa, modemde her bağlantının UDP portunu (IPsec için UDP 500 ve 4500) OPNsense’e yönlendirin.',
+    vpnStepKind: 'Tür', vpnStepSet: 'Ayarlar', vpnBack: 'Geri',
+    vpnAdvRemote: 'Gelişmiş: port, IP bloğu, bağlantı adresi', vpnAdvSite: 'Gelişmiş: port, IP bloğu, karşı tarafın anahtarı', vpnAdvIpsec: 'Gelişmiş: ortak anahtar, bu tarafın adresi',
+    vpnLiveCount: function (n) { return n + ' bağlı'; }, vpnNoLive: 'Bağlı cihaz yok',
+    vpnTraffic: 'Trafik', vpnOurNets: 'Bizim ağlarımız',
+    wgSecret: 'QR kodunda ve .conf dosyasında karşı tarafın gizli anahtarı var. Yalnızca karşı tarafın yöneticisiyle, güvenli bir yoldan paylaşın.',
+    wgText: function (c) {
+        return ['WireGuard bağlantısı: ' + c.name,
+            'Bu değerler KARŞI TARAFTAKİ cihaza girilir.', '',
+            'Bağlanılacak adres (Endpoint)      : ' + c.address,
+            'Bu güvenlik duvarının açık anahtarı : ' + c.pubkey,
+            'Bu tarafın tünel adresi             : ' + c.tunnel,
+            'İzin verilen ağlar (AllowedIPs)     : ' + [c.tunnel.split('/')[0] + '/32'].concat(c.networks).join(', '),
+            'Karşı tarafın ağları                : ' + c.remote_networks.join(', '),
+            'Karşı tarafın açık anahtarı         : ' + (c.remote_pubkey || '—')].join('\n');
+    },
     /* IPsec site to site */
     ipcProto: 'Protokol',
     ipcProtoWg: 'Karşı taraf da WireGuard destekliyorsa (OPNsense, pfSense, MikroTik, Linux).',
