@@ -272,6 +272,35 @@
             </countries>
         </geo>
         <!--
+            Attack protection: Suricata (OPNsense's intrusion detection) on the protected networks.
+            The service itself, its rulesets and the "drop" policy live in OPNsense's IDS model.
+        -->
+        <ips>
+            <enabled type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </enabled>
+            <mode type="OptionField">
+                <Default>detect</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <detect>Alert only</detect>
+                    <block>Block</block>
+                </OptionValues>
+            </mode>
+            <groups type="OptionField">
+                <Multiple>Y</Multiple>
+                <Default>malware,attackers,exploits,phishing</Default>
+                <OptionValues>
+                    <malware>Malware and command servers</malware>
+                    <attackers>Known attacker addresses</attackers>
+                    <exploits>Exploits of vulnerabilities</exploits>
+                    <phishing>Phishing</phishing>
+                    <scan>Scans and floods</scan>
+                </OptionValues>
+            </groups>
+        </ips>
+        <!--
             VPN connections Inversa Panel manages; the WireGuard instance itself (keys, port, tunnel, peers)
             lives in OPNsense's WireGuard models, referenced by its uuid.
         -->

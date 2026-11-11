@@ -48,7 +48,7 @@
     var QUICK = ['ads', 'malware', 'adult', 'forcedns'];
     var TYPES = ['phone', 'tablet', 'laptop', 'tv', 'console', 'printer', 'iot', 'server', 'unknown'];
     /* tab order; tabs other than the four core ones come from views/*.js (see register()) */
-    var TAB_ORDER = ['dash', 'devices', 'net', 'filter', 'sched', 'pf', 'vpn', 'guest', 'geo', 'settings'];
+    var TAB_ORDER = ['dash', 'devices', 'net', 'filter', 'ips', 'sched', 'pf', 'vpn', 'guest', 'geo', 'settings'];
     var CORE_TABS = ['dash', 'devices', 'filter', 'settings'];
     var TABS = CORE_TABS.slice();
     var VIEWS = {};
@@ -319,6 +319,7 @@
                 kinds: Array.isArray(data.kinds) ? {} : (data.kinds || {}),
                 approval: Array.isArray(data.approval) ? {} : (data.approval || {}),
                 guest: data.guest || {}, geo: data.geo || {}, vpn: data.vpn || {},
+                ips: data.ips || { enabled: false, mode: 'detect', groups: [] },
                 reservations: Array.isArray(data.reservations) ? {} : (data.reservations || {})
             };
             S.draft = clone(S.saved);
@@ -1009,6 +1010,7 @@
             approval: S.draft.approval,
             guest: S.draft.guest,
             geo: S.draft.geo,
+            ips: S.draft.ips,
             vpn: S.draft.vpn,
             geo_license: S.ui.geoLicense || ''
         }).then(function (res) {

@@ -64,6 +64,31 @@ class Catalog
         'telegram' => ['telegram.org', 'telegram.me', 't.me', 'telesco.pe', 'tdesktop.com'],
     ];
 
+    /* description used to recognise the intrusion detection policy Inversa Panel manages (drop instead of alert) */
+    const IPS_POLICY = 'Inversa Panel (managed)';
+
+    /**
+     * Attack protection group => Suricata rulesets (file names as listed under
+     * Services > Intrusion Detection > Download). Names unknown to the running OPNsense version
+     * are skipped at sync time. Kept to rulesets that say "this is hostile" rather than
+     * "this is unusual": every extra ruleset costs memory and brings false alarms.
+     */
+    const IPS_GROUPS = [
+        'malware' => [
+            'abuse.ch.feodotracker.rules', 'abuse.ch.sslblacklist.rules', 'botcc.rules', 'botcc.portgrouped.rules',
+            'emerging-malware.rules', 'emerging-mobile_malware.rules', 'emerging-coinminer.rules',
+            'emerging-worm.rules', 'emerging-ja3.rules',
+        ],
+        'attackers' => ['compromised.rules', 'drop.rules', 'dshield.rules', 'ciarmy.rules'],
+        'exploits' => [
+            'emerging-exploit.rules', 'emerging-exploit_kit.rules', 'emerging-shellcode.rules',
+            'emerging-attack_response.rules', 'emerging-web_client.rules', 'emerging-web_server.rules',
+            'emerging-sql.rules', 'emerging-current_events.rules',
+        ],
+        'phishing' => ['emerging-phishing.rules'],
+        'scan' => ['emerging-scan.rules', 'emerging-dos.rules'],
+    ];
+
     /**
      * Turn a plain domain into the regex Unbound expects in its allowlist (domain + subdomains).
      * @param string $domain validated domain name

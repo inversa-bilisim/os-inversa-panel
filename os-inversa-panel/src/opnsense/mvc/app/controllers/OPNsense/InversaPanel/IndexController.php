@@ -21,6 +21,7 @@ class IndexController extends \OPNsense\Base\IndexController
         '/js/inversapanel/views/vpn.js',
         '/js/inversapanel/views/guest.js',
         '/js/inversapanel/views/geo.js',
+        '/js/inversapanel/views/ips.js',
     ];
 
     public function indexAction()

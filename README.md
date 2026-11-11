@@ -7,7 +7,7 @@ Tasarım taslağı: https://claude.ai/artifact/9HQfR7v4fu2ouPT9Xh73qN
 
 ## Bellek gereksinimi
 
-**DNS engelleme kullanılacaksa en az 8 GB RAM önerilir; 4 GB yetmez.**
+**DNS engelleme veya saldırı önleme kullanılacaksa en az 8 GB RAM önerilir; 4 GB yetmez.**
 
 Engelleme, OPNsense'in kendi DNS sunucusu Unbound üzerinden çalışır ve Unbound engel listelerinin tamamını bellekte tutar. Bellek ihtiyacını Inversa Panel değil, açılan kategorilerin listeleri belirler:
 
@@ -15,7 +15,15 @@ Engelleme, OPNsense'in kendi DNS sunucusu Unbound üzerinden çalışır ve Unbo
 - Listeler yenilenirken buna geçici olarak **yaklaşık 1 GB** daha eklenir.
 - Takas alanı olmayan 4 GB'lık bir test kurulumunda yenileme, Unbound'un yeniden başlamasıyla çakıştığında bellek tükendi: bir seferinde Unbound durdu (DNS kesildi), bir seferinde güvenlik duvarı tamamen yanıt vermez oldu.
 
-Engelleme kategorileri kapalıyken eklentinin kayda değer bir bellek ihtiyacı yoktur.
+**Saldırı önleme (Suricata)** de bellek ister, ne kadar isteyeceğini desen eşleyici belirler. Dört varsayılan grupla (yaklaşık 41 bin kural) ölçülen:
+
+- Hyperscan ile **450 MB**. İşlemci destekliyorsa (SSSE3; son 15 yılın bütün işlemcileri) Inversa Panel bunu kendisi seçer.
+- OPNsense'in varsayılan eşleyicisiyle (Aho-Corasick) **3,5 GB**. 4 GB'lık test kurulumu bu ayarla, DNS engelleme de açıkken kilitlendi.
+- Kurallar her gece yenilenirken yeni kurallar eskilerin yanında kurulur; bellek kısa süre artar.
+
+Inversa Panel, Suricata'yı başlatmadan önce boş belleğe bakar (Hyperscan ile 1 GB, onsuz 4,5 GB); yetmiyorsa başlatmaz ve bunu ekranda söyler. Engel listesi yenilemesi ile Suricata'nın başlaması aynı anda çalıştırılmaz.
+
+DNS engelleme ve saldırı önleme kapalıyken eklentinin kayda değer bir bellek ihtiyacı yoktur.
 
 ## Sürüm 0.2'de neler var
 
@@ -25,6 +33,7 @@ Engelleme kategorileri kapalıyken eklentinin kayda değer bir bellek ihtiyacı 
 | Cihazlar | Cihaz listesi, ad/tür verme, tek tıkla internet kesme, sabit IP (DHCP rezervasyonu); **yeni cihaz onayı**: onay isteyen ağlarda bekleyen cihazlar listenin başında, "Onayla" düğmesiyle | `inversapanel_blocked` MAC takma adı + otomatik engel kuralı; sabit IP'ler Dnsmasq › Hosts kaydı olarak; onaylı cihazlar `inversapanel_approved` MAC takma adında (yalnızca bir ağ onay isterken vardır) |
 | Ağ ve İnternet | WAN: DHCP / PPPoE (VLAN etiketli) / sabit IP, IPv6, port; yerel ağ ekleme (VLAN veya ayrı port), adres, DHCP sunucusu aç/kapat, DHCP aralığı ve kira süresi (ağ eklerken de); ağ başına **"yeni cihazlar onay beklesin"**; üç durumlu ağlar arası erişim tablosu; port görünümü | Arayüzler, VLAN'lar, PPPoE, ağ geçidi, dnsmasq DHCP aralıkları (OPNsense kurulum sihirbazıyla aynı yöntem); erişim kuralları otomatik kural olarak |
 | Engelleme | Kategoriler, 12 uygulama, izin/engel listeleri, güvenli arama, DNS zorlama | Unbound politikası `Inversa Panel (managed)`, otomatik rdr kuralı |
+| Saldırı önleme | Suricata ile korunan ağlardaki trafiği bilinen saldırı ve zararlı yazılım izlerine karşı denetler: **yalnızca uyar** veya **engelle**; beş grup (zararlı yazılım ve komuta sunucuları, bilinen saldırgan adresler, açık istismarı, oltalama, tarama); son uyarılar cihaz adıyla listelenir | OPNsense'in Saldırı Tespiti ayarları (Servisler › Saldırı Tespiti): seçilen kural setleri, engelleme için `Inversa Panel (managed)` politikası, gecelik kural güncelleme görevi |
 | Zamanlama | Gün/saat aralığında cihazın internetini kesme veya uygulama engelleme; her dakika değerlendirilir | pf tablosu `inversapanel_sched`, zamanlama başına Unbound politikası `Inversa Panel schedule: …` |
 | Port yönlendirme | Hazır servisler, hedef cihaz seçimi, aç/kapat, sil; UPnP durumu | Güvenlik Duvarı › NAT › Port Forward kuralları (izin kuralı otomatik) |
 | VPN | Birden çok WireGuard bağlantısı, her biri kendi UDP portunda: **uzaktan erişim** (cihaz başına QR kodu + `.conf`, istendiği zaman tekrar alınabilir; tüm trafik / yalnızca seçili iç ağlar; hiç iç ağ seçilmezse **yalnızca internet**: cihaz sadece buranın internet IP'siyle dışarı çıkar, iç ağlara ve firewall'a erişemez) ve **siteden siteye** (seçili yerel ağlar ⇄ karşı ağlar; karşı tarafın anahtarı yoksa Inversa Panel üretip hazır yapılandırma verir). Her bağlantının erişebileceği iç ağlar ve VPN IP bloğu (ör. 10.70.0.0/24, çakışma denetimli; değişince cihazlar yeniden numaralanır) ayrı seçilir. | Bağlantı başına bir WireGuard örneği (`inversapanel-…`) + peer'lar; WAN izni, seçili ağlara izin (tam modda diğer iç ağlara engel), NAT otomatik kural olarak |
@@ -44,6 +53,7 @@ Inversa Panel mevcut ayarları okur ve yalnızca kullanıcının Inversa Panel'd
 - Erişim tablosundaki her hücre varsayılan olarak **"OPNsense"** durumundadır: mevcut güvenlik duvarı kuralları geçerlidir. Kural yalnızca kullanıcı bir hücreyi İzinli/Engelli yaptığında eklenir.
 - Inversa Panel'in anlayamadığı yapılar (çoklu WAN, LAGG/bridge üyesi ağlar, takma ad kullanan port yönlendirmeleri…) **salt okunur** gösterilir.
 - Inversa Panel yalnızca kendi oluşturduğu ağları silebilir. Her VPN bağlantısı için boş bir port ve çakışmayan bir tünel ağı seçer (0.2'deki tek `inversapanel` örneği ilk açılışta bağlantı olarak devralınır); varsa GeoIP adresinin üzerine yazmaz.
+- OPNsense'te saldırı tespiti zaten açıksa Inversa Panel onu yönetmez: ayarlarına dokunmaz, yalnızca durumunu ve uyarılarını gösterir. Yalnızca kendi açtığı saldırı tespitini değiştirir ve kapatır.
 - Eklediği her kayıt "Inversa Panel" etiketi taşır. **Ayarlar › Inversa Panel'in eklediklerini kaldır**, yalnızca bu kayıtları siler ve Inversa Panel'i kapatır. Port yönlendirmeleri, ağlar ve VPN cihazları kullanıcının bilinçli oluşturduğu şeyler olduğu için kalır.
 - Otomatik güvenlik duvarı kuralları config.xml'e yazılmaz; eklenti kaldırılınca kendiliğinden kaybolur.
 
@@ -54,14 +64,14 @@ os-inversa-panel/                       opnsense/plugins deposundaki bir eklenti
   Makefile, pkg-descr
   src/etc/inc/plugins.inc.d/inversapanel.inc        otomatik güvenlik duvarı kuralları (inversapanel_firewall)
   src/opnsense/mvc/app/models/OPNsense/InversaPanel model (InversaPanel.xml), menü, ACL
-  src/opnsense/mvc/app/library/OPNsense/InversaPanel Catalog, Integration (Uygula), Network, Rollback, PortForward, Vpn, Extras (GeoIP, hız sınırı)
-  src/opnsense/mvc/app/controllers/OPNsense/InversaPanel  sayfa + API (state, devices, dashboard, service, network, portforward, vpn, geo)
+  src/opnsense/mvc/app/library/OPNsense/InversaPanel Catalog, Integration (Uygula), Network, Rollback, PortForward, Vpn, Ips (Suricata), Extras (GeoIP, hız sınırı)
+  src/opnsense/mvc/app/controllers/OPNsense/InversaPanel  sayfa + API (state, devices, dashboard, service, network, portforward, vpn, geo, ips)
   src/opnsense/mvc/app/views/OPNsense/InversaPanel  index.volt
   src/opnsense/www/js/inversapanel/app.js           çekirdek: durum, taslak, değişiklik listesi, sekme altyapısı
-  src/opnsense/www/js/inversapanel/views/*.js       net, sched, pf, vpn, guest, geo sekmeleri
+  src/opnsense/www/js/inversapanel/views/*.js       net, sched, pf, vpn, guest, geo, ips sekmeleri
   src/opnsense/www/js/inversapanel/i18n/{tr,en}.js  dil dosyaları
   src/opnsense/www/css/inversapanel/inversapanel.css
-  src/opnsense/scripts/OPNsense/InversaPanel        hosts.py, killstates.py, dnsbl.sh, schedule.php (her dakika), rollback.php, nettest.py, geoip_dbip.py
+  src/opnsense/scripts/OPNsense/InversaPanel        hosts.py, killstates.py, dnsbl.sh, ips.sh, schedule.php (her dakika), rollback.php, nettest.py, geoip_dbip.py
   src/opnsense/service/conf/actions.d/actions_inversapanel.conf
 tools/deploy.sh, tools/remove.sh             test cihazına kopyalama / kaldırma
 ```
@@ -81,6 +91,7 @@ tools/deploy.sh, tools/remove.sh             test cihazına kopyalama / kaldırm
 | `GET /api/inversapanel/portforward/list`, `POST …/add`, `…/toggle/{uuid}`, `…/del/{uuid}` | Port yönlendirme |
 | `GET /api/inversapanel/vpn/status`, `POST …/create`, `…/update/{uuid}`, `…/delete/{uuid}`, `…/peeradd/{conn}`, `GET …/peerconfig/{conn}/{peer}`, `POST …/peerrenew/{conn}/{peer}`, `…/peertoggle/{conn}/{peer}`, `…/peerdel/{conn}/{peer}` | WireGuard VPN bağlantıları ve cihazları |
 | `GET /api/inversapanel/geo/status` | GeoIP veritabanı durumu, engellenen deneme sayısı |
+| `GET /api/inversapanel/ips/status`, `POST …/start` | Suricata durumu, bellek kullanımı, engellemenin bu donanımda mümkün olup olmadığı, son uyarılar; çalışmıyorsa yeniden başlatma |
 
 ## Proxmox'ta test
 
@@ -116,6 +127,8 @@ tools/deploy.sh, tools/remove.sh             test cihazına kopyalama / kaldırm
 - Port atamaları şimdilik görüntülenir; internet portu WAN ayarından, ağ portu ağ eklerken seçilir. Mevcut bir ağın portunu değiştirmek OPNsense menülerinden yapılır.
 - Uygulama engelleme DNS tabanlıdır; "VPN, proxy ve şifreli DNS" kategorisi ile "DNS'i zorla" birlikte açılmalıdır.
 - Engel listesi yenilemesi ağır bir iştir (büyük listelerde ~1 GB bellek, Unbound'un kendi kullanımına ek olarak; bkz. [Bellek gereksinimi](#bellek-gereksinimi)); Inversa Panel aynı anda yalnızca birini çalıştırır, yeni istekler sıraya girer.
+- Engel listeleri yalnızca DNS engelleme ayarları değiştiğinde yenilenir; başka bir ayar için "Uygula"ya basmak yenileme başlatmaz.
+- **Saldırı önleme:** Suricata korunan (iç) ağlarda dinler, internet tarafında değil: uyarılar hangi cihazın tetiklediğini gösterir ve yalnızca güvenlik duvarından geçen trafik denetlenir. Şifreli (HTTPS) trafiğin içeriği görülmez. Engelleme modu OPNsense'in netmap (IPS) modudur: birleştirilmiş port (LAGG), köprü ve sanal arayüzlerde ya da donanım hızlandırmaları (CRC, TSO, LRO) açıkken sunulmaz. Uyarı ve engelleme etiketsiz bir LAN üzerinde sanal ağ kartıyla (vtnet) denendi; **VLAN üzerindeki trafikte ve gerçek ağ kartlarında engelleme test edilmedi**. Engelleme açıkken Suricata yeniden başlatılırsa (ayar değişikliği) denetlenen ağ kartı kısa süre kesilir.
 - Ülke verisi OPNsense'te başka bir GeoIP kaynağı (MaxMind, ipinfo) ayarlıysa o kullanılır; Inversa Panel DB-IP verisini yalnızca kaynak ayarlı değilken yazar.
 - "Bağlantı" sütunu o anki pf durum sayısıdır, trafik miktarı değildir.
 - **Yeni cihaz onayı** güvenlik duvarında uygulanır: onaysız cihaz internete ve diğer ağlara çıkamaz, yalnızca güvenlik duvarının kendisine (DHCP, DNS, yönetim arayüzü) erişir. Aynı anahtara (switch) ya da Wi-Fi'ye bağlı cihazların birbirine doğrudan erişimi güvenlik duvarından geçmediği için engellenemez (erişim noktasında istemci yalıtımı veya 802.1X gerekir). Onay MAC adresine göredir (MAC taklit edilebilir); adresler OPNsense'in MAC takma adı mekanizmasıyla dakikada bir yenilenir, bu yüzden onaylı bir cihaz yeni bir IP aldığında erişimi en geç bir dakika içinde açılır. Onay ilk açıldığında o ana kadar görülen cihazlar onaylı sayılır.

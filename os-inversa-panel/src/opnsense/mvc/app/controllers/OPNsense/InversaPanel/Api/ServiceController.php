@@ -14,6 +14,7 @@ use OPNsense\InversaPanel\Catalog;
 use OPNsense\InversaPanel\Dhcp;
 use OPNsense\InversaPanel\Integration;
 use OPNsense\InversaPanel\InversaPanel;
+use OPNsense\InversaPanel\Ips;
 
 /**
  * "Apply" button: store all pending UI changes at once and push them into OPNsense.
@@ -79,7 +80,7 @@ class ServiceController extends ApiControllerBase
     }
 
     /**
-     * Remove what Inversa Panel added behind the scenes (aliases, DNS policies, shaper objects) and switch
+     * Remove what Inversa Panel added behind the scenes (aliases, DNS policies, shaper objects, attack protection) and switch
      * Inversa Panel off, which also removes its automatic firewall rules. Port forwards, networks and VPN
      * devices are things the user explicitly created and still uses: they stay.
      */
@@ -114,10 +115,17 @@ class ServiceController extends ApiControllerBase
                 }
             }
         }
+        /* attack protection: Suricata off and the "drop" policy gone, if Inversa Panel had switched it on */
+        $ipsWasOn = !$mdl->ips->enabled->isEmpty();
+        $mdl->ips->enabled->setValue('0');
+        $ips = Ips::sync($mdl, $ipsWasOn);
         $mdl->serializeToConfig(false, true);
         $aliases->serializeToConfig(false, true);
         $unbound->serializeToConfig(false, true);
         $shaper->serializeToConfig(false, true);
+        if ($ips !== null) {
+            $ips['ids']->serializeToConfig(false, true);
+        }
         \OPNsense\Core\Config::getInstance()->save();
 
         $backend = new \OPNsense\Core\Backend();
@@ -126,13 +134,18 @@ class ServiceController extends ApiControllerBase
         \OPNsense\InversaPanel\Extras::applyShaper();
         $backend->configdRun('template reload OPNsense/Unbound/*');
         $backend->configdRun('inversapanel dnsbl', true);
+        if ($ips !== null) {
+            Ips::reconfigure();
+        }
         return ['status' => 'ok'];
     }
 
     /**
-     * schedules, access matrix, network kinds, guest limit, country blocking, vpn preferences
+     * schedules, access matrix, network kinds, guest limit, country blocking, attack protection,
+     * vpn preferences
+     * @param bool $ipsForeign intrusion detection runs without Inversa Panel: its settings stay untouched
      */
-    private function applyExtended(InversaPanel $mdl)
+    private function applyExtended(InversaPanel $mdl, $ipsForeign = false)
     {
         $schedules = $this->request->getPost('schedules');
         if (is_array($schedules)) {
@@ -220,9 +233,10 @@ class ServiceController extends ApiControllerBase
 
         foreach (['guest' => ['limit' => 'flag', 'down' => 'int', 'up' => 'int'],
                   'geo' => ['enabled' => 'flag', 'direction' => 'str'],
+                  'ips' => ['enabled' => 'flag', 'mode' => 'str'],
                   'vpn' => ['mode' => 'str', 'endpoint' => 'str']] as $section => $fields) {
             $data = $this->request->getPost($section);
-            if (!is_array($data)) {
+            if (!is_array($data) || ($section === 'ips' && $ipsForeign)) {
                 continue;
             }
             foreach ($fields as $field => $kind) {
@@ -233,6 +247,9 @@ class ServiceController extends ApiControllerBase
             }
             if ($section === 'geo' && isset($data['countries'])) {
                 $mdl->geo->countries->setValue(implode(',', array_map('strtoupper', self::stringList($data['countries']))));
+            }
+            if ($section === 'ips' && isset($data['groups'])) {
+                $mdl->ips->groups->setValue(implode(',', self::stringList($data['groups'])));
             }
         }
 
@@ -255,6 +272,9 @@ class ServiceController extends ApiControllerBase
         /* approval of new devices: what was held back before this change, to see who is newly held back */
         $approvalBefore = $mdl->getApprovalInterfaces();
         $heldBefore = Approval::heldIps($mdl);
+        /* attack protection: only an intrusion detection Inversa Panel switched on is ours to change */
+        $ipsWasOn = !$mdl->ips->enabled->isEmpty();
+        $ipsForeign = Ips::foreign($mdl);
 
         $general = $this->request->getPost('general');
         if (is_array($general)) {
@@ -319,7 +339,7 @@ class ServiceController extends ApiControllerBase
             }
         }
 
-        $this->applyExtended($mdl);
+        $this->applyExtended($mdl, $ipsForeign);
         /* networks that just started to ask for approval: the devices already there keep working */
         $autoApproved = Approval::approveExisting($mdl, array_diff($mdl->getApprovalInterfaces(), $approvalBefore));
 
@@ -355,6 +375,7 @@ class ServiceController extends ApiControllerBase
             $result = (new Integration($mdl))->apply([
                 'geo_license' => trim((string)$this->request->getPost('geo_license')),
                 'kill' => array_diff(Approval::heldIps($mdl), $heldBefore),
+                'ips_was_on' => $ipsWasOn,
             ]);
             $result['auto_approved'] = $autoApproved;
         } catch (\Exception $e) {

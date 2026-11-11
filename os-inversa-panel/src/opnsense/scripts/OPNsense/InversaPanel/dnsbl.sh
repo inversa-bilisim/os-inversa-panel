@@ -13,10 +13,18 @@
 # Only one refresh may run at a time: a single run holds the parsed lists in memory
 # (about a gigabyte with the larger lists), overlapping runs exhausted a 4 GB firewall.
 # A request arriving while a run is busy is remembered and handled by that run once more.
+# For the same reason it never runs together with ips.sh (Suricata loading its rules):
+# both take ${HEAVY} for their memory hungry part.
 
 LOCK=/tmp/inversapanel_dnsbl.lock
 AGAIN=/tmp/inversapanel_dnsbl.again
+HEAVY=/tmp/inversapanel_heavy.lock
 UNBOUNDCTL="/usr/local/sbin/unbound-control -c /var/unbound/unbound.conf"
+
+if [ "${1}" = "work" ]; then
+    /usr/local/opnsense/scripts/unbound/blocklists.py update
+    exit 0
+fi
 
 if [ "${1}" != "locked" ]; then
     touch ${AGAIN}
@@ -27,7 +35,8 @@ fi
 # the whole cycle repeats when a request came in meanwhile (also during the wait below)
 while [ -f ${AGAIN} ]; do
     rm -f ${AGAIN}
-    /usr/local/opnsense/scripts/unbound/blocklists.py update
+    # wait for the other heavy job (at most 15 minutes, then go ahead anyway)
+    /usr/bin/lockf -k -t 900 ${HEAVY} /bin/sh "${0}" work || /bin/sh "${0}" work
     if [ -f /var/unbound/data/dnsbl_format_warning ]; then
         /usr/local/sbin/pluginctl -c unbound_start
     fi

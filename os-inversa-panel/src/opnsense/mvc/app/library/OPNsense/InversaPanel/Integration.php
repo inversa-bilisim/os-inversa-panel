@@ -87,13 +87,30 @@ class Integration
         return $aliasMdl;
     }
 
+    /* what the DNS blocklists are built from; when it stays the same there is nothing to refresh */
+    private static function dnsSignature(Unbound $unbound)
+    {
+        $policy = null;
+        foreach ($unbound->dnsbl->blocklist->iterateItems() as $item) {
+            if ((string)$item->description === Catalog::DNSBL_POLICY) {
+                $policy = [];
+                foreach (['enabled', 'type', 'wildcards', 'allowlists', 'nxdomain'] as $field) {
+                    $policy[] = (string)$item->$field;
+                }
+                break;
+            }
+        }
+        return md5(json_encode([$policy, (string)$unbound->general->safesearch, (string)$unbound->general->stats]));
+    }
+
     /**
      * keep the Inversa Panel blocklist policy and related general Unbound switches in sync
-     * @return array [Unbound model, bool restart_required]
+     * @return array [Unbound model, bool restart_required, bool changed]
      */
     public function syncUnbound()
     {
         $unbound = new Unbound();
+        $before = self::dnsSignature($unbound);
         $filtering = $this->inversapanel->filtering;
 
         $policy = null;
@@ -158,7 +175,7 @@ class Integration
             $this->messages[] = 'Unbound DNS is disabled, DNS based blocking will not work until it is enabled';
         }
 
-        return [$unbound, $restart];
+        return [$unbound, $restart, self::dnsSignature($unbound) !== $before];
     }
 
     /**
@@ -170,13 +187,22 @@ class Integration
         /* both aliases (blocked devices, countries) live in one Alias model: use one instance */
         $aliasMdl = $this->syncAlias();
         list($aliasMdl, $geoUrlChanged) = Extras::syncGeo($this->inversapanel, (string)($options['geo_license'] ?? ''), $aliasMdl);
-        list($unbound, $restartUnbound) = $this->syncUnbound();
+        list($unbound, $restartUnbound, $dnsChanged) = $this->syncUnbound();
         $shaper = Extras::syncShaper($this->inversapanel);
+        /* throws before anything is saved when the settings cannot work here */
+        $ips = Ips::sync($this->inversapanel, !empty($options['ips_was_on']));
 
         $this->inversapanel->serializeToConfig();
         $aliasMdl->serializeToConfig();
         $unbound->serializeToConfig();
         $shaper->serializeToConfig(false, true);
+        if ($ips !== null) {
+            if ($ips['cron'] !== null) {
+                $ips['cron']->serializeToConfig();
+            }
+            /* validated in Ips::sync(); the model in memory does not know a cron job created just now */
+            $ips['ids']->serializeToConfig(false, true);
+        }
         Config::getInstance()->save();
 
         $backend = new Backend();
@@ -201,13 +227,24 @@ class Integration
         /* schedules take effect now instead of at the next minute */
         $backend->configdRun('inversapanel schedule');
 
-        /* dns: render config, restart only when global switches changed, refresh lists in background */
-        $backend->configdRun('template reload OPNsense/Unbound/*');
-        if ($restartUnbound) {
-            $backend->configdRun('unbound restart');
+        /*
+         * dns: render config, restart only when global switches changed, refresh lists in background.
+         * Only when the DNS blocking settings changed (or the lists were never built): a refresh
+         * takes about a gigabyte of memory for a while, too much to spend on every "Apply".
+         */
+        if ($dnsChanged || $restartUnbound || !is_file('/var/unbound/data/dnsbl.json')) {
+            $backend->configdRun('template reload OPNsense/Unbound/*');
+            if ($restartUnbound) {
+                $backend->configdRun('unbound restart');
+            }
+            /* same as "unbound dnsbl" + cache flush, so newly blocked domains stop resolving immediately */
+            $backend->configdRun('inversapanel dnsbl', true);
         }
-        /* same as "unbound dnsbl" + cache flush, so newly blocked domains stop resolving immediately */
-        $backend->configdRun('inversapanel dnsbl', true);
+
+        /* Suricata: only touched when something it depends on changed (a restart interrupts inspection) */
+        if ($ips !== null && $ips['changed']) {
+            Ips::reconfigure($ips['cron'] !== null);
+        }
 
         return ['status' => 'ok', 'messages' => $this->messages];
     }

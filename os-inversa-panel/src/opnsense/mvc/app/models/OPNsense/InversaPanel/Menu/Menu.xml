@@ -7,6 +7,7 @@
         <Overview order="10" VisibleName="Genel bakış" url="/ui/inversapanel#dash" cssClass="fa fa-dashboard fa-fw"/>
         <Network order="20" VisibleName="Ağ ve İnternet" url="/ui/inversapanel#net" cssClass="fa fa-sitemap fa-fw"/>
         <Devices order="30" VisibleName="Cihazlar" url="/ui/inversapanel#devices" cssClass="fa fa-laptop fa-fw"/>
+        <Ips order="35" VisibleName="Saldırı önleme" url="/ui/inversapanel#ips" cssClass="fa fa-bolt fa-fw"/>
         <Vpn order="40" VisibleName="VPN" url="/ui/inversapanel#vpn" cssClass="fa fa-lock fa-fw"/>
     </Inversa>
 </menu>

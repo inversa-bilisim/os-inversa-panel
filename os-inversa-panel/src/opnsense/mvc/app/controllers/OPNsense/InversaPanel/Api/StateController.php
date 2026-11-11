@@ -120,6 +120,11 @@ class StateController extends ApiControllerBase
                 'direction' => (string)$mdl->geo->direction,
                 'countries' => $mdl->geo->countries->getValues(),
             ],
+            'ips' => [
+                'enabled' => !$mdl->ips->enabled->isEmpty(),
+                'mode' => (string)$mdl->ips->mode,
+                'groups' => $mdl->ips->groups->getValues(),
+            ],
             'vpn' => [
                 'mode' => (string)$mdl->vpn->mode,
                 'endpoint' => (string)$mdl->vpn->endpoint,
