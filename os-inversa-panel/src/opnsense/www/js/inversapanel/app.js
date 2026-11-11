@@ -118,6 +118,25 @@
     }
 
     /* language of the OPNsense GUI itself, used for "automatic" */
+    /*
+     * A language file that misses a text (added later, not translated yet) shows the English one
+     * instead of failing: every language is filled up from English once, at the start.
+     */
+    function fillLanguages() {
+        var all = window.InversaPanelI18n, en = all.en;
+        var fill = function (target, source) {
+            Object.keys(source).forEach(function (key) {
+                var value = source[key];
+                if (target[key] === undefined) {
+                    target[key] = value;
+                } else if (value && typeof value === 'object' && !Array.isArray(value) && target[key] && typeof target[key] === 'object') {
+                    fill(target[key], value);
+                }
+            });
+        };
+        Object.keys(all).forEach(function (code) { if (code !== 'en') { fill(all[code], en); } });
+    }
+
     function autoLang() {
         var code = String(root.getAttribute('data-langcode') || 'en').slice(0, 2).toLowerCase();
         return window.InversaPanelI18n[code] ? code : 'en';
@@ -1724,6 +1743,7 @@
 
     function start(element) {
         root = element;
+        fillLanguages();
         var hashTab = String(window.location.hash || '').replace('#', '');
         S = {
             tab: pageFor(hashTab),

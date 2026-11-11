@@ -15,6 +15,10 @@
                     <auto>Automatic</auto>
                     <tr>Türkçe</tr>
                     <en>English</en>
+                    <de>Deutsch</de>
+                    <fr>Français</fr>
+                    <es>Español</es>
+                    <it>Italiano</it>
                 </OptionValues>
             </language>
             <!-- internal networks Inversa Panel protects (blocking rules and DNS enforcement apply here) -->

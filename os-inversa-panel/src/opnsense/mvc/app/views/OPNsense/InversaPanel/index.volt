@@ -9,6 +9,10 @@
 <link rel="stylesheet" href="/ui/css/inversapanel/inversapanel.css?v={{ inversapanel_version }}">
 <script src="/ui/js/inversapanel/i18n/tr.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/i18n/en.js?v={{ inversapanel_version }}"></script>
+<script src="/ui/js/inversapanel/i18n/de.js?v={{ inversapanel_version }}"></script>
+<script src="/ui/js/inversapanel/i18n/fr.js?v={{ inversapanel_version }}"></script>
+<script src="/ui/js/inversapanel/i18n/es.js?v={{ inversapanel_version }}"></script>
+<script src="/ui/js/inversapanel/i18n/it.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/app.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/views/net.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/views/sched.js?v={{ inversapanel_version }}"></script>
