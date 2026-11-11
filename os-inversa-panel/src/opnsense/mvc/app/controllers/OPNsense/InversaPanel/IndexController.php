@@ -20,6 +20,7 @@ class IndexController extends \OPNsense\Base\IndexController
         '/js/inversapanel/views/pf.js',
         '/js/inversapanel/views/vpn.js',
         '/js/inversapanel/views/guest.js',
+        '/js/inversapanel/views/dns.js',
         '/js/inversapanel/views/geo.js',
         '/js/inversapanel/views/ips.js',
     ];

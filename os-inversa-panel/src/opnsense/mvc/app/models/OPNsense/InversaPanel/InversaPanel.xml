@@ -294,6 +294,41 @@
             </vpnexempt>
         </geo>
         <!--
+            DNS servers Unbound asks. "auto" leaves Unbound as OPNsense has it; the others are written
+            as forward / DNS over TLS entries of Unbound (Services > Unbound DNS), described
+            "Inversa Panel (managed)". Local names are Unbound host overrides with that description
+            and are not stored here.
+        -->
+        <dns>
+            <upstream type="OptionField">
+                <Default>auto</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <auto>Automatic (as set in OPNsense)</auto>
+                    <cloudflare>Cloudflare</cloudflare>
+                    <google>Google</google>
+                    <quad9>Quad9</quad9>
+                    <custom>Own servers</custom>
+                </OptionValues>
+            </upstream>
+            <!-- own servers -->
+            <servers type="NetworkField">
+                <NetMaskAllowed>N</NetMaskAllowed>
+                <FieldSeparator>,</FieldSeparator>
+                <AsList>Y</AsList>
+            </servers>
+            <!-- encrypt the queries (DNS over TLS) -->
+            <dot type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </dot>
+            <!-- own servers with DNS over TLS: the name their certificate is checked against -->
+            <tlsname type="HostnameField">
+                <IsDNSName>Y</IsDNSName>
+                <IpAllowed>N</IpAllowed>
+            </tlsname>
+        </dns>
+        <!--
             Attack protection: Suricata (OPNsense's intrusion detection) on the protected networks.
             The service itself, its rulesets and the "drop" policy live in OPNsense's IDS model.
         -->

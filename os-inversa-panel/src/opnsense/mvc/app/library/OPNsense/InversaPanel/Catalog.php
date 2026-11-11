@@ -43,6 +43,16 @@ class Catalog
         'fc00::/7', 'fe80::/10', 'ff00::/8',
     ];
 
+    /* description of the Unbound host overrides and forward entries Inversa Panel manages (DNS page) */
+    const DNS_TAG = 'Inversa Panel (managed)';
+
+    /* DNS servers that can be chosen by name: addresses and the name their certificate carries (DNS over TLS) */
+    const DNS_PRESETS = [
+        'cloudflare' => ['servers' => ['1.1.1.1', '1.0.0.1'], 'tls' => 'cloudflare-dns.com'],
+        'google' => ['servers' => ['8.8.8.8', '8.8.4.4'], 'tls' => 'dns.google'],
+        'quad9' => ['servers' => ['9.9.9.9', '149.112.112.112'], 'tls' => 'dns.quad9.net'],
+    ];
+
     /* traffic shaper objects for the guest speed limit carry this description prefix */
     const SHAPER_PREFIX = 'Inversa Panel guest';
 

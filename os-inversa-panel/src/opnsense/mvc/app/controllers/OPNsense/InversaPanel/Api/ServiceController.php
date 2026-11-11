@@ -12,6 +12,7 @@ use OPNsense\Base\UserException;
 use OPNsense\InversaPanel\Approval;
 use OPNsense\InversaPanel\Catalog;
 use OPNsense\InversaPanel\Dhcp;
+use OPNsense\InversaPanel\Dns;
 use OPNsense\InversaPanel\Integration;
 use OPNsense\InversaPanel\InversaPanel;
 use OPNsense\InversaPanel\Ips;
@@ -303,6 +304,7 @@ class ServiceController extends ApiControllerBase
 
         $mdl = new InversaPanel();
         $geoBefore = self::geoAllowState($mdl);
+        $dnsBefore = Dns::signature($mdl);
         /* approval of new devices: what was held back before this change, to see who is newly held back */
         $approvalBefore = $mdl->getApprovalInterfaces();
         $heldBefore = Approval::heldIps($mdl);
@@ -373,6 +375,23 @@ class ServiceController extends ApiControllerBase
             }
         }
 
+        /* DNS page: the servers to ask (stored here) and the local names (Unbound host overrides) */
+        $dns = $this->request->getPost('dns');
+        $dnsRecords = null;
+        if (is_array($dns)) {
+            foreach (['upstream' => 'str', 'tlsname' => 'str', 'dot' => 'flag'] as $field => $kind) {
+                if (array_key_exists($field, $dns)) {
+                    $mdl->dns->$field->setValue($kind === 'flag' ? self::flag($dns[$field]) : strtolower(trim((string)$dns[$field])));
+                }
+            }
+            if (array_key_exists('servers', $dns)) {
+                $mdl->dns->servers->setValue(implode(',', self::stringList($dns['servers'])));
+            }
+            if (array_key_exists('records', $dns)) {
+                $dnsRecords = is_array($dns['records']) ? array_values($dns['records']) : [];
+            }
+        }
+
         $this->applyExtended($mdl, $ipsForeign);
         /* networks that just started to ask for approval: the devices already there keep working */
         $autoApproved = Approval::approveExisting($mdl, array_diff($mdl->getApprovalInterfaces(), $approvalBefore));
@@ -384,6 +403,30 @@ class ServiceController extends ApiControllerBase
         if (!empty($validations)) {
             return ['status' => 'failed', 'validations' => $validations];
         }
+
+        $unbound = new \OPNsense\Unbound\Unbound();
+        if ($dnsRecords !== null && ($problem = Dns::validateRecords($dnsRecords, $unbound)) !== null) {
+            return ['status' => 'failed', 'validations' => ['dns' => $problem]];
+        }
+        /* other DNS servers: only ones that answer, a wrong choice takes name resolution down for everybody */
+        $dnsSwitched = Dns::signature($mdl) !== $dnsBefore && Dns::signature($mdl) !== '';
+        if ($dnsSwitched) {
+            if (Dns::locked($unbound) !== null) {
+                return ['status' => 'failed', 'validations' => ['dns' => 'DNS forwarding is set up in OPNsense itself (Services > Unbound DNS)']];
+            }
+            $silent = array_keys(array_filter(Dns::check($mdl), fn($answered) => !$answered));
+            if (!empty($silent)) {
+                return ['status' => 'failed', 'dns_unreachable' => $silent];
+            }
+        } elseif ((string)$mdl->dns->upstream === 'custom' && Dns::signature($mdl) === '') {
+            return ['status' => 'failed', 'validations' => ['dns' => 'no DNS server address given']];
+        }
+
+        /*
+         * the copy to go back to, taken before anything is written: changes that can cut the
+         * administrator off, or everybody (name resolution), are confirmed or put back
+         */
+        $backup = self::geoTightened($geoBefore, self::geoAllowState($mdl)) || $dnsSwitched ? Rollback::prepare() : null;
 
         /* fixed addresses: mac => ip ('' = remove), stored as Dnsmasq hosts */
         $reservations = $this->request->getPost('reservations');
@@ -405,14 +448,12 @@ class ServiceController extends ApiControllerBase
             }
         }
 
-        /* the copy to go back to, taken before anything is written */
-        $backup = self::geoTightened($geoBefore, self::geoAllowState($mdl)) ? Rollback::prepare() : null;
-
         try {
             $result = (new Integration($mdl))->apply([
                 'geo_license' => trim((string)$this->request->getPost('geo_license')),
                 'kill' => array_diff(Approval::heldIps($mdl), $heldBefore),
                 'ips_was_on' => $ipsWasOn,
+                'dns_records' => $dnsRecords,
             ]);
             $result['auto_approved'] = $autoApproved;
         } catch (\Exception $e) {

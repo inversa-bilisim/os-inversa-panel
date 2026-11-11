@@ -10,6 +10,7 @@ namespace OPNsense\InversaPanel\Api;
 use OPNsense\Base\ApiControllerBase;
 use OPNsense\InversaPanel\Catalog;
 use OPNsense\InversaPanel\Dhcp;
+use OPNsense\InversaPanel\Dns;
 use OPNsense\InversaPanel\InversaPanel;
 use OPNsense\InversaPanel\Rollback;
 
@@ -94,6 +95,8 @@ class StateController extends ApiControllerBase
             }
         }
 
+        $unbound = new \OPNsense\Unbound\Unbound();
+
         return [
             'general' => [
                 'enabled' => !$mdl->general->enabled->isEmpty(),
@@ -133,12 +136,24 @@ class StateController extends ApiControllerBase
                 'mode' => (string)$mdl->vpn->mode,
                 'endpoint' => (string)$mdl->vpn->endpoint,
             ],
+            /* servers the firewall asks, and the local names (Unbound host overrides) Inversa Panel manages */
+            'dns' => [
+                'upstream' => (string)$mdl->dns->upstream,
+                'servers' => array_values(array_filter($mdl->dns->servers->getValues())),
+                'dot' => !$mdl->dns->dot->isEmpty(),
+                'tlsname' => (string)$mdl->dns->tlsname,
+                'records' => Dns::records($unbound),
+            ],
             /* a change that waits for its confirmation (seconds left), see Rollback */
             'rollback' => Rollback::pending(),
             'options' => [
                 'interfaces' => $interfaces,
                 'apps' => $apps,
                 'dhcp_networks' => $dhcpNets,
+                'dns_presets' => Catalog::DNS_PRESETS,
+                /* address overrides made in OPNsense itself, and why the servers cannot be chosen here (if so) */
+                'dns_foreign' => Dns::foreign($unbound),
+                'dns_locked' => Dns::locked($unbound),
             ],
         ];
     }

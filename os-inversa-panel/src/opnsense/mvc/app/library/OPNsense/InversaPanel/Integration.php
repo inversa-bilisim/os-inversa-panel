@@ -188,6 +188,13 @@ class Integration
         $aliasMdl = $this->syncAlias();
         list($aliasMdl, $geoUrlChanged) = Extras::syncGeo($this->inversapanel, (string)($options['geo_license'] ?? ''), $aliasMdl);
         list($unbound, $restartUnbound, $dnsChanged) = $this->syncUnbound();
+        /* DNS page: local names (when the page sent them) and the servers Unbound asks; both need a restart */
+        if (is_array($options['dns_records'] ?? null) && Dns::setRecords($unbound, $options['dns_records'])) {
+            $restartUnbound = true;
+        }
+        if (Dns::syncServers($this->inversapanel, $unbound)) {
+            $restartUnbound = true;
+        }
         $shaper = Extras::syncShaper($this->inversapanel);
         /* throws before anything is saved when the settings cannot work here */
         $ips = Ips::sync($this->inversapanel, !empty($options['ips_was_on']));
@@ -233,13 +240,16 @@ class Integration
          * Only when the DNS blocking settings changed (or the lists were never built): a refresh
          * takes about a gigabyte of memory for a while, too much to spend on every "Apply".
          */
-        if ($dnsChanged || $restartUnbound || !is_file('/var/unbound/data/dnsbl.json')) {
+        $refreshLists = $dnsChanged || !is_file('/var/unbound/data/dnsbl.json');
+        if ($refreshLists || $restartUnbound) {
             $backend->configdRun('template reload OPNsense/Unbound/*');
             if ($restartUnbound) {
                 $backend->configdRun('unbound restart');
             }
-            /* same as "unbound dnsbl" + cache flush, so newly blocked domains stop resolving immediately */
-            $backend->configdRun('inversapanel dnsbl', true);
+            if ($refreshLists) {
+                /* same as "unbound dnsbl" + cache flush, so newly blocked domains stop resolving immediately */
+                $backend->configdRun('inversapanel dnsbl', true);
+            }
         }
 
         /* Suricata: only touched when something it depends on changed (a restart interrupts inspection) */

@@ -12,7 +12,7 @@ use OPNsense\Core\Config;
 
 /**
  * Safety net for changes that can cut the administrator off (network settings, "only these
- * countries get in"); OPNsense core has none. A copy of the configuration is taken before the
+ * countries get in") or everybody (other DNS servers); OPNsense core has none. A copy of the configuration is taken before the
  * change; unless the user confirms within the timeout, a background job puts that copy back and
  * reloads all services.
  */

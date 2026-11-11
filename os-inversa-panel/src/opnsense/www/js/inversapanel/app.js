@@ -333,7 +333,7 @@
             var before = (s.reservations || {})[mac] || '', after = (d.reservations || {})[mac] || '';
             add(label + ' · ' + t.dFixedIp, before || t.dIpAuto, after || t.dIpAuto, function () { S.draft.reservations[mac] = before; });
         });
-        /* views add their own pending changes (schedules, access, guest, countries, vpn) */
+        /* views add their own pending changes (schedules, access, guest, countries, vpn, dns) */
         Object.keys(VIEWS).forEach(function (key) {
             if (VIEWS[key].changes) {
                 VIEWS[key].changes(add, d, s);
@@ -359,6 +359,7 @@
                 approval: Array.isArray(data.approval) ? {} : (data.approval || {}),
                 guest: data.guest || {}, geo: data.geo || {}, vpn: data.vpn || {},
                 ips: data.ips || { enabled: false, mode: 'detect', groups: [] },
+                dns: data.dns || { upstream: 'auto', servers: [], dot: false, tlsname: '', records: [] },
                 reservations: Array.isArray(data.reservations) ? {} : (data.reservations || {})
             };
             S.draft = clone(S.saved);
@@ -1152,6 +1153,7 @@
             geo: S.draft.geo,
             ips: S.draft.ips,
             vpn: S.draft.vpn,
+            dns: S.draft.dns,
             geo_license: S.ui.geoLicense || ''
         }).then(function (res) {
             if (res.status === 'ok') {
@@ -1165,6 +1167,11 @@
             }
             if (res.pending_confirm) {
                 S.ui.notice = { type: 'err', text: t.confirmFirst, list: [] };
+                return;
+            }
+            if (res.dns_unreachable) {
+                /* the chosen DNS servers were asked before anything was changed, and did not answer */
+                S.ui.notice = { type: 'err', text: t.dnsUnreachable, list: res.dns_unreachable };
                 return;
             }
             var list = Object.keys(res.validations || {}).map(function (k) { return k + ': ' + res.validations[k]; });
@@ -1391,9 +1398,17 @@
             renderPending();
             return;
         }
-        if (event.key === 'Enter' && el.getAttribute && el.getAttribute('data-input') === 'domain') {
+        var kind = el.getAttribute && el.getAttribute('data-input');
+        if (event.key === 'Enter' && kind === 'domain') {
             event.preventDefault();
             addDomain(el.getAttribute('data-list'));
+        } else if (event.key === 'Enter' && kind && kind.indexOf(':') > 0) {
+            /* a view's form: Enter does what its button does */
+            var parts = kind.split(':');
+            if (VIEWS[parts[0]] && VIEWS[parts[0]].enter) {
+                var what = VIEWS[parts[0]].enter(parts[1], el);
+                if (what) { event.preventDefault(); redraw(what); }
+            }
         }
     }
 
@@ -1466,7 +1481,7 @@
 
     /*
      * Extension point for views/*.js. A view is a page:
-     *   { key, icon, label(t), render(), load()?, act(name, el)?, input(name, el, type)?, changes(add, draft, saved)? }
+     *   { key, icon, label(t), render(), load()?, act(name, el)?, input(name, el, type)?, enter(name, el)?, changes(add, draft, saved)? }
      * act/input return what to redraw: 'full' | 'main' | 'pending'. Where a page shows is decided by MENU.
      */
     /* the welcome card is answered once, stored immediately (not part of the pending changes) */
