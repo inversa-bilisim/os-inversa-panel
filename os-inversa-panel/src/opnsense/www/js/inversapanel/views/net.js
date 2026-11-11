@@ -146,12 +146,22 @@
             return '<div class="k-wan-row"><div class="k-wan-text"><b>' + h.esc(title) + '</b><span class="muted">' + h.esc(sub) + '</span></div>' + control + '</div>';
         };
         /* the kinds of connection one below the other, what the chosen one needs beside them, then how it is right now */
-        var html = '<div class="k-wan"><section class="k-card k-wan-types"><h2>' + h.esc(T.wanType) + '</h2>' + ['pppoe', 'static', 'dhcp'].map(function (k) {
+        var adv = N.wanAdv || f.mac || f.mtu;
+        var html = '<div class="k-wan"><div class="k-wan-left"><section class="k-card k-wan-types"><h2>' + h.esc(T.wanType) + '</h2>' + ['pppoe', 'static', 'dhcp'].map(function (k) {
             var on = f.type === k;
             return '<button type="button" class="k-opt' + (on ? ' on' : '') + '" data-act="net:wantype" data-v="' + k + '" aria-pressed="' + on + '">' +
                 '<b>' + h.esc(T.wt[k][0]) + '</b><span>' + h.esc(T.wt[k][1]) + '</span></button>';
         }).join('') + '</section>';
-        html += '<section class="k-card k-wan-settings"><h2>' + h.esc(T.wanSettings(T.wt[f.type] ? T.wt[f.type][0] : '')) + '</h2>';
+        html += adv ? '<section class="k-card k-wan-adv"><h2>' + h.esc(T.wanAdvTitle) + '</h2>' +
+            '<label class="k-field"><span>' + h.esc(T.wanMac) + '</span><input type="text" class="mono" data-input="net:wan-mac" value="' + h.esc(f.mac) + '" placeholder="' + h.esc(T.wanAuto) + '" autocomplete="off" spellcheck="false">' +
+            '<span class="muted small">' + h.esc(T.wanMacSub) + '</span></label>' +
+            '<label class="k-field"><span>MTU</span><input type="text" inputmode="numeric" class="mono" style="width:100px" data-input="net:wan-mtu" value="' + h.esc(f.mtu) + '" placeholder="' + (f.type === 'pppoe' ? '1492' : '1500') + '">' +
+            '<span class="muted small">' + h.esc(f.type === 'pppoe' ? T.wanMtuPppoe : T.wanMtuSub) + '</span></label></section>' :
+            '<button type="button" class="k-link small k-wan-advlink" data-act="net:wanadv">' + h.esc(T.wanAdv) + '</button>';
+        if (f.type === 'dhcp') {
+            html += '<div class="k-banner warn" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span>' + h.esc(T.dhcpWarn) + '</span></div>';
+        }
+        html += '</div><section class="k-card k-wan-settings"><h2>' + h.esc(T.wanSettings(T.wt[f.type] ? T.wt[f.type][0] : '')) + '</h2>';
         if (f.type === 'pppoe') {
             html += '<div class="k-wan-fields"><label class="k-field"><span>' + h.esc(T.pppUser) + '</span>' +
                 '<input type="text" class="mono" data-input="net:wan-username" value="' + h.esc(f.username) + '" autocomplete="off"></label>' +
@@ -165,9 +175,6 @@
                 '<label class="k-field"><span>' + h.esc(T.stGw) + '</span>' +
                 '<input type="text" class="mono" data-input="net:wan-gateway" value="' + h.esc(f.gateway) + '"></label></div>';
         }
-        if (f.type === 'dhcp') {
-            html += '<div class="k-banner warn" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span>' + h.esc(T.dhcpWarn) + '</span></div>';
-        }
         html += '<div>' +
             row(T.wanPort, T.wanPortSub, portChips(f.port, 'wanport')) +
             row(T.vlanReq, T.vlanReqSub, '<div class="k-wan-ctl">' + (f.useVlan ? '<input type="text" inputmode="numeric" class="mono" style="width:80px" data-input="net:wan-vlan" value="' + h.esc(f.vlan) + '" aria-label="' + h.esc(T.vlanId) + '">' : '') +
@@ -175,11 +182,8 @@
             row('IPv6', T.ipv6Sub, '<div class="k-seg">' + [['auto', T.v6Auto], ['off', T.v6Off]].map(function (o) {
                 return '<button type="button" class="' + (f.ipv6 === o[0] ? 'on' : '') + '" data-act="net:wanv6" data-v="' + o[0] + '">' + h.esc(o[1]) + '</button>';
             }).join('') + '</div>') +
-            (N.wanAdv || f.mac || f.mtu ?
-                row(T.wanMac, T.wanMacSub, '<input type="text" class="mono" style="width:180px" data-input="net:wan-mac" value="' + h.esc(f.mac) + '" placeholder="' + h.esc(T.wanAuto) + '" autocomplete="off" spellcheck="false">') +
-                row('MTU', f.type === 'pppoe' ? T.wanMtuPppoe : T.wanMtuSub, '<input type="text" inputmode="numeric" class="mono" style="width:100px" data-input="net:wan-mtu" value="' + h.esc(f.mtu) + '" placeholder="' + (f.type === 'pppoe' ? '1492' : '1500') + '">') : '') +
             '</div>' +
-            '<div class="k-wan-foot">' + (N.wanAdv || f.mac || f.mtu ? '' : '<button type="button" class="k-link small" data-act="net:wanadv">' + h.esc(T.wanAdv) + '</button>') +
+            '<div class="k-wan-foot">' +
             '<span class="muted small">' + h.esc(T.netSafety) + '</span>' +
             '<button type="button" class="k-btn" data-act="net:wanreset"' + (changed ? '' : ' disabled') + '>' + h.esc(T.discard) + '</button>' +
             '<button type="button" class="k-btn primary" data-act="net:wanapply"' + (changed && !N.busy && !h.countdown() ? '' : ' disabled') + '>' + h.esc(N.busy ? T.applying : T.netApply) + '</button></div></section>';

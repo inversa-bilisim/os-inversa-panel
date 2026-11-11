@@ -421,6 +421,8 @@ function inversapanel_cron()
 {
     return [
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel schedule', '*']],
+        /* data usage and events for the overview page */
+        ['autocron' => ['/usr/local/sbin/configctl -d inversapanel watch', '*']],
         /* free country database refresh (only acts when country blocking is on and no other source is set) */
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel geoip normal', '40', '4']],
     ];

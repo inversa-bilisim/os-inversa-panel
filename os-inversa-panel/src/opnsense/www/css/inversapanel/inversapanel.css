@@ -134,6 +134,9 @@
 /* the pages of the open menu entry */
 .inversapanel .k-subtabs { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 20px; }
 .inversapanel .k-subtabs .k-chip { min-height: 40px; min-width: 136px; justify-content: center; }
+/* a tab keeps the width of its bold label, so choosing one does not move the others */
+.inversapanel .k-lbl { display: inline-flex; flex-direction: column; align-items: center; }
+.inversapanel .k-lbl::after { content: attr(data-t); height: 0; overflow: hidden; visibility: hidden; font-weight: 600; pointer-events: none; user-select: none; }
 
 /* banners */
 .inversapanel .k-banner { display: flex; align-items: flex-start; gap: 10px; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; }
@@ -305,7 +308,12 @@
 /* internet connection: the kinds one below the other, the settings of the chosen one, how the connection is now */
 .inversapanel .k-narrow { max-width: 1120px; }
 .inversapanel .k-wan { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
-.inversapanel .k-wan-types { flex: 1 1 260px; gap: 10px; }
+.inversapanel .k-wan-left { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.inversapanel .k-wan-types { gap: 10px; }
+.inversapanel .k-wan-adv { gap: 12px; }
+.inversapanel .k-wan-adv .k-field > span.muted { font-weight: 400; font-size: 12px; }
+.inversapanel .k-wan-adv .k-field input { max-width: 100%; }
+.inversapanel .k-wan-advlink { min-height: 32px; padding: 0 4px; }
 .inversapanel .k-wan-types h2 { margin-bottom: 4px; }
 .inversapanel .k-wan-types .k-opt { flex: none; width: 100%; min-height: 64px; }
 .inversapanel .k-wan-settings { flex: 1.9 1 380px; }
@@ -495,3 +503,64 @@
 
 /* OPNsense's own page heading ("Inversa Panel: Panel") only repeats what the header below already says */
 header.page-content-head { display: none; }
+
+/* overview */
+.inversapanel .k-ov { font-variant-numeric: tabular-nums; }
+.inversapanel .k-ov-status { gap: 12px; padding: 16px 24px; }
+.inversapanel .k-ov-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.inversapanel .k-ov-todo { flex: 0 1 470px; min-width: 0; display: flex; flex-direction: column; gap: 4px; background: var(--k-warn-soft); border: 1px solid var(--k-warn-line); color: var(--k-warn-text); border-radius: 12px; padding: 8px 12px; font-size: 13px; }
+.inversapanel .k-ov-todo-row { display: flex; align-items: center; gap: 8px; width: 100%; padding: 2px 0; border: none; background: transparent; color: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.inversapanel .k-ov-todo-row svg { flex: none; }
+.inversapanel .k-ov-todo-row span:nth-of-type(1) { flex: 1 1 auto; min-width: 0; }
+.inversapanel .k-ov-go { flex: none; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.inversapanel .k-ov-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+.inversapanel .k-ov-chk { flex: 1 1 150px; border: none; cursor: pointer; font-family: inherit; justify-content: flex-start; padding: 8px 10px; min-width: 0; text-decoration: none; }
+.inversapanel .k-ov-chk:hover { background: var(--k-chip); text-decoration: none; color: var(--k-text-2); }
+.inversapanel .k-ov-chk:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
+.inversapanel .k-ov-chk b { margin-left: auto; font-weight: 600; color: var(--k-text); white-space: nowrap; }
+.inversapanel .k-ov-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 0 18px; border-top: 1px solid var(--k-line-2); padding-top: 6px; }
+.inversapanel .k-ov-quick-t { font-size: 12px; font-weight: 600; color: var(--k-text-2); text-transform: uppercase; letter-spacing: .04em; }
+.inversapanel .k-ov-q { display: inline-flex; align-items: center; font-size: 13px; font-weight: 500; }
+.inversapanel .k-ov-q .k-switch { height: 34px; width: 50px; }
+.inversapanel .k-ov-quick-all { margin-left: auto; }
+.inversapanel .k-ov .k-link.small { min-height: 32px; font-size: 13px; }
+.inversapanel .k-ov .k-kpi { flex: 1 1 190px; padding: 14px 18px; gap: 4px; }
+.inversapanel .k-ov .k-kpi-value { font-size: 28px; }
+.inversapanel .k-ov .k-ov-two { display: flex; flex-wrap: nowrap; align-items: baseline; gap: 0 10px; font-size: 24px; line-height: 31px; white-space: nowrap; }
+.inversapanel .k-ov-two .k-kpi-unit { margin-left: 0; }
+.inversapanel .k-ov-wan { gap: 10px; }
+.inversapanel .k-ov-wan .k-kv { padding: 7px 0; }
+.inversapanel .k-ov-wan > .k-link { margin-top: auto; }
+.inversapanel .k-ov-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; align-items: stretch; }
+.inversapanel .k-ov-tight { gap: 10px; padding: 18px 20px; }
+.inversapanel .k-ov-tight .k-list-row { padding: 8px 0; gap: 10px; }
+.inversapanel .k-ov-tight > .k-link { margin-top: auto; }
+.inversapanel .k-ov-col { width: 10px; height: 28px; border-radius: 4px; flex: none; }
+.inversapanel .k-ov-grow { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.inversapanel .k-ov-grow b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inversapanel .k-ov-grow .muted { font-size: 12px; }
+.inversapanel .k-ov-rate { display: flex; flex-direction: column; align-items: flex-end; width: 62px; flex: none; font-size: 12px; line-height: 1.3; color: var(--k-text-2); }
+.inversapanel .k-ov-top-row { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
+.inversapanel .k-ov-top-row > div:first-child { display: flex; justify-content: space-between; gap: 8px; }
+.inversapanel .k-ov-top-row > div:first-child > span:last-child { flex: none; }
+.inversapanel .k-ov-top-row b { font-weight: 500; }
+.inversapanel .k-ov-bars-wrap { position: relative; }
+.inversapanel .k-ov-bars-max { position: absolute; top: -2px; left: 0; font-size: 11px; color: var(--k-muted); background: #fff; padding-right: 4px; }
+.inversapanel .k-ov-bars { display: flex; align-items: flex-end; gap: 2px; height: 84px; border-top: 1px solid var(--k-line-2); border-bottom: 1px solid var(--k-input); }
+.inversapanel .k-ov-bars i { flex: 1 1 0; background: var(--k-accent); border-radius: 3px 3px 0 0; min-width: 0; }
+.inversapanel .k-ov-bars i:hover { background: #163A94; }
+.inversapanel .k-ov-list { max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inversapanel .k-ov-num { width: 40px; text-align: right; font-weight: 600; flex: none; }
+.inversapanel .k-ov-ev { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--k-line-2); font-size: 13px; }
+.inversapanel .k-ov-ev:last-child { border-bottom: none; }
+.inversapanel .k-ov-ev > .mono { flex: none; font-size: 12px; min-width: 40px; }
+.inversapanel .k-ov-ev .k-dot { position: relative; top: -1px; }
+.inversapanel .k-ov-ev div { min-width: 0; display: flex; flex-direction: column; }
+.inversapanel .k-ov-ev b { font-weight: 600; }
+.inversapanel .k-ov-ev div .muted { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inversapanel .k-ov-meter { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
+.inversapanel .k-ov-meter > div:first-child { display: flex; justify-content: space-between; gap: 8px; }
+.inversapanel .k-ov-meter > div:first-child span:first-child { font-weight: 500; }
+.inversapanel .k-ov-tight .k-kv { padding: 7px 0; align-items: center; }
+.inversapanel .k-ov-tight .k-kv:last-child { border-bottom: none; }
+.inversapanel a.k-ov-pill { min-height: 24px; font-size: 12px; padding: 0 10px; text-decoration: none; }

@@ -23,6 +23,9 @@ UNBOUNDCTL="/usr/local/sbin/unbound-control -c /var/unbound/unbound.conf"
 
 if [ "${1}" = "work" ]; then
     /usr/local/opnsense/scripts/unbound/blocklists.py update
+    # for "what happened" on the overview page
+    mkdir -p /var/db/inversapanel
+    echo "{\"t\":$(date +%s),\"k\":\"lists\"}" >> /var/db/inversapanel/events.log
     exit 0
 fi
 

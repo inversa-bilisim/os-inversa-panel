@@ -18,6 +18,7 @@ use OPNsense\Core\Backend;
 use OPNsense\Core\Config;
 use OPNsense\InversaPanel\Catalog;
 use OPNsense\InversaPanel\InversaPanel;
+use OPNsense\InversaPanel\Overview;
 use OPNsense\Unbound\Unbound;
 
 $state_file = '/var/run/inversapanel_schedule.json';
@@ -48,6 +49,7 @@ $mdl = new InversaPanel();
 $enabled = !$mdl->general->enabled->isEmpty();
 $cut_ips = [];
 $app_policies = [];
+$running = [];
 foreach ($mdl->schedules->schedule->iterateItems() as $uuid => $sched) {
     if (!$enabled || $sched->enabled->isEmpty()) {
         $active = false;
@@ -61,6 +63,9 @@ foreach ($mdl->schedules->schedule->iterateItems() as $uuid => $sched) {
             /* overnight window, e.g. 23:00-07:00 belongs to the day it starts */
             $active = (in_array($today, $days) && $minute >= $start) || (in_array($yesterday, $days) && $minute < $end);
         }
+    }
+    if ($active) {
+        $running[$uuid] = (string)$sched->name;
     }
     $ips = [];
     foreach ($sched->devices->getValues() as $mac) {
@@ -104,7 +109,16 @@ $apps_changed = $signature !== ($previous['apps'] ?? '');
  * remember the new state first: even if writing the policies fails below, the heavy blocklist
  * refresh must not be retriggered every minute
  */
-file_put_contents($state_file, json_encode(['cut' => $cut_ips, 'apps' => $signature, 'time' => time()]));
+file_put_contents($state_file, json_encode(['cut' => $cut_ips, 'apps' => $signature, 'running' => $running, 'time' => time()]));
+/* for "what happened" on the overview page (not after a restart, when nothing is known about before) */
+if (isset($previous['running'])) {
+    foreach (array_diff_key($running, $previous['running']) as $name) {
+        Overview::event('sched_on', ['name' => $name]);
+    }
+    foreach (array_diff_key($previous['running'], $running) as $name) {
+        Overview::event('sched_off', ['name' => $name]);
+    }
+}
 if ($apps_changed) {
   try {
     $unbound = new Unbound();

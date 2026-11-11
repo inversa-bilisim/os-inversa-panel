@@ -451,7 +451,7 @@
                     up += Number(row.outbytes || 0);
                 }
             });
-            var sample = { time: Number(data.time), down: down, up: up };
+            var sample = { time: Number(data.time), down: down, up: up, ifaces: data.interfaces || {} };
             var prev = S.traffic.last;
             S.traffic.last = sample;
             if (prev && sample.time > prev.time && sample.down >= prev.down && sample.up >= prev.up) {
@@ -461,6 +461,17 @@
                     up: (sample.up - prev.up) * 8 / dt / 1e6
                 };
                 S.traffic.rate = rate;
+                /* per network: what the firewall sends into it is what its devices download */
+                S.traffic.nets = {};
+                Object.keys(sample.ifaces).forEach(function (key) {
+                    var now = sample.ifaces[key], was = prev.ifaces[key];
+                    if (was && Number(now.inbytes) >= Number(was.inbytes) && Number(now.outbytes) >= Number(was.outbytes)) {
+                        S.traffic.nets[key] = {
+                            down: (Number(now.outbytes) - Number(was.outbytes)) * 8 / dt / 1e6,
+                            up: (Number(now.inbytes) - Number(was.inbytes)) * 8 / dt / 1e6
+                        };
+                    }
+                });
                 S.traffic.hist.push(rate);
                 if (S.traffic.hist.length > HISTORY) {
                     S.traffic.hist.shift();
@@ -574,7 +585,7 @@
         var html = MENU.filter(function (m) { return pagesOf(m[0]).length; }).map(function (m) {
             var key = m[0], on = current === key;
             return '<button type="button" class="k-tab' + (on ? ' on' : '') + '" data-act="tab" data-v="' + key + '"' +
-                (on ? ' aria-current="page"' : '') + '>' + icon(labels[key][1]) + '<span>' + esc(labels[key][0]) + '</span>' +
+                (on ? ' aria-current="page"' : '') + '>' + icon(labels[key][1]) + '<span class="k-lbl" data-t="' + esc(labels[key][0]) + '">' + esc(labels[key][0]) + '</span>' +
                 (key === 'devices' && wait ? '<span class="k-count warn" title="' + esc(t.apprBanner(wait)) + '">' + wait + '</span>' : '') + '</button>';
         }).join('');
         document.getElementById('k-tabs').innerHTML = html;
@@ -586,9 +597,9 @@
         var core = { devices: t.tabDevices, filter: t.subFilter, lists: t.subLists };
         document.getElementById('k-subtabs').innerHTML = pages.length < 2 ? '' :
             '<div class="k-subtabs" role="group" aria-label="' + esc(t.subtabsAria) + '">' + pages.map(function (key) {
-                var on = S.tab === key;
+                var on = S.tab === key, label = esc(VIEWS[key] ? VIEWS[key].label(t) : core[key]);
                 return '<button type="button" class="k-chip' + (on ? ' on' : '') + '" data-act="tab" data-v="' + key + '"' +
-                    (on ? ' aria-current="page"' : '') + '>' + esc(VIEWS[key] ? VIEWS[key].label(t) : core[key]) + '</button>';
+                    (on ? ' aria-current="page"' : '') + '><span class="k-lbl" data-t="' + label + '">' + label + '</span></button>';
             }).join('') + '</div>';
     }
 
@@ -673,6 +684,84 @@
 
     /* ------------------------------------------------------------------ view: overview */
 
+    function loadOverview() {
+        return api('GET', '/api/inversapanel/dashboard/overview').then(function (data) { S.ov = data; });
+    }
+
+    /* how long the gateway, the internet and DNS take to answer */
+    function loadNetTest() {
+        return api('GET', '/api/inversapanel/network/test').then(function (data) { S.ovTest = data; });
+    }
+
+    function clock(ts) {
+        return new Date(ts * 1000).toLocaleTimeString(T().locale, { hour: '2-digit', minute: '2-digit' });
+    }
+
+    /* a moment: the time today, "yesterday 23:15", otherwise the day as well */
+    function when(ts) {
+        var mid = S.ov ? S.ov.midnight : 0;
+        if (ts >= mid) { return clock(ts); }
+        if (ts >= mid - 86400) { return T().ov.yesterday + ' ' + clock(ts); }
+        return new Date(ts * 1000).toLocaleDateString(T().locale, { day: 'numeric', month: 'short' }) + ' ' + clock(ts);
+    }
+
+    function span(sec) {
+        var o = T().ov, s = Math.max(0, sec), d = Math.floor(s / 86400), hr = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+        return d ? o.durDH(d, hr) : (hr ? o.durHM(hr, m) : o.durM(m));
+    }
+
+    /* [number, unit] */
+    function bytes(n) {
+        var units = ['B', 'KB', 'MB', 'GB', 'TB'], i = 0, v = Number(n || 0);
+        while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+        return [fmt(v, i >= 2 && v < 100 ? 1 : 0), units[i]];
+    }
+
+    function hostByIp(ip) {
+        for (var i = 0; i < S.hosts.length; i++) {
+            if (S.hosts[i].ips.indexOf(ip) >= 0) { return S.hosts[i]; }
+        }
+        return null;
+    }
+
+    /* what needs somebody's attention: [text, action, value] */
+    function attention() {
+        var t = T(), o = t.ov, ov = S.ov || {}, list = [], level = protectionLevel(S.saved), n = waitingCount();
+        if (level === 'off') { list.push([o.todoOff, 'tab', 'settings']); }
+        if (level === 'warn') { list.push([t.statusWhy(protectionGaps(S.saved)), 'tab', 'filter']); }
+        if (ov.wan && ov.wan.exists && !ov.wan.address) { list.push([o.todoWan, 'tab', 'net']); }
+        if (n) { list.push([o.todoWait(n), 'show-waiting', '']); }
+        (ov.vpn || []).forEach(function (c) {
+            if (c.enabled && c.kind === 'site' && !c.connected) { list.push([o.todoVpn(c.name), 'tab', 'vpn']); }
+        });
+        if (ov.ips && ov.ips.available && ov.ips.enabled && !ov.ips.running) { list.push([o.todoIps, 'tab', 'ips']); }
+        return list;
+    }
+
+    /* a line of "what happened": [dot, title, detail] */
+    function eventText(e) {
+        var o = T().ov, host;
+        switch (e.k) {
+            case 'attack':
+                host = hostByIp(e.dst);
+                return ['warn', e.blocked ? o.evAttackBlocked : o.evAttack,
+                    e.src + ' → ' + (host ? devName(host) : e.dst) + ' · ' + e.msg + (e.n > 1 ? ' · ' + o.times(e.n) : '')];
+            case 'device_wait':
+                host = hostByMac(e.mac);
+                return ['warn', o.evWait, (host ? devName(host) : e.mac) + (host && host.network ? ' · ' + host.network : '')];
+            case 'peer_on': return ['ok', o.evPeer, e.name + ' · ' + e.conn];
+            case 'vpn_up': return ['ok', o.evVpnUp, e.name];
+            case 'vpn_down': return ['warn', o.evVpnDown, e.name];
+            case 'wan_up': return ['ok', o.evWanUp, ''];
+            case 'wan_down': return ['warn', o.evWanDown, ''];
+            case 'sched_on': return ['', o.evSchedOn, e.name];
+            case 'sched_off': return ['', o.evSchedOff, e.name];
+            case 'lists': return ['', o.evLists, ''];
+            case 'boot': return ['', o.evBoot, ''];
+        }
+        return null;
+    }
+
     function chartSvg(hist) {
         var max = 5;
         hist.forEach(function (r) { max = Math.max(max, r.down, r.up); });
@@ -709,10 +798,20 @@
     }
 
     function viewDash() {
-        var t = T(), level = protectionLevel(S.saved);
+        var t = T(), o = t.ov, level = protectionLevel(S.saved), ov = S.ov || {}, test = S.ovTest || null, sys = ov.system || null;
         var online = S.hosts.filter(function (h) { return h.online; }).length;
         var dns = S.dns || {};
         var rate = S.traffic.rate;
+
+        /* the page redraws with every traffic sample: ask for the rest when it has grown old */
+        if (!document.hidden && Date.now() - (S.ovAsked || 0) > 30000) {
+            S.ovAsked = Date.now();
+            loadOverview().then(refreshView, function () {});
+        }
+        if (!document.hidden && Date.now() - (S.ovTestAsked || 0) > 60000) {
+            S.ovTestAsked = Date.now();
+            loadNetTest().then(refreshView, function () {});
+        }
 
         var statusTitle = level === 'ok' ? t.statusOk : (level === 'warn' ? t.statusWarn : t.statusOff);
         var dnsActive = S.saved.general.enabled && (
@@ -720,8 +819,14 @@
             (S.saved.filtering.apps || []).length > 0 ||
             (S.saved.filtering.denylist || []).length > 0
         );
+        var link = function (label, tab) {
+            return '<button type="button" class="k-link small" data-act="tab" data-v="' + tab + '">' + esc(label) + ' →</button>';
+        };
+        var kv = function (k, v, mono) {
+            return '<div class="k-kv"><span class="muted">' + esc(k) + '</span><span' + (mono ? ' class="mono"' : '') + '>' + v + '</span></div>';
+        };
 
-        var html = '<div class="k-stack">';
+        var html = '<div class="k-stack k-ov">';
         if (!S.draft.general.welcomed) {
             /* first run, possibly on a long-configured firewall: nothing is switched on unasked */
             html += '<section class="k-card k-welcome"><div class="k-setting" style="padding:0;border:none;flex-wrap:wrap">' +
@@ -732,31 +837,72 @@
                 '<button type="button" class="k-btn primary" data-act="welcome-yes">' + esc(t.welcomeYes) + '</button></div>' +
                 '</div></section>';
         }
-        html += waitingBanner();
-        html += '<section class="k-card k-status">' +
+
+        /* ---- status: what it is like, what waits for somebody, every protection in a word, the quick switches */
+        var wanUp = !!(ov.wan && ov.wan.address), ips = ov.ips || null, geo = S.saved.geo || {};
+        var vpns = (ov.vpn || []).filter(function (c) { return c.enabled; });
+        var vpnUp = vpns.filter(function (c) { return c.kind !== 'site' || c.connected; }).length;
+        var todo = attention();
+        var line = [t.statusLine(online, S.hosts.length)];
+        if (ov.wan) { line.push(wanUp ? o.wanUpShort : o.noConn); }
+        if (ips && ips.last) { line.push(o.lastAlert(when(ips.last))); }
+        var chips = [
+            [o.chkInternet, !ov.wan ? '…' : (wanUp ? o.connected + (test && test.internet && test.internet.ok ? ' · ' + fmt(test.internet.ms) + ' ms' : '') : o.noConn),
+                !ov.wan ? '' : (wanUp ? 'ok' : 'warn'), 'net'],
+            [t.dnsFilter, dnsActive ? t.active : t.inactive, dnsActive ? 'ok' : '', 'filter'],
+            [t.tabIps, !ips ? '…' : (!ips.available || !ips.enabled ? t.off : (!ips.running ? o.notRunning : (ips.inline ? o.ipsBlocking : o.ipsWatching))),
+                !ips || !ips.available || !ips.enabled ? '' : (ips.running ? 'ok' : 'warn'), 'ips'],
+            [o.chkGeo, !geo.enabled ? t.off : (geo.mode === 'allow' ? o.geoAllow((geo.allowed || []).length) : o.geoBlock((geo.countries || []).length)),
+                geo.enabled ? 'ok' : '', 'geo'],
+            [t.tabVpn, !S.ov ? '…' : (vpns.length ? o.vpnUp(vpnUp, vpns.length) : o.none), !vpns.length ? '' : (vpnUp < vpns.length ? 'warn' : 'ok'), 'vpn']
+        ];
+        html += '<section class="k-card k-ov-status"><div class="k-ov-top">' +
             '<div class="k-status-main"><div class="k-badge-big ' + (level === 'ok' ? 'ok' : 'warn') + '">' +
             icon(ICONS.shield + (level === 'ok' ? ICONS.check : ICONS.alert), 28) + '</div>' +
-            '<div><h1>' + esc(statusTitle) + '</h1>' +
-            (level === 'warn' ? '<div style="font-size:14px;color:var(--k-warn-text)">' + esc(t.statusWhy(protectionGaps(S.saved))) + '</div>' : '') +
-            '<div class="muted" style="font-size:14px">' + esc(t.statusLine(online, S.hosts.length)) + '</div></div></div>' +
-            '<div class="k-chips"><span class="k-info"><span class="k-dot ' + (dnsActive ? 'ok' : '') + '"></span>' +
-            esc(t.dnsFilter) + ': ' + esc(dnsActive ? t.active : t.inactive) + '</span></div>' +
-            '</section>';
+            '<div><h1>' + esc(statusTitle) + '</h1><div class="muted" style="font-size:14px">' + esc(line.join(' · ')) + '</div></div></div>' +
+            (todo.length ? '<div class="k-ov-todo"><b>' + esc(o.todoTitle(todo.length)) + '</b>' + todo.map(function (x) {
+                return '<button type="button" class="k-ov-todo-row" data-act="' + x[1] + '" data-v="' + x[2] + '">' + icon(ICONS.warn, 16) +
+                    '<span>' + esc(x[0]) + '</span><span class="k-ov-go">' + esc(o.show) + ' →</span></button>';
+            }).join('') + '</div>' : '') + '</div>' +
+            '<div class="k-ov-checks">' + chips.map(function (c) {
+                return '<button type="button" class="k-info k-ov-chk" data-act="tab" data-v="' + c[3] + '"><span class="k-dot ' + c[2] + '"></span>' +
+                    '<span>' + esc(c[0]) + '</span><b>' + esc(c[1]) + '</b></button>';
+            }).join('') +
+            '<a class="k-info k-ov-chk" href="/ui/core/firmware#status"><span class="k-dot ' + (sys && sys.update ? 'warn' : (sys ? 'ok' : '')) + '"></span>' +
+            '<span>' + esc(o.chkUpdate) + '</span><b>' + esc(!sys ? '…' : (sys.update ? (sys.latest ? o.updReady(sys.latest) : o.updPending) : o.upToDate)) + '</b></a></div>' +
+            '<div class="k-ov-quick"><span class="k-ov-quick-t">' + esc(t.quickTitle) + '</span>' + QUICK.map(function (k) {
+                return '<span class="k-ov-q">' + toggle(!!S.draft.filtering[k], 'data-act="cat" data-v="' + k + '"', t.cats[k][0]) + esc(t.cats[k][0]) + '</span>';
+            }).join('') + '<span class="k-ov-quick-all">' + link(t.editAll, 'filter') + '</span></div></section>';
 
-        var blockedValue = dns.enabled && dns.available ? fmt(dns.blocked) : '—';
-        var blockedSub = dns.enabled && dns.available ? t.kpiBlockedSub(fmt(dns.blocked_pcnt, 1)) : t.kpiNoStats;
+        /* ---- numbers */
+        var hours = ov.dns_hours || null, blockedToday = 0, totalToday = 0;
+        (hours || []).forEach(function (hr) {
+            if (hr[0] >= ov.midnight) { blockedToday += hr[1]; totalToday += hr[2]; }
+        });
+        var wait = waitingCount(), usage = ov.usage || null;
+        var used = usage ? bytes(usage['in'] + usage.out) : null;
         var kpis = [
-            [t.kpiOnline, fmt(online), '', t.kpiOnlineSub(S.hosts.length)],
-            [t.kpiBlocked, blockedValue, '', blockedSub],
-            [t.kpiDown, rate ? fmt(rate.down, 1) : '—', 'Mbit/s', t.kpiRateSub],
-            [t.kpiUp, rate ? fmt(rate.up, 1) : '—', 'Mbit/s', t.kpiRateSub]
+            [t.kpiOnline, fmt(online), '', t.kpiOnlineSub(S.hosts.length) + (wait ? ' · ' + o.waiting(wait) : '')],
+            [o.kpiBlocked, hours ? fmt(blockedToday) : '—', '',
+                hours ? (totalToday ? t.kpiBlockedSub(fmt(blockedToday / totalToday * 100, 1)) : o.noQueries) : (S.ov ? t.kpiNoStats : '…')],
+            [o.kpiAlerts, ips && ips.available && ips.enabled ? fmt(ips.today) + (ips.more ? '+' : '') : '—', '',
+                !ips ? '…' : (!ips.available || !ips.enabled ? o.ipsOff :
+                    (ips.today ? (ips.blocked === ips.today ? o.allBlocked : o.someBlocked(ips.blocked)) + ' · ' + o.lastAt(when(ips.last)) : o.noAlerts))]
         ];
         html += '<div class="k-kpis">' + kpis.map(function (k) {
             return '<div class="k-kpi"><div class="k-kpi-label">' + esc(k[0]) + '</div>' +
                 '<div class="k-kpi-value">' + esc(k[1]) + (k[2] ? '<span class="k-kpi-unit">' + esc(k[2]) + '</span>' : '') + '</div>' +
                 '<div class="muted">' + esc(k[3]) + '</div></div>';
-        }).join('') + '</div>';
+        }).join('') +
+            '<div class="k-kpi"><div class="k-kpi-label">' + esc(o.kpiSpeed) + '</div><div class="k-kpi-value k-ov-two">' +
+            '<span>↓ ' + esc(rate ? fmt(rate.down, 1) : '—') + '</span><span>↑ ' + esc(rate ? fmt(rate.up, 1) : '—') + '</span>' +
+            '<span class="k-kpi-unit">Mbit/s</span></div><div class="muted">' + esc(t.kpiRateSub) + '</div></div>' +
+            '<div class="k-kpi"><div class="k-kpi-label">' + esc(o.kpiUsage) + '</div><div class="k-kpi-value">' + esc(used ? used[0] : '—') +
+            (used ? '<span class="k-kpi-unit">' + used[1] + '</span>' : '') + '</div><div class="muted">' +
+            esc(usage ? '↓ ' + bytes(usage['in']).join(' ') + ' · ↑ ' + bytes(usage.out).join(' ') + (usage.from > ov.midnight + 120 ? ' · ' + o.since(clock(usage.from)) : '') :
+                (S.ov ? o.usageSoon : '…')) + '</div></div></div>';
 
+        /* ---- traffic, and the internet connection beside it */
         var chart = chartSvg(S.traffic.hist);
         html += '<div class="k-row stretch">' +
             '<section class="k-card k-grow"><div class="k-card-head"><div><h2>' + esc(t.chartTitle) + '</h2>' +
@@ -767,46 +913,102 @@
             '<div class="k-axis" style="top:4px">' + esc(fmt(chart.max)) + ' Mbit/s</div>' +
             '<div class="k-axis" style="top:92px">' + esc(fmt(chart.max / 2)) + ' Mbit/s</div>' +
             (S.traffic.hist.length < 2 ? '<div class="k-axis" style="top:150px;left:40%">' + esc(t.chartWaiting) + '</div>' : '') +
-            '</div></section>';
+            '</div><div class="k-axis-row"><span>' + esc(o.minAgo(10)) + '</span><span>' + esc(o.minAgo(5)) + '</span><span>' + esc(o.now) + '</span></div></section>';
+        var ms = function (r) { return r && r.ok ? fmt(r.ms, r.ms < 10 ? 1 : 0) + ' ms' : (test ? o.noAnswer : '…'); };
+        html += '<section class="k-card k-side k-ov-wan">' + (ov.wan && !ov.wan.exists ? '<div class="muted">' + esc(t.wanMissing) + '</div>' :
+            '<div class="k-wan-head"><div class="k-ibox big ' + (!ov.wan || wanUp ? 'on' : 'cut') + '">' + icon(ICONS.globe, 22) + '</div>' +
+            '<div><b>' + esc(!ov.wan ? '…' : (wanUp ? t.wanConnected : t.wanDown)) + '</b><span class="muted">' +
+            esc(ov.wan ? (t.wanVia[ov.wan.type] || ov.wan.type) + ' · ' + ov.wan.device : '') + '</span></div></div><div>' +
+            kv(t.wanIp, esc(wanUp ? ov.wan.address : '—'), true) +
+            kv(o.gateway, esc(ov.wan && ov.wan.gateway ? ov.wan.gateway + (test && test.gateway && test.gateway.ok ? ' · ' + ms(test.gateway) : '') : '—'), true) +
+            kv(o.latency, esc(ms(test && test.internet)), true) +
+            kv(o.dnsTime, esc(ms(test && test.dns)), true) +
+            kv(o.upSince, esc(wanUp && ov.wan.since ? span(ov.now - ov.wan.since) : '—')) + '</div>') +
+            link(t.subWan, 'net') + '</section></div>';
+
+        /* ---- local networks, busiest devices, VPN */
+        var nets = ov.networks || [], ifr = S.traffic.nets || {};
+        html += '<div class="k-ov-grid"><section class="k-card k-ov-tight"><div class="k-card-head"><h2>' + esc(t.subNets) + '</h2>' +
+            '<span class="muted">' + esc(o.netsSub) + '</span></div><div>' +
+            (nets.length ? nets.map(function (n) {
+                var count = S.hosts.filter(function (h) { return h.online && h.network_key === n.key; }).length, r = ifr[n.key];
+                return '<div class="k-list-row"><span class="k-ov-col" style="background:' + esc(n.color) + '"></span>' +
+                    '<div class="k-ov-grow"><b>' + esc(n.name) + '</b><span class="muted mono">' + esc(n.cidr || '') + (n.isolated ? ' · ' + esc(o.isolated) : '') + '</span></div>' +
+                    '<span class="k-badge">' + esc(o.devs(count)) + '</span>' +
+                    '<span class="k-ov-rate"><span>↓ ' + esc(r ? fmt(r.down, 1) : '—') + '</span><span>↑ ' + esc(r ? fmt(r.up, 1) : '—') + '</span></span></div>';
+            }).join('') : '<div class="muted">' + esc(S.ov ? o.none : '…') + '</div>') + '</div>' + link(t.subNets, 'nets') + '</section>';
 
         var top = S.hosts.filter(function (h) { return h.states > 0; })
             .sort(function (a, b) { return b.states - a.states; }).slice(0, 5);
         var topMax = top.length ? top[0].states : 1;
-        html += '<section class="k-card k-side"><div class="k-card-head"><h2>' + esc(t.topDevTitle) + '</h2>' +
+        html += '<section class="k-card k-ov-tight"><div class="k-card-head"><h2>' + esc(t.topDevTitle) + '</h2>' +
             '<span class="muted">' + esc(t.topDevSub) + '</span></div>' +
             (top.length ? top.map(function (h) {
-                return '<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;gap:8px">' +
-                    '<span class="k-grow-text" style="font-weight:500">' + esc(devName(h)) + '</span>' +
-                    '<span style="flex:none;color:#36404D">' + esc(t.conns(h.states)) + '</span></div>' +
+                return '<div class="k-ov-top-row"><div><span class="k-grow-text"><b>' + esc(devName(h)) + '</b>' +
+                    (h.network ? ' <span class="muted">· ' + esc(h.network) + '</span>' : '') + '</span>' +
+                    '<span>' + esc(t.conns(h.states)) + '</span></div>' +
                     '<div class="k-bar"><div style="width:' + Math.max(3, Math.round(h.states / topMax * 100)) + '%"></div></div></div>';
             }).join('') : '<div class="muted">' + esc(!S.hostsLoaded ? '…' : (S.hosts.length ? t.noActive : t.noDevicesYet)) + '</div>') +
-            '<button type="button" class="k-link" data-act="tab" data-v="devices">' + esc(t.allDevices) + ' →</button>' +
-            '</section></div>';
+            link(t.allDevices, 'devices') + '</section>';
 
+        html += '<section class="k-card k-ov-tight"><div class="k-card-head"><h2>' + esc(t.tabVpn) + '</h2>' +
+            '<span class="muted">' + esc(vpns.length ? o.vpnUp(vpnUp, vpns.length) : '') + '</span></div><div>' +
+            ((ov.vpn || []).length ? ov.vpn.map(function (c) {
+                var up = c.enabled && (c.kind !== 'site' || c.connected);
+                var state = !c.enabled ? t.vpnDisabled : (c.kind !== 'site' ? o.peers(c.online.length, c.peers) :
+                    (c.connected ? t.vpnConnected + (c.up_for ? ' · ' + span(c.up_for) : '') : o.noConn));
+                return '<div class="k-list-row"><span class="k-dot ' + (!c.enabled ? '' : (up ? 'ok' : 'warn')) + '"></span>' +
+                    '<div class="k-ov-grow"><b>' + esc(c.name) + '</b><span class="muted">' +
+                    esc((c.kind === 'site' ? t.vpnKindSite : t.vpnKindRemote) + ' · ' + (c.type === 'ipsec' ? 'IPsec' : 'WireGuard')) + '</span></div>' +
+                    '<span class="' + (c.enabled && !up ? 'k-warn-text' : 'muted') + '">' + esc(state) + '</span></div>';
+            }).join('') : '<div class="muted">' + esc(S.ov ? o.vpnNone : '…') + '</div>') + '</div>' + link(t.tabVpn, 'vpn') + '</section></div>';
+
+        /* ---- blocked requests, what happened, the system */
         var blockedRows;
         if (!dns.enabled) {
             blockedRows = '<div class="muted">' + esc(t.statsOff) + '</div>';
         } else if (!dns.top_blocked || !dns.top_blocked.length) {
             blockedRows = '<div class="muted">' + esc(t.noBlocked) + '</div>';
         } else {
-            blockedRows = dns.top_blocked.slice(0, 6).map(function (b) {
+            blockedRows = dns.top_blocked.slice(0, 4).map(function (b) {
                 return '<div class="k-list-row"><span class="k-grow-text mono">' + esc(b.domain) + '</span>' +
-                    '<span class="k-badge">' + esc(b.custom ? t.customList : b.list) + '</span>' +
-                    '<span style="width:56px;text-align:right;font-weight:600;flex:none">' + esc(fmt(b.total)) + '</span></div>';
+                    '<span class="k-badge k-ov-list">' + esc(b.custom ? t.customList : b.list) + '</span>' +
+                    '<span class="k-ov-num">' + esc(fmt(b.total)) + '</span></div>';
             }).join('');
         }
-        html += '<div class="k-row stretch">' +
-            '<section class="k-card k-half"><div class="k-card-head"><h2>' + esc(t.topBlockedTitle) + '</h2></div><div>' + blockedRows + '</div></section>' +
-            '<section class="k-card k-half" style="gap:4px"><div class="k-card-head"><h2>' + esc(t.quickTitle) + '</h2>' +
-            '<span class="muted">' + esc(t.quickSub) + '</span></div>' +
-            QUICK.map(function (k) {
-                var on = !!S.draft.filtering[k];
-                return '<div class="k-setting" style="padding:6px 0"><div class="k-setting-text"><b style="font-weight:500">' + esc(t.cats[k][0]) + '</b>' +
-                    '<span class="muted">' + esc(on ? t.on : t.off) + '</span></div>' +
-                    toggle(on, 'data-act="cat" data-v="' + k + '"', t.cats[k][0]) + '</div>';
-            }).join('') +
-            '<button type="button" class="k-link" data-act="tab" data-v="filter">' + esc(t.editAll) + ' →</button>' +
-            '</section></div>';
+        var hmax = 1;
+        (hours || []).forEach(function (hr) { hmax = Math.max(hmax, hr[1]); });
+        html += '<div class="k-ov-grid"><section class="k-card k-ov-tight"><div class="k-card-head"><h2>' + esc(o.blockedTitle) + '</h2>' +
+            '<span class="muted">' + esc(o.blockedSub) + '</span></div>' +
+            (hours && hours.length ? '<div class="k-ov-bars-wrap"><span class="k-ov-bars-max">' + esc(fmt(hmax)) + '</span>' +
+                '<div class="k-ov-bars" role="img" aria-label="' + esc(o.blockedTitle) + '">' + hours.map(function (hr) {
+                    return '<i style="height:' + (hr[1] ? Math.max(3, Math.round(hr[1] / hmax * 100)) : 0) + '%" title="' + esc(when(hr[0]) + ' · ' + o.reqs(fmt(hr[1]))) + '"></i>';
+                }).join('') + '</div></div><div class="k-axis-row"><span>' + esc(when(hours[0][0])) + '</span><span>' + esc(o.now) + '</span></div>' : '') +
+            '<div>' + blockedRows + '</div></section>';
+
+        var events = (ov.events || []).map(function (e) { var x = eventText(e); return x ? [e.t].concat(x) : null; })
+            .filter(function (x) { return x; }).slice(0, 6);
+        html += '<section class="k-card k-ov-tight"><div class="k-card-head"><h2>' + esc(o.evTitle) + '</h2></div><div>' +
+            (events.length ? events.map(function (e) {
+                return '<div class="k-ov-ev"><span class="muted mono">' + esc(when(e[0])) + '</span><span class="k-dot ' + e[1] + '"></span>' +
+                    '<div><b>' + esc(e[2]) + '</b>' + (e[3] ? '<span class="muted" title="' + esc(e[3]) + '">' + esc(e[3]) + '</span>' : '') + '</div></div>';
+            }).join('') : '<div class="muted">' + esc(S.ov ? o.evNone : '…') + '</div>') + '</div></section>';
+
+        var meter = function (name, pct, value) {
+            return '<div class="k-ov-meter"><div><span>' + esc(name) + '</span><span class="muted">' + esc(value) + '</span></div>' +
+                '<div class="k-bar"><div style="width:' + Math.min(100, Math.max(0, Math.round(pct))) + '%' + (pct >= 90 ? ';background:var(--k-warn)' : '') + '"></div></div></div>';
+        };
+        var part = function (x) { return bytes(x.used).join(' ') + ' / ' + bytes(x.total).join(' '); };
+        html += '<section class="k-card k-ov-tight"><div class="k-card-head"><h2>' + esc(o.sysTitle) + '</h2>' +
+            '<span class="muted">' + esc(sys && sys.boot ? o.upFor(span(ov.now - sys.boot)) : '') + '</span></div>' +
+            (sys ? (sys.cpu !== null ? meter(o.cpu, sys.cpu, o.pct(sys.cpu)) : '') +
+                (sys.memory ? meter(o.memory, sys.memory.used / sys.memory.total * 100, part(sys.memory)) : '') +
+                (sys.disk ? meter(o.disk, sys.disk.used / sys.disk.total * 100, part(sys.disk)) : '') +
+                (sys.temperature !== null ? meter(o.temp, sys.temperature, fmt(sys.temperature) + ' °C') : '') +
+                '<div>' + kv(o.version, esc(sys.product + ' ' + sys.version)) +
+                kv(o.chkUpdate, sys.update ? '<a class="k-pill warn k-ov-pill" href="/ui/core/firmware#status">' + esc(sys.latest ? o.updReady(sys.latest) : o.updPending) + '</a>' : esc(o.upToDate)) +
+                (sys.config_changed ? kv(o.cfgChanged, esc(when(sys.config_changed))) : '') + '</div>' :
+                '<div class="muted">…</div>') + '</section></div>';
 
         return html + '</div>';
     }

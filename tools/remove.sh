@@ -24,7 +24,8 @@ rm -rf /usr/local/opnsense/mvc/app/models/OPNsense/InversaPanel \
        /usr/local/opnsense/www/css/inversapanel \
        /usr/local/opnsense/www/img/inversapanel \
        /usr/local/opnsense/service/conf/actions.d/actions_inversapanel.conf \
-       /usr/local/etc/inc/plugins.inc.d/inversapanel.inc
+       /usr/local/etc/inc/plugins.inc.d/inversapanel.inc \
+       /var/db/inversapanel
 rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
 service configd restart > /dev/null
 configctl filter reload > /dev/null
