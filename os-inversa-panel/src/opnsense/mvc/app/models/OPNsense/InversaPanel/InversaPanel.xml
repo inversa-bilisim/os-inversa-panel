@@ -152,7 +152,7 @@
                     <Required>Y</Required>
                     <Mask>/^(lan|opt[0-9]{1,3})$/</Mask>
                 </interface>
-                <!-- up to 0.3: the kind of network. Replaced by a colour, isolation and a speed limit per network. -->
+                <!-- earlier versions: the kind of network. Replaced by a colour, isolation and a speed limit per network. -->
                 <kind type="OptionField">
                     <Default>home</Default>
                     <Required>Y</Required>

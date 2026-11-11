@@ -14,7 +14,7 @@ class InversaPanel extends BaseModel
     /* colours a network can have; the first is the default of the main network (LAN) */
     const COLORS = ['#1F4FC7', '#0F766E', '#7C3AED', '#B45309', '#475569', '#BE185D', '#15803D', '#0E7490'];
 
-    /* the colours the kinds of network had (up to 0.3) */
+    /* the colours the kinds of network had (earlier versions) */
     const KIND_COLORS = ['home' => '#1F4FC7', 'iot' => '#0F766E', 'guest' => '#7C3AED', 'camera' => '#B45309', 'server' => '#475569'];
 
     /**
