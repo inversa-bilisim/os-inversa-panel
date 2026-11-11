@@ -53,7 +53,7 @@ class Catalog
         'quad9' => ['servers' => ['9.9.9.9', '149.112.112.112'], 'tls' => 'dns.quad9.net'],
     ];
 
-    /* traffic shaper objects for the guest speed limit carry this description prefix */
+    /* traffic shaper objects of the speed limits carry this description prefix ("guest": they were for guest networks only) */
     const SHAPER_PREFIX = 'Inversa Panel guest';
 
     /* MaxMind GeoLite2 country database, the format OPNsense's GeoIP aliases read */

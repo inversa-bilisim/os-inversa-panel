@@ -14,7 +14,7 @@ use OPNsense\Firewall\Util;
 use OPNsense\TrafficShaper\TrafficShaper;
 
 /**
- * Country rules (GeoIP alias) and the guest speed limit (traffic shaper), both written
+ * Country rules (GeoIP alias) and the speed limit of networks (traffic shaper), both written
  * to OPNsense's own models and tagged so Inversa Panel only touches what it created.
  */
 class Extras
@@ -147,10 +147,10 @@ class Extras
         return [$aliases, $urlChanged];
     }
 
-    /* ------------------------------------------------------------------ guest speed limit */
+    /* ------------------------------------------------------------------ speed limit of a network */
 
     /**
-     * pipes + rules limiting every guest network (shared download/upload limit per network)
+     * pipes + rules for every network that has a speed limit (download / upload of the whole network)
      */
     public static function syncShaper(InversaPanel $mdl)
     {
@@ -166,18 +166,18 @@ class Extras
                 $shaper->pipes->pipe->del($uuid);
             }
         }
-        if (!$mdl->guest->limit->isEmpty()) {
+        {
             $ifs = Config::getInstance()->object()->interfaces;
             foreach ($mdl->networks->network->iterateItems() as $net) {
                 $key = (string)$net->interface;
-                if ((string)$net->kind !== 'guest' || $ifs->$key === null || !filter_var((string)$ifs->$key->ipaddr, FILTER_VALIDATE_IP)) {
+                if ($net->limit->isEmpty() || $ifs->$key === null || !filter_var((string)$ifs->$key->ipaddr, FILTER_VALIDATE_IP)) {
                     continue;
                 }
                 $bits = (int)(string)$ifs->$key->subnet;
                 $mask = (~0 << (32 - $bits)) & 0xffffffff;
                 $cidr = long2ip(ip2long((string)$ifs->$key->ipaddr) & $mask) . '/' . $bits;
                 $pipes = [];
-                foreach (['down' => (string)$mdl->guest->down, 'up' => (string)$mdl->guest->up] as $dir => $mbit) {
+                foreach (['down' => (string)$net->down, 'up' => (string)$net->up] as $dir => $mbit) {
                     $pipe = $shaper->pipes->pipe->Add();
                     $pipe->setNodes([
                         'number' => (string)$shaper->newPipeNumber(), 'enabled' => '1', 'bandwidth' => $mbit,
@@ -186,7 +186,7 @@ class Extras
                     ]);
                     $pipes[$dir] = $pipe->getAttributes()['uuid'];
                 }
-                /* traffic leaving the firewall towards guests is their download */
+                /* traffic leaving the firewall towards the network is its download */
                 $shaper->rules->rule->Add()->setNodes([
                     'enabled' => '1', 'sequence' => '1', 'interface' => $key, 'proto' => 'ip', 'direction' => 'out',
                     'source' => 'any', 'destination' => $cidr, 'target' => $pipes['down'],

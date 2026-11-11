@@ -48,8 +48,6 @@
     };
     var CATS = ['ads', 'malware', 'adult', 'gambling', 'bypass', 'safesearch', 'forcedns'];
     var QUICK = ['ads', 'malware', 'adult', 'forcedns'];
-    /* colour of a network by its kind (network cards, access table, device list) */
-    var KIND_COLOR = { home: '#1F4FC7', iot: '#0F766E', guest: '#7C3AED', camera: '#B45309', server: '#475569' };
     var TYPES = ['phone', 'tablet', 'laptop', 'tv', 'console', 'printer', 'iot', 'server', 'unknown'];
     /*
      * The menu: each entry opens one or more pages; with more than one, the pages show as sub tabs
@@ -59,14 +57,14 @@
      */
     var MENU = [
         ['dash', ['dash']],
-        ['net', ['net', 'nets', 'guest', 'ports', 'dns', 'pf']],
+        ['net', ['net', 'nets', 'ports', 'dns', 'pf']],
         ['vpn', ['vpn']],
         ['devices', ['devices', 'sched']],
         ['security', ['filter', 'lists', 'geo', 'ips']],
         ['settings', ['settings']]
     ];
     /* addresses of menu entries that no longer exist */
-    var MOVED = { remote: 'vpn' };
+    var MOVED = { remote: 'vpn', guest: 'nets' };
     var CORE_PAGES = ['dash', 'devices', 'filter', 'lists', 'settings'];
     var VIEWS = {};
     var TRAFFIC_MS = 5000;
@@ -336,7 +334,7 @@
             var before = (s.reservations || {})[mac] || '', after = (d.reservations || {})[mac] || '';
             add(label + ' · ' + t.dFixedIp, before || t.dIpAuto, after || t.dIpAuto, function () { S.draft.reservations[mac] = before; });
         });
-        /* views add their own pending changes (schedules, access, guest, countries, vpn, dns) */
+        /* views add their own pending changes (schedules, access, countries, dns) */
         Object.keys(VIEWS).forEach(function (key) {
             if (VIEWS[key].changes) {
                 VIEWS[key].changes(add, d, s);
@@ -358,9 +356,8 @@
                 general: data.general, filtering: data.filtering, devices: data.devices,
                 schedules: data.schedules || [],
                 access: Array.isArray(data.access) ? {} : (data.access || {}),
-                kinds: Array.isArray(data.kinds) ? {} : (data.kinds || {}),
                 approval: Array.isArray(data.approval) ? {} : (data.approval || {}),
-                guest: data.guest || {}, geo: data.geo || {}, vpn: data.vpn || {},
+                geo: data.geo || {}, vpn: data.vpn || {},
                 ips: data.ips || { enabled: false, mode: 'detect', groups: [] },
                 dns: data.dns || { upstream: 'auto', servers: [], dot: false, tlsname: '', records: [] },
                 reservations: Array.isArray(data.reservations) ? {} : (data.reservations || {})
@@ -883,11 +880,11 @@
         return !!(h.online && h.dhcp === false && ip && dhcpNetOf(ip));
     }
 
-    /* the network a device is on: its name, in the colour of the network's kind */
+    /* the network a device is on: its name, with the network's colour */
     function networkBadge(h) {
         if (!h.network) { return '<span class="muted">—</span>'; }
-        var kind = (S.draft.kinds || {})[h.network_key] || 'home';
-        return '<span class="k-netbadge" title="' + esc(T().netKinds[kind] || '') + '"><span class="k-dot" style="background:' + (KIND_COLOR[kind] || KIND_COLOR.home) + '"></span>' +
+        var net = (S.options.interfaces || []).filter(function (i) { return i.key === h.network_key; })[0];
+        return '<span class="k-netbadge"><span class="k-dot" style="background:' + esc(net && net.color ? net.color : '#5B6573') + '"></span>' +
             esc(h.network) + '</span>';
     }
 
@@ -1150,9 +1147,7 @@
             reservations: changedReservations(),
             schedules: S.draft.schedules,
             access: S.draft.access,
-            kinds: S.draft.kinds,
             approval: S.draft.approval,
-            guest: S.draft.guest,
             geo: S.draft.geo,
             ips: S.draft.ips,
             vpn: S.draft.vpn,
@@ -1505,7 +1500,7 @@
 
     var helpers = {
         esc: esc, icon: icon, toggle: toggle, api: api, fmt: fmt, ago: ago, clone: clone,
-        toggleInList: toggleInList, devName: devName, hostByMac: hostByMac, ICONS: ICONS, KIND_COLOR: KIND_COLOR,
+        toggleInList: toggleInList, devName: devName, hostByMac: hostByMac, ICONS: ICONS,
         T: function () { return T(); },
         S: function () { return S; },
         redraw: redraw,

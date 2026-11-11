@@ -103,9 +103,9 @@ class Network
         $cfg = self::cfg();
         $vlans = self::vlans();
         $ports = $this->ports();
-        $kinds = [];
-        foreach ($mdl->networks->network->iterateItems() as $node) {
-            $kinds[(string)$node->interface] = ['kind' => (string)$node->kind, 'created' => !$node->created->isEmpty()];
+        if ($mdl->migrateNetworks()) {
+            $mdl->serializeToConfig(false, true);
+            Config::getInstance()->save();
         }
 
         /* --- WAN --- */
@@ -184,8 +184,13 @@ class Network
                 'ip' => $ip,
                 'subnet' => (string)$node->subnet,
                 'dhcp' => self::dhcpRange($key),
-                'kind' => $kinds[$key]['kind'] ?? ($key === 'lan' ? 'home' : 'home'),
-                'created' => $kinds[$key]['created'] ?? false,
+                'color' => $mdl->networkColor($key),
+                'created' => ($own = $mdl->networkNode($key)) !== null && !$own->created->isEmpty(),
+                'isolated' => $own !== null && !$own->isolated->isEmpty(),
+                'approval' => $own !== null && !$own->approval->isEmpty(),
+                'limit' => $own !== null && !$own->limit->isEmpty(),
+                'down' => $own !== null ? (int)(string)$own->down : 20,
+                'up' => $own !== null ? (int)(string)$own->up : 5,
                 /* LAGG/bridge members, dynamic addressing etc. are shown but edited in OPNsense itself */
                 'readonly' => !isset($ports[$physical]) || $ip === '',
             ];
@@ -211,7 +216,14 @@ class Network
             $port['vlans'] = $roles[$dev]['vlans'] ?? [];
         }
 
-        return ['wan' => $wan, 'networks' => $networks, 'ports' => array_values($ports)];
+        /* the networks an isolated one still talks to */
+        $keys = array_column($networks, 'key');
+        foreach ($networks as &$entry) {
+            $entry['reach'] = $entry['isolated'] ? $mdl->reachOf($entry['key'], $keys) : [];
+        }
+        unset($entry);
+
+        return ['wan' => $wan, 'networks' => $networks, 'ports' => array_values($ports), 'colors' => InversaPanel::COLORS];
     }
 
     /* ------------------------------------------------------------------ writes */
@@ -364,12 +376,35 @@ class Network
     }
 
     /**
-     * change address / DHCP of an existing network
+     * a network's name as OPNsense takes it for an interface: capitals, digits, underscore
+     */
+    public static function cleanName($name)
+    {
+        return substr(preg_replace('/[^A-Z0-9_]/', '', strtoupper((string)$name)), 0, 16);
+    }
+
+    /**
+     * change name / address / DHCP of an existing network
      */
     public function updateNetwork($key, array $net)
     {
         $node = self::cfg()->interfaces->$key;
-        if ($node === null || !isset($net['ip'])) {
+        if ($node === null) {
+            return;
+        }
+        if (isset($net['name'])) {
+            $name = self::cleanName($net['name']);
+            if ($name === '') {
+                throw new \InvalidArgumentException('enter a name for the network (capitals, digits, underscore)');
+            }
+            foreach (self::cfg()->interfaces->children() as $other => $item) {
+                if ($other !== $key && strtoupper((string)$item->descr ?: $other) === $name) {
+                    throw new \InvalidArgumentException("the name $name is already used by another network");
+                }
+            }
+            $node->descr = $name;
+        }
+        if (!isset($net['ip'])) {
             return;
         }
         $ip = (string)$net['ip'];

@@ -114,7 +114,7 @@
         render: function () {
             var T = h.T();
             return '<div class="k-stack k-narrow"><div><h1>' + h.esc(T.dnsTitle) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + h.esc(T.dnsSub) + '</div></div>' +
-                viewRecords() + viewServers() + '</div>';
+                viewServers() + viewRecords() + '</div>';
         },
         act: function (name, el) {
             var d = dns(), v = el.getAttribute('data-v');

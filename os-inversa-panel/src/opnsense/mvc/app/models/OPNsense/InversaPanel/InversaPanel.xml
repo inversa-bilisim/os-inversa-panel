@@ -152,6 +152,7 @@
                     <Required>Y</Required>
                     <Mask>/^(lan|opt[0-9]{1,3})$/</Mask>
                 </interface>
+                <!-- up to 0.3: the kind of network. Replaced by a colour, isolation and a speed limit per network. -->
                 <kind type="OptionField">
                     <Default>home</Default>
                     <Required>Y</Required>
@@ -163,6 +164,35 @@
                         <server>Servers</server>
                     </OptionValues>
                 </kind>
+                <!-- colour of the network in the lists -->
+                <color type="TextField">
+                    <Mask>/^#[0-9A-Fa-f]{6}$/</Mask>
+                </color>
+                <!--
+                    kept apart from the other networks; which ones it still talks to is in the access
+                    rules below (both directions allowed)
+                -->
+                <isolated type="BooleanField">
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </isolated>
+                <!-- speed limit of the whole network (Mbit/s) -->
+                <limit type="BooleanField">
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </limit>
+                <down type="IntegerField">
+                    <Default>20</Default>
+                    <MinimumValue>1</MinimumValue>
+                    <MaximumValue>10000</MaximumValue>
+                    <Required>Y</Required>
+                </down>
+                <up type="IntegerField">
+                    <Default>5</Default>
+                    <MinimumValue>1</MinimumValue>
+                    <MaximumValue>10000</MaximumValue>
+                    <Required>Y</Required>
+                </up>
                 <!-- created by Inversa Panel: only these may be deleted from Inversa Panel -->
                 <created type="BooleanField">
                     <Default>0</Default>

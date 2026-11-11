@@ -12,6 +12,9 @@ use OPNsense\Base\UserException;
 use OPNsense\Core\Backend;
 use OPNsense\Core\Config;
 use OPNsense\Interfaces\Vlan;
+use OPNsense\InversaPanel\Approval;
+use OPNsense\InversaPanel\Extras;
+use OPNsense\InversaPanel\Integration;
 use OPNsense\InversaPanel\InversaPanel;
 use OPNsense\InversaPanel\Network;
 use OPNsense\InversaPanel\Rollback;
@@ -22,6 +25,42 @@ use OPNsense\InversaPanel\Rollback;
  */
 class NetworkController extends ApiControllerBase
 {
+    /**
+     * what Inversa Panel itself keeps about a network: colour, isolation, speed limit, approval of new devices
+     * @param array $item the form of the network; only what it contains is changed
+     * @param array $internal keys of the internal networks
+     */
+    private static function networkSettings(InversaPanel $mdl, $key, array $item, array $internal)
+    {
+        $flag = fn($value) => !empty($value) && $value !== 'false';
+        $node = $mdl->networkNode($key, true);
+        if (isset($item['color'])) {
+            if (!preg_match('/^#[0-9A-Fa-f]{6}$/', (string)$item['color'])) {
+                throw new \InvalidArgumentException('invalid colour');
+            }
+            $node->color->setValue((string)$item['color']);
+        }
+        if (isset($item['limit'])) {
+            $node->limit->setValue($flag($item['limit']) ? '1' : '0');
+            foreach (['down', 'up'] as $dir) {
+                $mbit = (int)($item[$dir] ?? 0);
+                if ($flag($item['limit']) && ($mbit < 1 || $mbit > 10000)) {
+                    throw new \InvalidArgumentException('speed limit: 1 to 10000 Mbit/s');
+                }
+                if ($mbit >= 1 && $mbit <= 10000) {
+                    $node->$dir->setValue((string)$mbit);
+                }
+            }
+        }
+        if (isset($item['approval'])) {
+            $node->approval->setValue($flag($item['approval']) ? '1' : '0');
+        }
+        if (isset($item['isolated'])) {
+            $reach = array_values(array_intersect(is_array($item['reach'] ?? null) ? $item['reach'] : [], $internal));
+            $mdl->setIsolation($key, $flag($item['isolated']), $reach, $internal);
+        }
+    }
+
     public function getAction()
     {
         $state = (new Network())->state(new InversaPanel());
@@ -64,6 +103,9 @@ class NetworkController extends ApiControllerBase
         $mdl = new InversaPanel();
         $vlans = new Vlan();
         $keys = [];
+        /* the internal networks there are, for "isolated from the others" */
+        $internal = array_column($net->state($mdl)['networks'], 'key');
+        $approvalBefore = $mdl->getApprovalInterfaces();
         try {
             if (is_array($wan)) {
                 $keys = array_merge($keys, $net->setWan($wan, $vlans));
@@ -74,40 +116,19 @@ class NetworkController extends ApiControllerBase
                 }
                 $key = $net->addNetwork($item, $vlans);
                 $keys[] = $key;
-                $node = $mdl->networks->network->Add();
-                $node->interface->setValue($key);
-                $node->kind->setValue((string)($item['kind'] ?? 'home'));
+                $node = $mdl->networkNode($key, true);
                 $node->created->setValue('1');
                 $mdl->general->interfaces->setValue(implode(',', array_unique(array_merge($mdl->getProtectedInterfaces(), [$key]))));
-                /*
-                 * safe defaults: a new network reaches the internet but no other network; home
-                 * networks may reach new IoT/camera/server networks (to use those devices)
-                 */
-                $kind = (string)($item['kind'] ?? 'home');
-                $kinds = [];
-                foreach ($mdl->networks->network->iterateItems() as $n) {
-                    $kinds[(string)$n->interface] = (string)$n->kind;
-                }
-                foreach ($mdl->getProtectedInterfaces() as $other) {
-                    if ($other === $key) {
-                        continue;
-                    }
-                    $otherHome = ($kinds[$other] ?? 'home') === 'home';
-                    foreach ([[$key, $other, false], [$other, $key, $otherHome && in_array($kind, ['iot', 'camera', 'server'])]] as $pair) {
-                        $rule = $mdl->access->rule->Add();
-                        $rule->from->setValue($pair[0]);
-                        $rule->to->setValue($pair[1]);
-                        $rule->allow->setValue($pair[2] ? '1' : '0');
-                    }
-                }
-                $rule = $mdl->access->rule->Add();
-                $rule->from->setValue($key);
-                $rule->to->setValue('wan');
-                $rule->allow->setValue('1');
+                /* a new network is kept apart from the others unless said otherwise; it always reaches the internet */
+                $item['isolated'] = $item['isolated'] ?? true;
+                self::networkSettings($mdl, $key, $item, $internal);
+                $mdl->setAccess($key, 'wan', true);
+                $internal[] = $key;
             }
             foreach (is_array($update) ? $update : [] as $key => $item) {
                 if (is_array($item) && preg_match('/^(lan|opt[0-9]+)$/', (string)$key)) {
                     $net->updateNetwork((string)$key, $item);
+                    self::networkSettings($mdl, (string)$key, $item, $internal);
                     $keys[] = (string)$key;
                 }
             }
@@ -140,6 +161,11 @@ class NetworkController extends ApiControllerBase
                 throw new \InvalidArgumentException(implode("\n", $messages));
             }
             $vlans->serializeToConfig();
+            /* networks that just started to ask for approval: the devices already there keep working */
+            Approval::approveExisting($mdl, array_diff($mdl->getApprovalInterfaces(), $approvalBefore));
+            /* what follows from the settings of a network: the alias of approved devices, the speed limits */
+            (new Integration($mdl))->syncAlias()->serializeToConfig();
+            Extras::syncShaper($mdl)->serializeToConfig(false, true);
             /*
              * Inversa Panel's own values here are set by this code, not by the user; its interface field
              * caches the interface list from before this request (a new optN would look invalid)
@@ -153,6 +179,7 @@ class NetworkController extends ApiControllerBase
         }
 
         $net->apply($keys);
+        Extras::applyShaper();
         $state = Rollback::arm($backup);
         return ['status' => 'confirm', 'remaining' => $state['deadline'] - time()];
     }

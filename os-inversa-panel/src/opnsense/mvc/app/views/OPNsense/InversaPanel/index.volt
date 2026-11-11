@@ -14,7 +14,6 @@
 <script src="/ui/js/inversapanel/views/sched.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/views/pf.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/views/vpn.js?v={{ inversapanel_version }}"></script>
-<script src="/ui/js/inversapanel/views/guest.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/views/dns.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/views/geo.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/views/ips.js?v={{ inversapanel_version }}"></script>

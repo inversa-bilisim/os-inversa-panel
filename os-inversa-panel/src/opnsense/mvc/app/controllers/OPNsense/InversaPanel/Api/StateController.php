@@ -22,6 +22,10 @@ class StateController extends ApiControllerBase
     public function getAction()
     {
         $mdl = new InversaPanel();
+        if ($mdl->migrateNetworks()) {
+            $mdl->serializeToConfig(false, true);
+            \OPNsense\Core\Config::getInstance()->save();
+        }
 
         $devices = [];
         foreach ($mdl->devices->device->iterateItems() as $device) {
@@ -48,7 +52,7 @@ class StateController extends ApiControllerBase
             if ($key === 'wan') {
                 continue;
             }
-            $interfaces[] =['key' => $key, 'name' => $option['value'], 'selected' => !empty($option['selected'])];
+            $interfaces[] = ['key' => $key, 'name' => $option['value'], 'selected' => !empty($option['selected']), 'color' => $mdl->networkColor($key)];
         }
 
         $apps = [];
