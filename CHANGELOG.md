@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 (2026-11-12)
+
+- Settings › About: **Check for an update** asks GitHub for the latest release, only when the button is pressed. A newer version is shown with its release notes and can be installed with one more button.
+- Before the installation the OPNsense configuration and the panel's records are copied to `/var/db/inversapanel-update/backup`. The checksum of the downloaded package is compared with the one GitHub publishes; a package that does not match is not installed.
+- After the installation the page says what was checked: the installed version, every setting of the panel that was there before, the panel's records, and that the new code loads. What is missing is put back from the backup.
+- Versions up to 1.2.0 have no such button: update them once more with the install command.
+- The texts are in Turkish and English; in the other languages they show in English for now.
+
 ## 1.2.0 (2026-11-12)
 
 - Settings › Notifications: a Telegram bot tells a chat what happened: a new device, attack alerts, VPN connections, the internet connection going down and coming back, failed logins. Events are collected once a minute and sent as one message; a message that could not be sent is kept and sent later. The firewall only sends, it takes no commands from Telegram.

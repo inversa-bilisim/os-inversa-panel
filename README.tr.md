@@ -104,7 +104,7 @@ Ardından OPNsense menüsünde **Inversa**'yı ya da `https://<güvenlik duvarı
 
 **Yeni kurulmuş bir OPNsense öneririz.** Panel, yapılandırılmış bir güvenlik duvarına da kurulabilir ve mevcut ayarlara dokunmaz; bir kısmını olduğu gibi kullanır (ağlar, sabit adresler, basit port yönlendirmeleri, yerel adlar); OPNsense'te yapılmış güvenlik duvarı kuralları, NAT, VPN bağlantıları ve servisler panelin yanında çalışmaya devam eder ve yine OPNsense'in kendi sayfalarından yönetilir. *Ayarlar › Mevcut ayarlar* sayfası panelin ne bulduğunu, neyin OPNsense'te kaldığını ve neyin bir özelliği etkileyebileceğini (başka bir DHCP sunucusu, engel listeleri, zaten çalışan saldırı tespiti, elle giden NAT) listeler. Panel yeni kurulumlarda geliştirildi ve denendi; çalışan bir güvenlik duvarına kuracaksanız önce yapılandırma yedeği indirin (*Sistem › Yapılandırma › Yedekler*).
 
-- **Güncelleme:** aynı komutu yeniden çalıştırın. Ayarlar ve kayıtlar korunur.
+- **Güncelleme:** 1.3.0'dan itibaren Ayarlar › Hakkımızda › **Güncellemeyi denetle** (GitHub'a yalnızca basılınca bakar; önce yedek alır, sonra ayarları denetler). Ya da aynı komutu yeniden çalıştırın. Ayarlar ve kayıtlar korunur.
 - **Kaldırma:** `pkg delete os-inversa-panel`. Paneli, güvenlik duvarı kurallarını ve kayıtlarını (veri kullanımı, olaylar, günlükler) kaldırır. OPNsense yapılandırmasına yazdıkları (takma adlar, engelleme listesi ilkesi, VPN bağlantıları, ağlar) kalır; onların da gitmesini istiyorsanız paketi kaldırmadan önce *Ayarlar › Inversa Panel'in eklediklerini kaldır*'ı çalıştırın.
 
 Paket OPNsense 26.7 için derlenir. Bütün sürümler ve dosyaları [sürümler sayfasında](https://github.com/inversa-bilisim/os-inversa-panel/releases), değişiklikler [değişiklik günlüğünde](CHANGELOG.md) yer alır.

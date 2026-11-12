@@ -659,6 +659,9 @@ header.page-content-head { display: none; }
 .inversapanel .k-about-support { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
 .inversapanel .k-about-support b { display: block; font-weight: 600; }
 .inversapanel .k-about-support .k-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: 13px; }
+.inversapanel .k-up { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--k-line-2); }
+.inversapanel .k-up-new { display: flex; flex-direction: column; gap: 8px; }
+.inversapanel .k-up-notes { max-height: 220px; overflow-y: auto; white-space: pre-wrap; }
 .inversapanel .k-about-pre { margin: 0; padding: 10px 12px; background: var(--k-soft); border: 1px solid var(--k-line); border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; color: var(--k-text-2); white-space: pre-wrap; overflow-wrap: anywhere; }
 .inversapanel .k-about-part { flex: 0 0 110px; font-weight: 600; }
 .inversapanel .k-about-co { display: flex; flex-direction: column; gap: 12px; }

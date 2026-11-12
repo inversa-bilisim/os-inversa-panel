@@ -22,9 +22,66 @@
     ];
 
     var A = { data: null, copied: false };
+    /* update: what GitHub said (check), how the running or last update goes (status) */
+    var U = { check: null, checking: false, status: null, timer: null, wasRunning: false, asked: null };
 
     function load() {
-        return h.api('GET', '/api/inversapanel/state/about').then(function (data) { A.data = data; }, function () { A.data = {}; });
+        return h.api('GET', '/api/inversapanel/state/about').then(function (data) { A.data = data; }, function () { A.data = {}; })
+            .then(function () { return poll(); });
+    }
+
+    /* while an update runs the page asks how it goes; the firewall's web server may not answer for a moment */
+    function poll() {
+        return h.api('GET', '/api/inversapanel/update/status').then(function (status) {
+            status = status || { state: 'none' };
+            /* just asked for: until the update that was started shows up, the old answer does not count */
+            if (U.asked) {
+                var fresh = status.state !== 'none' && (status.started || 0) !== U.asked.before;
+                if (!fresh && Date.now() - U.asked.at < 30000) { return; }
+                U.asked = null;
+            }
+            U.status = status;
+            if (status.state === 'running') { U.wasRunning = true; }
+            /* the update went through while this page was open: load the new version of the page */
+            if (status.state === 'done' && U.wasRunning) {
+                U.wasRunning = false;
+                setTimeout(function () { window.location.reload(); }, 2500);
+            }
+        }, function () { /* asked again on the next round */ }).then(function () {
+            var busy = !!U.asked || (U.status && U.status.state === 'running');
+            if (busy && !U.timer) { U.timer = setInterval(function () { poll().then(function () { h.redraw('main'); }); }, 2000); }
+            if (!busy && U.timer) { clearInterval(U.timer); U.timer = null; }
+        });
+    }
+
+    function updateBox(T) {
+        var s = U.status || {}, c = U.check, html = '';
+        var note = function (kind, text) { return '<div class="k-note ' + kind + '">' + h.esc(text) + '</div>'; };
+        if (s.state === 'running') {
+            return '<div class="k-up">' + note('info', T.upRunning(s.to || '…') + ' ' + (T.upSteps[s.step] || '')) + '</div>';
+        }
+        if (s.state === 'done') {
+            var lines = [T.upDone(s.from, s.to)];
+            (s.restored || []).forEach(function (k) { lines.push(T.upRestored[k] || k); });
+            (s.problems || []).forEach(function (k) { lines.push(T.upProblems[k] || k); });
+            if (!(s.restored || []).length && !(s.problems || []).length) { lines.push(T.upAllThere); }
+            html += note((s.problems || []).length ? 'warn' : 'ok', lines.join(' '));
+        } else if (s.state === 'failed') {
+            html += note('warn', T.upFailed + ' ' + (T.upErrors[s.error] || s.error || '') + (s.detail ? ' (' + s.detail + ')' : ''));
+        }
+        if (c && c.error) {
+            html += note('warn', T.upErrors[c.error] || c.error);
+        } else if (c && c.newer) {
+            html += '<div class="k-up-new"><b>' + h.esc(T.upNew(c.latest)) + '</b>' +
+                (c.notes ? '<pre class="k-about-pre k-up-notes">' + h.esc(c.notes) + '</pre>' : '') +
+                '<span class="muted small">' + h.esc(T.upBackupNote) + '</span></div>';
+        } else if (c) {
+            html += note('ok', T.upCurrent(c.installed));
+        }
+        html += '<div class="k-btns">' + (c && c.newer ?
+            '<button type="button" class="k-btn primary" data-act="about:install">' + h.esc(T.upInstall(c.latest)) + '</button>' : '') +
+            '<button type="button" class="k-btn" data-act="about:check"' + (U.checking ? ' disabled' : '') + '>' + h.esc(U.checking ? T.upChecking : T.upCheck) + '</button></div>';
+        return '<div class="k-up">' + html + '</div>';
     }
 
     /* what somebody helping needs to know; no addresses of devices, keys or passwords */
@@ -76,6 +133,7 @@
                 kv(T.aboutRunsOn, h.esc(A.data ? (d.product || 'OPNsense') + ' ' + (d.product_version || '') : '…')) +
                 kv(T.aboutLicense, link(REPO + '/blob/main/LICENSE', 'BSD-2-Clause')) +
                 kv(T.aboutSource, link(REPO, 'github.com/inversa-bilisim/os-inversa-panel')) + '</div>' +
+                updateBox(T) +
                 '<div class="muted small">© 2026 Inversa Bilişim</div></section>' +
 
                 '<section class="k-card k-about-parts"><h2>' + h.esc(T.aboutBuiltOn) + '</h2><div class="muted" style="font-size:14px">' + h.esc(T.aboutBuiltOnSub) + '</div><div>' +
@@ -94,6 +152,22 @@
         },
         act: function (name) {
             if (name === 'copy') { copy(supportText()); }
+            if (name === 'check' && !U.checking) {
+                U.checking = true;
+                h.api('POST', '/api/inversapanel/update/check', {}).then(function (res) {
+                    U.check = res && res.status === 'ok' ? res : { error: (res && res.error) || 'unreachable' };
+                }, function () { U.check = { error: 'unreachable' }; }).then(function () { U.checking = false; h.redraw('main'); });
+                return 'main';
+            }
+            if (name === 'install' && U.check && U.check.newer && window.confirm(h.T().upConfirm(U.check.latest))) {
+                U.asked = { at: Date.now(), before: (U.status && U.status.started) || 0 };
+                U.status = { state: 'running', step: 'check', to: U.check.latest };
+                U.wasRunning = true;
+                U.check = null;
+                h.api('POST', '/api/inversapanel/update/install', {}).then(function () { return poll(); }, function () { return poll(); })
+                    .then(function () { h.redraw('main'); });
+                return 'main';
+            }
             return null;
         }
     });

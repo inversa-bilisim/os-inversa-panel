@@ -2,7 +2,7 @@ rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json /var/lib/php/tmp
 if [ -z "${PKG_UPGRADE}" ]; then
     # the panel's own records (data usage, events, logs) go with the package;
     # what it wrote into the OPNsense configuration stays until it is removed there
-    rm -rf /var/db/inversapanel
+    rm -rf /var/db/inversapanel /var/db/inversapanel-update
     if [ -x /usr/local/sbin/configctl ]; then
         /usr/local/sbin/configctl cron restart > /dev/null 2>&1 || true
         # the panel's firewall rules end with the package
