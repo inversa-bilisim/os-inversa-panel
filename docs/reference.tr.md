@@ -41,11 +41,11 @@ os-inversa-panel/                       opnsense/plugins deposundaki bir eklenti
   Makefile, pkg-descr
   src/etc/inc/plugins.inc.d/inversapanel.inc        otomatik güvenlik duvarı kuralları (inversapanel_firewall)
   src/opnsense/mvc/app/models/OPNsense/InversaPanel model (InversaPanel.xml), menü, ACL
-  src/opnsense/mvc/app/library/OPNsense/InversaPanel Catalog, Integration (Uygula), Network, Rollback, PortForward, Vpn (WireGuard), Ipsec (siteden siteye), Ips (Suricata), Dns (yerel adlar, DNS sunucuları), Overview (genel bakış, olaylar), Extras (GeoIP, hız sınırı)
+  src/opnsense/mvc/app/library/OPNsense/InversaPanel Catalog, Integration (Uygula), Network, Rollback, PortForward, Vpn (WireGuard), Ipsec (siteden siteye), Ips (Suricata), Dns (yerel adlar, DNS sunucuları), Scan (mevcut ayarlar), Approval (yeni cihaz onayı), Overview (genel bakış, olaylar), Extras (GeoIP, hız sınırı)
   src/opnsense/mvc/app/controllers/OPNsense/InversaPanel  sayfa + API (state, devices, dashboard, service, network, portforward, vpn, geo, ips, logs)
   src/opnsense/mvc/app/views/OPNsense/InversaPanel  index.volt
   src/opnsense/www/js/inversapanel/app.js           çekirdek: durum, taslak, değişiklik listesi, menü ve alt sayfalar, onay sayacı
-  src/opnsense/www/js/inversapanel/views/*.js       net (İnternet bağlantısı, Yerel ağlar, Fiziksel portlar), sched, pf, vpn, geo, ips, dns, logs (Kayıtlar), about (Hakkımızda) sayfaları
+  src/opnsense/www/js/inversapanel/views/*.js       net (İnternet bağlantısı, Yerel ağlar, Fiziksel portlar), sched, pf, vpn, geo, ips, dns, logs (Kayıtlar), scan (Mevcut ayarlar), about (Hakkımızda) sayfaları
   src/opnsense/www/js/inversapanel/i18n/{tr,en,de,fr,es,it}.js  dil dosyaları
   src/opnsense/www/css/inversapanel/inversapanel.css
   src/opnsense/scripts/OPNsense/InversaPanel        hosts.py, killstates.py, dnsbl.sh, ips.sh, schedule.php, watch.php ve logs.py (her dakika), rollback.php, nettest.py, dnscheck.py, geoip_dbip.py

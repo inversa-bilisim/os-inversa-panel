@@ -124,7 +124,7 @@ The complete list of limits, and what each page writes where, is in the [referen
 
 ## Feedback
 
-Bugs and requests: [GitHub issues](https://github.com/inversa-bilisim/os-inversa-panel/issues). Contact: yazilim@inversa.com.tr · [inversa.com.tr](https://inversa.com.tr)
+Bugs and requests: [GitHub issues](https://github.com/inversa-bilisim/os-inversa-panel/issues). Want to help? See [CONTRIBUTING.md](CONTRIBUTING.md). Contact: yazilim@inversa.com.tr · [inversa.com.tr](https://inversa.com.tr)
 
 ## Licence
 

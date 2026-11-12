@@ -41,11 +41,11 @@ os-inversa-panel/                       same layout as a plugin folder in the op
   Makefile, pkg-descr
   src/etc/inc/plugins.inc.d/inversapanel.inc        automatic firewall rules (inversapanel_firewall)
   src/opnsense/mvc/app/models/OPNsense/InversaPanel model (InversaPanel.xml), menu, ACL
-  src/opnsense/mvc/app/library/OPNsense/InversaPanel Catalog, Integration (Apply), Network, Rollback, PortForward, Vpn (WireGuard), Ipsec (site to site), Ips (Suricata), Dns (local names, DNS servers), Overview (overview, events), Extras (GeoIP, speed limit)
+  src/opnsense/mvc/app/library/OPNsense/InversaPanel Catalog, Integration (Apply), Network, Rollback, PortForward, Vpn (WireGuard), Ipsec (site to site), Ips (Suricata), Dns (local names, DNS servers), Overview (overview, events), Scan (existing settings), Approval (new devices), Extras (GeoIP, speed limit)
   src/opnsense/mvc/app/controllers/OPNsense/InversaPanel  page + API (state, devices, dashboard, service, network, portforward, vpn, geo, ips, logs)
   src/opnsense/mvc/app/views/OPNsense/InversaPanel  index.volt
   src/opnsense/www/js/inversapanel/app.js           core: state, draft, list of changes, menu and sub pages, confirmation countdown
-  src/opnsense/www/js/inversapanel/views/*.js       the net (Internet connection, Local networks, Physical ports), sched, pf, vpn, geo, ips, dns, logs (Logs), about (About) pages
+  src/opnsense/www/js/inversapanel/views/*.js       the net (Internet connection, Local networks, Physical ports), sched, pf, vpn, geo, ips, dns, logs (Logs), scan (Existing settings), about (About) pages
   src/opnsense/www/js/inversapanel/i18n/{tr,en,de,fr,es,it}.js  language files
   src/opnsense/www/css/inversapanel/inversapanel.css
   src/opnsense/scripts/OPNsense/InversaPanel        hosts.py, killstates.py, dnsbl.sh, ips.sh, schedule.php, watch.php and logs.py (every minute), rollback.php, nettest.py, dnscheck.py, geoip_dbip.py

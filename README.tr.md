@@ -124,7 +124,7 @@ Sınırların tam listesi ve her sayfanın nereye ne yazdığı [başvuru belges
 
 ## Geri bildirim
 
-Hata ve istekler: [GitHub issues](https://github.com/inversa-bilisim/os-inversa-panel/issues). İletişim: yazilim@inversa.com.tr · [inversa.com.tr](https://inversa.com.tr)
+Hata ve istekler: [GitHub issues](https://github.com/inversa-bilisim/os-inversa-panel/issues). Katkıda bulunmak için: [CONTRIBUTING.md](CONTRIBUTING.md) (İngilizce). İletişim: yazilim@inversa.com.tr · [inversa.com.tr](https://inversa.com.tr)
 
 ## Lisans
 
