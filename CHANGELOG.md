@@ -5,6 +5,7 @@
 - Settings › About: **Check for an update** asks GitHub for the latest release, only when the button is pressed. A newer version is shown with its release notes and can be installed with one more button.
 - Before the installation the OPNsense configuration and the panel's records are copied to `/var/db/inversapanel-update/backup`. The checksum of the downloaded package is compared with the one GitHub publishes; a package that does not match is not installed.
 - After the installation the page says what was checked: the installed version, every setting of the panel that was there before, the panel's records, and that the new code loads. What is missing is put back from the backup.
+- Settings › Notifications: a new switch, **New version**, off by default. When it is on, GitHub is asked once a day and a new version is announced by Telegram, once per version; installing it stays with you.
 - Versions up to 1.2.0 have no such button: update them once more with the install command.
 - The texts are in Turkish and English; in the other languages they show in English for now.
 

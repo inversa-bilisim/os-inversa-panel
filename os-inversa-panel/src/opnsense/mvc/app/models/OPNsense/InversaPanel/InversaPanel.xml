@@ -426,6 +426,10 @@
                 <Default>1</Default>
                 <Required>Y</Required>
             </logins>
+            <updates type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </updates>
         </notify>
         <!--
             VPN connections Inversa Panel manages. A WireGuard one (remote access or site to site) refers to

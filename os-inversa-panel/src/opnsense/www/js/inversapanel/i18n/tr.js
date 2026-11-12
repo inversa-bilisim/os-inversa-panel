@@ -79,7 +79,8 @@ window.InversaPanelI18n.tr = {
         attacks: ['Saldırı uyarıları', 'Saldırı önlemenin uyarıları, dakikada bir özet olarak. İnternetten gelip güvenlik duvarının zaten reddettiği denemeler bildirilmez.'],
         vpn: ['VPN bağlantıları', 'Uzaktan bağlanan cihazlar ve siteden siteye bağlantının kurulması ya da kopması.'],
         internet: ['İnternet bağlantısı', 'Bağlantının kopması ve geri gelmesi, güvenlik duvarının yeniden başlaması. Kopma haberi bağlantı geri gelince ulaşır.'],
-        logins: ['Hatalı giriş denemeleri', 'Güvenlik duvarının arayüzüne yanlış parolayla giriş denemesi.']
+        logins: ['Hatalı giriş denemeleri', 'Güvenlik duvarının arayüzüne yanlış parolayla giriş denemesi.'],
+        updates: ['Yeni sürüm', 'Günde bir kez GitHub’a bakılır; Inversa Panel’in yeni sürümü çıktıysa haber verilir. Kurulum yine Hakkımızda sayfasından, siz isteyince yapılır.']
     },
     ntSave: 'Kaydet', ntTest: 'Kaydet ve deneme mesajı gönder', ntSaved: 'Bildirim ayarları kaydedildi.', ntTestSent: 'Deneme mesajı gönderildi; Telegram’a bakın.',
     ntFailed: 'Olmadı', ntLoadFailed: 'Bildirim ayarları okunamadı.',

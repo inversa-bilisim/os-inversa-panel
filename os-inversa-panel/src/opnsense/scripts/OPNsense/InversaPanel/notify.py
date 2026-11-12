@@ -20,6 +20,7 @@ import json
 import os
 import sqlite3
 import ssl
+import subprocess
 import sys
 import time
 import urllib.error
@@ -36,6 +37,7 @@ API = os.environ.get('INVERSAPANEL_TELEGRAM_API', 'https://api.telegram.org')
 RECENT = 900        # events older than this are not news any more
 KEEP_QUEUE = 6 * 3600
 MAX_QUEUE = 40
+UPDATE_EVERY = 86400  # the look for a newer release, when it is switched on
 MAX_TEXT = 3500     # Telegram takes 4096 characters
 
 TEXT = {
@@ -55,6 +57,7 @@ TEXT = {
         'times': '×{n}',
         'more': '… and {n} more',
         'test': 'Test message: notifications from Inversa Panel reach this chat.',
+        'update': 'Inversa Panel {new} is out (installed: {old}). Update: Settings › About',
     },
     'tr': {
         'device_wait': 'Yeni cihaz onay bekliyor: {dev} ({net})',
@@ -72,6 +75,7 @@ TEXT = {
         'times': '×{n}',
         'more': '… ve {n} tane daha',
         'test': 'Deneme mesajı: Inversa Panel bildirimleri bu sohbete ulaşıyor.',
+        'update': 'Inversa Panel {new} yayımlandı (kurulu sürüm: {old}). Güncelleme: Ayarlar › Hakkımızda',
     },
 }
 
@@ -87,7 +91,7 @@ SWITCH = {
 def settings():
     """what the page stored, plus the names needed to word a message"""
     out = {'enabled': False, 'token': '', 'chat': '', 'lang': 'en', 'host': 'OPNsense', 'names': {}, 'nets': {},
-           'devices': True, 'attacks': True, 'vpn': False, 'internet': True, 'logins': True}
+           'devices': True, 'attacks': True, 'vpn': False, 'internet': True, 'logins': True, 'updates': False}
     try:
         root = ET.parse(CONFIG).getroot()
     except (OSError, ET.ParseError):
@@ -97,7 +101,7 @@ def settings():
         return out
     node = panel.find('notify')
     if node is not None:
-        for key in ('enabled', 'devices', 'attacks', 'vpn', 'internet', 'logins'):
+        for key in ('enabled', 'devices', 'attacks', 'vpn', 'internet', 'logins', 'updates'):
             value = node.findtext(key)
             if value is not None and value != '':
                 out[key] = value == '1'
@@ -251,6 +255,26 @@ def new_attacks(cfg, state, first, now):
     return [(now, '\n'.join(lines))]
 
 
+def new_version(cfg, state, now):
+    """once a day, only when switched on: is there a newer release on GitHub; each version is told once"""
+    if not cfg['enabled'] or not cfg['updates'] or now - state.get('update_checked', 0) < UPDATE_EVERY:
+        return []
+    state['update_checked'] = now
+    try:
+        out = subprocess.run([os.path.join(os.path.dirname(os.path.abspath(__file__)), 'update.py'), 'check'],
+                             capture_output=True, text=True, timeout=60)
+        answer = json.loads(out.stdout)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return []
+    if answer.get('error') == 'unreachable':
+        # asked again in an hour, not tomorrow
+        state['update_checked'] = now - UPDATE_EVERY + 3600
+    if not answer.get('newer') or answer.get('latest') == state.get('update_told'):
+        return []
+    state['update_told'] = answer['latest']
+    return [(now, TEXT[cfg['lang']]['update'].format(new=answer['latest'], old=answer.get('installed', '?')))]
+
+
 def run():
     cfg = settings()
     now = int(time.time())
@@ -262,6 +286,7 @@ def run():
     queue = [item for item in state.get('queue', []) if now - item[0] < KEEP_QUEUE] if ready else []
     queue += new_events(cfg, state, first, now)
     queue += new_attacks(cfg, state, first, now)
+    queue += new_version(cfg, state, now)
     queue = sorted(queue, key=lambda item: item[0])[-MAX_QUEUE:]
     if ready and queue:
         text = 'Inversa Panel · %s\n' % cfg['host']

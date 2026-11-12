@@ -79,7 +79,8 @@ window.InversaPanelI18n.en = {
         attacks: ['Attack alerts', 'Alerts of attack protection, as a summary once a minute. Attempts from the internet that the firewall rejects anyway are not told.'],
         vpn: ['VPN connections', 'Devices connecting remotely, and a site to site connection coming up or going down.'],
         internet: ['Internet connection', 'The connection going down and coming back, the firewall restarting. News of an outage arrives when the connection is back.'],
-        logins: ['Failed logins', 'An attempt to log in to the firewall\'s interface with a wrong password.']
+        logins: ['Failed logins', 'An attempt to log in to the firewall\'s interface with a wrong password.'],
+        updates: ['New version', 'GitHub is asked once a day; you are told when a new version of Inversa Panel is out. Installing it stays with you, on the About page.']
     },
     ntSave: 'Save', ntTest: 'Save and send a test message', ntSaved: 'Notification settings saved.', ntTestSent: 'Test message sent; look at Telegram.',
     ntFailed: 'That did not work', ntLoadFailed: 'The notification settings could not be read.',
