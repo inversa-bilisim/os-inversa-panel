@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/InversaPanel</mount>
-    <version>1.3.2</version>
+    <version>1.3.3</version>
     <description>Inversa Panel - easy management</description>
     <items>
         <general>

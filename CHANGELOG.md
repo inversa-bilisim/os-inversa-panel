@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.3 (2026-11-12)
+
+- Settings › About: the e-mail address is a link in the same type as the other rows; the list of the software the panel is built on takes less room.
+
 ## 1.3.2 (2026-11-12)
 
 - Settings › About: what the update check and the update say ("up to date", "updated", an error) shows at the top of the page and goes after ten seconds. A new version stays in the card with its notes and its button; so does a warning about something that was put back or could not be checked.
