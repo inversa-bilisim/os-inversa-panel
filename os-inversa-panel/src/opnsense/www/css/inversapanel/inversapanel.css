@@ -58,7 +58,7 @@
 .inversapanel .k-half { flex: 1 1 420px; min-width: 0; }
 
 /* header */
-.inversapanel .k-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.inversapanel .k-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; min-height: 64px; }
 .inversapanel .k-brand { display: flex; align-items: center; gap: 12px; }
 /* the mark already is a rounded tile in the accent colour (img/inversapanel/logo.png, 128 px for sharp high-density screens) */
 .inversapanel .k-logo { width: 44px; height: 44px; flex: none; background: url(../../img/inversapanel/logo.png) center / contain no-repeat; }
@@ -85,7 +85,7 @@
 /* pending changes, inside the header between brand and status */
 .inversapanel .k-pending-slot { flex: 1 1 320px; min-width: 0; display: flex; justify-content: center; }
 .inversapanel .k-pending-slot:empty { flex-basis: 0; }
-.inversapanel .k-pending-inline { display: flex; align-items: center; gap: 10px; max-width: 560px; min-width: 0; text-align: left; background: var(--k-warn-soft); border: 1px solid var(--k-warn-line); color: var(--k-warn-text); border-radius: 12px; padding: 6px 6px 6px 12px; transition: opacity .6s ease; }
+.inversapanel .k-pending-inline { display: flex; align-items: center; gap: 10px; max-width: 700px; min-width: 0; text-align: left; background: var(--k-warn-soft); border: 1px solid var(--k-warn-line); color: var(--k-warn-text); border-radius: 12px; padding: 6px 6px 6px 12px; transition: opacity .6s ease; }
 .inversapanel .k-pending-inline.ok { background: #EAF6EE; border-color: #A9D8B8; color: var(--k-ok-text); padding-right: 12px; }
 .inversapanel .k-pending-inline.err { background: #FDECEC; border-color: #F3B4B4; color: #7F1D1D; }
 .inversapanel .k-pending-inline.fade { opacity: 0; }
@@ -94,7 +94,7 @@
 .inversapanel .k-pending-inline .k-icon-btn { width: 32px; height: 32px; background: transparent; color: inherit; }
 .inversapanel .k-pending-inline svg { flex: none; }
 .inversapanel .k-pending-inline .k-pending-text { display: flex; flex-direction: column; align-items: flex-start; text-align: left; min-width: 0; flex: 1 1 auto; line-height: 1.25; }
-.inversapanel .k-pending-wrap { position: relative; min-width: 0; max-width: 680px; }
+.inversapanel .k-pending-wrap { position: relative; min-width: 0; max-width: 700px; }
 .inversapanel .k-btn.ghost { border-color: transparent; background: transparent; color: var(--k-warn-text); text-decoration: underline; text-underline-offset: 3px; }
 /* "show changes" list opens over the page, it does not push content */
 .inversapanel .k-changes { position: absolute; top: calc(100% + 8px); left: 0; right: 0; min-width: 340px; z-index: 1050; background: #fff; color: var(--k-text); text-align: left; border: 1px solid var(--k-line); border-radius: 12px; box-shadow: 0 12px 32px rgba(16, 24, 40, .18); max-height: 380px; overflow: auto; }
@@ -108,8 +108,9 @@
 .inversapanel .k-ch-diff .to { color: var(--k-accent); font-weight: 600; }
 .inversapanel .k-ch-diff .add { color: #15803D; font-weight: 600; }
 .inversapanel .k-ch-diff .del { color: #9A3B0A; font-weight: 600; text-decoration: line-through; }
-.inversapanel .k-pending-inline .k-pending-text b { font-weight: 600; white-space: nowrap; }
-.inversapanel .k-pending-inline .k-pending-text span { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inversapanel .k-pending-inline .k-pending-text b { font-weight: 600; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.inversapanel .k-pending-inline .k-pending-text span { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.inversapanel .k-pending-inline .k-btn { flex: none; }
 .inversapanel .k-btn.small { min-height: 36px; padding: 0 12px; font-size: 13px; flex: none; }
 
 /* language dropdown: grows with the number of languages without widening the header */
@@ -361,8 +362,11 @@
 .inversapanel .k-switch[disabled] { opacity: .5; cursor: not-allowed; }
 .inversapanel .k-sep { height: 1px; background: var(--k-line-2); }
 .inversapanel .k-count.warn { background: var(--k-warn); color: #fff; }
-.inversapanel .k-wait { align-items: center; }
-.inversapanel .k-wait b { display: block; }
+.inversapanel .k-subtabs .k-wait { align-items: center; margin: 0 0 0 auto; padding: 0 6px 0 12px; min-height: 40px; min-width: 0; flex: 1 1 240px; max-width: max-content; border-radius: 10px; }
+.inversapanel .k-wait-text { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex: 1 1 auto; font-size: 13px; }
+.inversapanel .k-wait-text b { white-space: nowrap; }
+.inversapanel .k-wait-text span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inversapanel .k-wait .k-btn { flex: none; min-height: 30px; }
 .inversapanel table.k-matrix { border-collapse: separate; border-spacing: 6px; margin: 0; }
 .inversapanel .k-matrix th { font-size: 13px; font-weight: 700; padding: 4px 8px; white-space: nowrap; text-align: left; }
 .inversapanel .k-matrix thead th { text-align: center; }

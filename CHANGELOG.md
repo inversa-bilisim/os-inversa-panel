@@ -7,6 +7,7 @@
 - Devices: **Wake up** for a device that is off (Wake-on-LAN); the device must have that enabled.
 - Internet connection: **Speed test**. Download, upload and latency, measured from the firewall itself against Cloudflare's speed test servers when the button is pressed. Cloudflare refuses tests made in a row for a while (about an hour after three tests on a fast line); the page then says how long to wait.
 - Health of the firewall: a disk that is 90% full, a processor at 85 °C or more and an OPNsense update that waits are events (overview, logs); the first two also show under "needs attention". Settings › Notifications has a switch for them, on by default.
+- Nothing on the page moves down any more when a message appears: the header keeps room for "unsaved changes", and "devices are waiting for approval" stands beside the pages of Devices instead of above the list. The text of the unsaved-changes box no longer runs under its buttons.
 - Settings › Backup, a new page: download the OPNsense configuration (the panel's settings are part of it), put a backup back from a file, and the copies the firewall takes every night at 03:15 when the configuration changed (the last 7 are kept; each can be downloaded or put back).
 - Putting a configuration back restarts the firewall; the page says so, asks first and loads again when the firewall is back.
 - The texts are in Turkish and English; in the other languages they show in English for now.

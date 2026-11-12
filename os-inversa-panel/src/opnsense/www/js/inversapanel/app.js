@@ -652,7 +652,7 @@
                 var on = S.tab === key, label = esc(VIEWS[key] ? VIEWS[key].label(t) : core[key]);
                 return '<button type="button" class="k-chip' + (on ? ' on' : '') + '" data-act="tab" data-v="' + key + '"' +
                     (on ? ' aria-current="page"' : '') + '><span class="k-lbl" data-t="' + label + '">' + label + '</span></button>';
-            }).join('') + '</div>';
+            }).join('') + (groupOf(S.tab) === 'devices' ? waitingBanner() : '') + '</div>';
     }
 
     function renderBanners() {
@@ -725,6 +725,8 @@
     }
 
     function renderMain() {
+        /* what stands beside the pages (devices waiting for approval) follows the draft */
+        if (document.getElementById('k-subtabs')) { renderSubtabs(); }
         var html = '';
         if (VIEWS[S.tab]) { html = VIEWS[S.tab].render(); }
         else if (S.tab === 'devices') { html = viewDevices(); }
@@ -850,12 +852,12 @@
         };
     }
 
-    /* devices held back until approved: shown on the overview and above the device list */
+    /* devices held back until approved: said beside the pages of Devices, where it moves nothing below it */
     function waitingBanner() {
         var t = T(), n = waitingCount();
         if (!n) { return ''; }
-        return '<div class="k-banner warn k-wait" style="margin:0">' + icon(ICONS.warn, 20) +
-            '<div style="flex:1 1 auto"><b>' + esc(t.apprBanner(n)) + '</b><div>' + esc(t.apprBannerSub) + '</div></div>' +
+        return '<div class="k-banner warn k-wait" title="' + esc(t.apprBannerSub) + '">' + icon(ICONS.warn, 18) +
+            '<div class="k-wait-text"><b>' + esc(t.apprBanner(n)) + '</b><span>' + esc(t.apprBannerSub) + '</span></div>' +
             (S.tab === 'devices' && S.ui.filter === 'waiting' ? '' :
                 '<button type="button" class="k-btn small" data-act="show-waiting">' + esc(t.apprShow) + '</button>') + '</div>';
     }
@@ -1333,7 +1335,6 @@
         }).join('');
         return '<div class="k-stack">' +
             '<div><h1>' + esc(t.devTitle) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + esc(t.devSub) + '</div></div>' +
-            waitingBanner() +
             (S.hostsLoaded && S.source !== 'discovery' ? '<div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.discoveryHint) + '</span></div>' : '') +
             '<div class="k-filterbar"><label class="k-search">' + icon(ICONS.search) +
             '<input type="search" data-input="search" value="' + esc(S.ui.search) + '" placeholder="' + esc(t.search) + '" aria-label="' + esc(t.search) + '"></label>' +
