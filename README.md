@@ -92,6 +92,8 @@ pkg add https://github.com/inversa-bilisim/os-inversa-panel/releases/latest/down
 
 Then open **Inversa** in OPNsense's menu, or `https://<firewall address>/ui/inversapanel`. Nothing changes on the firewall until you switch something on in the panel.
 
+**We recommend a fresh OPNsense installation.** The panel can be installed on a firewall that is already configured and leaves the existing settings alone, but it does not take them over: rules, port forwards, VPN connections and DNS settings made in OPNsense keep working beside the panel and are still managed on OPNsense's own pages. The panel was developed and tested on fresh installations; if you install it on a working firewall, download a configuration backup first (*System › Configuration › Backups*).
+
 - **Update:** run the same command again. Settings and records are kept.
 - **Remove:** `pkg delete os-inversa-panel`. This removes the panel, its firewall rules and its records (data usage, events, logs). What it wrote into the OPNsense configuration (aliases, the blocklist policy, VPN connections, networks) stays; run *Settings › Remove what Inversa Panel added* before removing the package if you want those gone as well.
 
