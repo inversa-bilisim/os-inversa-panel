@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.2 (2026-11-12)
+
+- Settings › About: what the update check and the update say ("up to date", "updated", an error) shows at the top of the page and goes after ten seconds. A new version stays in the card with its notes and its button; so does a warning about something that was put back or could not be checked.
+- The left block of the About page is narrower.
+
 ## 1.3.1 (2026-11-12)
 
 - Settings › About, rearranged: on the left the version with the update check beside it, web site, e-mail, licence, source code and where to report; one button copies the support information and shows what was copied. On the right who makes the panel and what it is built on.
