@@ -43,7 +43,7 @@ Ekran görüntülerindeki veriler örnektir.
 - Korunan ağlarda görülen bütün cihazlar; ağı, adresi ve durumuyla. Arama ve filtreler, ad ve tür verme.
 - Tek tıkla bir cihazın internetini kesme, sabit IP verme, onay isteyen ağlarda yeni cihazları onaylama.
 - Zamanlama: seçilen cihazlar için seçilen saatlerde interneti kesme ya da uygulama engelleme.
-- Bir cihazı 30 dakika, bir saat, iki saat ya da sabaha kadar durdurma; süre bitince kendiliğinden açılır.
+- Bir cihazı 30 dakika, bir saat, iki saat ya da sabaha kadar durdurma; süre bitince kendiliğinden açılır. Kapalı bir cihazı uzaktan uyandırma (Wake-on-LAN).
 
 **Güvenlik**
 - Kategoriler (reklam ve izleyiciler, zararlı yazılım ve oltalama, yetişkin içerik, kumar, VPN ve proxy), on iki uygulama, güvenli arama ve başka DNS sunucusu kullanmaya çalışan cihazlar için "DNS'i zorla".

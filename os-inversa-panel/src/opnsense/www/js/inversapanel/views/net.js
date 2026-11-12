@@ -127,7 +127,11 @@
                     '<span class="mono muted">' + (!N.test ? '…' : (r.ok ? h.esc(String(r.ms)) + ' ms' : '—')) + '</span></div>';
             }).join('') + '</div>' +
             '<div class="k-wan-btns"><button type="button" class="k-btn" data-act="net:test"' + (N.testing ? ' disabled' : '') + '>' + h.icon(PULSE, 15) + h.esc(N.testing ? T.wanTesting : T.wanRetest) + '</button>' +
-            '<button type="button" class="k-btn" data-act="net:extip"' + (N.extip === null ? ' disabled' : '') + '>' + h.esc(T.wanExtBtn) + '</button></div>' +
+            '<button type="button" class="k-btn" data-act="net:extip"' + (N.extip === null ? ' disabled' : '') + '>' + h.esc(T.wanExtBtn) + '</button>' +
+            '<button type="button" class="k-btn" data-act="net:speed"' + (N.speeding ? ' disabled' : '') + '>' + h.esc(N.speeding ? T.wanSpeeding : T.wanSpeedBtn) + '</button></div>' +
+            /* the speed of the line, measured from the firewall; takes some twenty seconds */
+            (N.speed ? (N.speed.ok ? '<div>' + kv(T.wanDown, h.esc(String(N.speed.down)) + ' Mbit/s') + kv(T.wanUp, h.esc(String(N.speed.up)) + ' Mbit/s') + kv(T.wanPing, h.esc(String(N.speed.ping)) + ' ms') + '</div>' :
+                '<div class="k-note warn">' + h.esc(N.speed.error === 'limited' ? T.wanSpeedLimited(N.speed.wait || 60) : T.wanSpeedFailed) + '</div>') : '') +
             '<div class="muted small">' + h.esc(T.wanExtNote) + '</div></section>';
         return html;
     }
@@ -431,6 +435,11 @@
             var v = el.getAttribute('data-v'), f = N.wan;
             switch (name) {
                 case 'test': runTest(); return 'main';
+                case 'speed':
+                    N.speeding = true;
+                    h.api('POST', '/api/inversapanel/network/speed', {}).then(function (r) { N.speed = r || { ok: false }; }, function () { N.speed = { ok: false }; })
+                        .then(function () { N.speeding = false; if (h.S().tab === 'net') { h.redraw('main'); } });
+                    return 'main';
                 case 'extip':
                     /* null: asked, no answer yet */
                     N.extip = null;

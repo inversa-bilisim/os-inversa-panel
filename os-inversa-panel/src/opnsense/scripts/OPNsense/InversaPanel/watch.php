@@ -129,6 +129,57 @@ foreach (Approval::hosts() as $host) {
 }
 $new['seen'] = array_slice(array_keys($seen), -5000);
 
+/*
+ * health of the firewall itself: a disk that fills up, a processor that runs hot, an OPNsense update
+ * that waits. Told once when it starts; the disk and the heat must fall well below the mark before
+ * they are told again. The update is looked at twice an hour (nothing is fetched, see Overview::system).
+ */
+$health = $old['health'] ?? ['disk' => false, 'temp' => false, 'update' => false, 'checked' => 0];
+$total = @disk_total_space('/');
+$free = @disk_free_space('/');
+if ($total > 0 && $free !== false) {
+    $used = (int)round(($total - $free) / $total * 100);
+    if (!$health['disk'] && $used >= 90) {
+        $health['disk'] = true;
+        if (!$first) {
+            Overview::event('health_disk', ['v' => $used]);
+        }
+    } elseif ($health['disk'] && $used < 85) {
+        $health['disk'] = false;
+    }
+}
+$warmest = null;
+$lines = [];
+exec('/sbin/sysctl -a 2>/dev/null | /usr/bin/grep -E "^(dev\.cpu\.[0-9]+\.temperature|hw\.acpi\.thermal\.tz[0-9]+\.temperature):"', $lines);
+foreach ($lines as $line) {
+    if (preg_match('/: (-?\d+(?:\.\d+)?)C/', $line, $m)) {
+        $warmest = max($warmest ?? -273, (float)$m[1]);
+    }
+}
+if ($warmest !== null) {
+    if (!$health['temp'] && $warmest >= 85) {
+        $health['temp'] = true;
+        if (!$first) {
+            Overview::event('health_temp', ['v' => (int)round($warmest)]);
+        }
+    } elseif ($health['temp'] && $warmest < 75) {
+        $health['temp'] = false;
+    }
+}
+if ($now - (int)($health['checked'] ?? 0) >= 1800) {
+    $health['checked'] = $now;
+    $product = json_decode((string)$backend->configdRun('firmware product'), true) ?? [];
+    $pending = false;
+    foreach (['upgrade_sets', 'new_packages', 'reinstall_packages', 'upgrade_packages'] as $key) {
+        $pending = $pending || !empty($product['product_check'][$key]);
+    }
+    if ($pending && !$health['update'] && !$first) {
+        Overview::event('health_update', []);
+    }
+    $health['update'] = $pending;
+}
+$new['health'] = $health;
+
 if (!is_dir(Overview::DIR)) {
     mkdir(Overview::DIR, 0755, true);
 }

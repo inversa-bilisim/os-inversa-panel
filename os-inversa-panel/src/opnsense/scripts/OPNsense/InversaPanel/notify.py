@@ -57,6 +57,9 @@ TEXT = {
         'times': '×{n}',
         'more': '… and {n} more',
         'test': 'Test message: notifications from Inversa Panel reach this chat.',
+        'health_disk': 'The firewall’s disk is {v}% full',
+        'health_temp': 'The firewall runs hot: {v} °C',
+        'health_update': 'An OPNsense update is waiting (System › Firmware)',
         'update': 'Inversa Panel {new} is out (installed: {old}). Update: Settings › About',
     },
     'tr': {
@@ -75,6 +78,9 @@ TEXT = {
         'times': '×{n}',
         'more': '… ve {n} tane daha',
         'test': 'Deneme mesajı: Inversa Panel bildirimleri bu sohbete ulaşıyor.',
+        'health_disk': 'Güvenlik duvarının diski %{v} dolu',
+        'health_temp': 'Güvenlik duvarı çok ısındı: {v} °C',
+        'health_update': 'Bekleyen bir OPNsense güncellemesi var (Sistem › Yazılım)',
         'update': 'Inversa Panel {new} yayımlandı (kurulu sürüm: {old}). Güncelleme: Ayarlar › Hakkımızda',
     },
 }
@@ -85,13 +91,14 @@ SWITCH = {
     'peer_on': 'vpn', 'vpn_up': 'vpn', 'vpn_down': 'vpn',
     'wan_up': 'internet', 'wan_down': 'internet', 'boot': 'internet',
     'login_fail': 'logins',
+    'health_disk': 'health', 'health_temp': 'health', 'health_update': 'health',
 }
 
 
 def settings():
     """what the page stored, plus the names needed to word a message"""
     out = {'enabled': False, 'token': '', 'chat': '', 'lang': 'en', 'host': 'OPNsense', 'names': {}, 'nets': {},
-           'devices': True, 'attacks': True, 'vpn': False, 'internet': True, 'logins': True, 'updates': False}
+           'devices': True, 'attacks': True, 'vpn': False, 'internet': True, 'logins': True, 'health': True, 'updates': False}
     try:
         root = ET.parse(CONFIG).getroot()
     except (OSError, ET.ParseError):
@@ -101,7 +108,7 @@ def settings():
         return out
     node = panel.find('notify')
     if node is not None:
-        for key in ('enabled', 'devices', 'attacks', 'vpn', 'internet', 'logins', 'updates'):
+        for key in ('enabled', 'devices', 'attacks', 'vpn', 'internet', 'logins', 'health', 'updates'):
             value = node.findtext(key)
             if value is not None and value != '':
                 out[key] = value == '1'

@@ -426,6 +426,10 @@
                 <Default>1</Default>
                 <Required>Y</Required>
             </logins>
+            <health type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </health>
             <updates type="BooleanField">
                 <Default>0</Default>
                 <Required>Y</Required>

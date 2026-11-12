@@ -19,7 +19,7 @@ use OPNsense\InversaPanel\InversaPanel;
  */
 class NotifyController extends ApiControllerBase
 {
-    const KINDS = ['devices', 'attacks', 'vpn', 'internet', 'logins', 'updates'];
+    const KINDS = ['devices', 'attacks', 'vpn', 'internet', 'logins', 'health', 'updates'];
 
     public function getAction()
     {

@@ -9,7 +9,7 @@
 (function () {
     'use strict';
     var h = window.InversaPanelApp.h;
-    var KINDS = ['devices', 'attacks', 'vpn', 'internet', 'logins', 'updates'];
+    var KINDS = ['devices', 'attacks', 'vpn', 'internet', 'logins', 'health', 'updates'];
     var N = { data: null, form: null, chats: null, busy: '', failed: false };
 
     function load() {

@@ -43,7 +43,7 @@ Screenshots show sample data.
 - Every device seen on the protected networks, with its network, address and state; search and filters; names and types.
 - Cut a device's internet access with one click, give it a fixed address, approve new devices on networks that ask for it.
 - Schedules: cut internet access or block apps for chosen devices at chosen times.
-- Pause a device for 30 minutes, an hour, two hours or until the morning; it comes back by itself.
+- Pause a device for 30 minutes, an hour, two hours or until the morning; it comes back by itself. Wake a device that is off (Wake-on-LAN).
 
 **Security**
 - Categories (ads and trackers, malware and phishing, adult content, gambling, VPN and proxy), twelve apps, safe search, and "Enforce DNS" for devices that try to use another DNS server.

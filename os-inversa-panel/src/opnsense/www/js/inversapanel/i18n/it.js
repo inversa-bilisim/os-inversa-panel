@@ -37,7 +37,8 @@ window.InversaPanelI18n.it = {
         evTitle: 'Eventi recenti', evNone: 'Ancora nessun evento registrato.', times: function (n) { return n === 1 ? '1 volta' : n + ' volte'; },
         evAttackBlocked: 'Attacco bloccato', evAttack: 'Avviso di attacco', evWait: 'Nuovo dispositivo in attesa di approvazione', evNew: 'Nuovo dispositivo in rete', evPeer: 'Dispositivo VPN connesso',
         evVpnUp: 'Connessione VPN attiva', evVpnDown: 'Connessione VPN persa', evWanUp: 'La connessione a Internet è tornata', evWanDown: 'Connessione a Internet persa',
-        evSchedOn: 'Pianificazione iniziata', evSchedOff: 'Pianificazione terminata', evLists: 'Liste di blocco aggiornate', evBoot: 'Firewall riavviato',
+        evSchedOn: 'Pianificazione iniziata', evSchedOff: 'Pianificazione terminata', evLists: 'Liste di blocco aggiornate', evBoot: 'Firewall riavviato', evDisk: 'Il disco del firewall si sta riempiendo', evTemp: 'Il firewall si surriscalda', evUpdate: 'Un aggiornamento di OPNsense è in attesa',
+        todoDisk: function (n) { return 'Il disco del firewall è pieno al ' + n + ' %'; }, todoTemp: function (n) { return 'Il firewall si surriscalda: ' + n + ' °C'; },
         sysTitle: 'Sistema', upFor: function (s) { return 'attivo da ' + s; }, cpu: 'Processore', memory: 'Memoria', disk: 'Disco', temp: 'Temperatura',
         version: 'Versione', cfgChanged: 'Ultima modifica alla configurazione'
     },

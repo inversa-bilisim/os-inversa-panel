@@ -37,7 +37,8 @@ window.InversaPanelI18n.de = {
         evTitle: 'Letzte Ereignisse', evNone: 'Noch nichts aufgezeichnet.', times: function (n) { return n + ' Mal'; },
         evAttackBlocked: 'Angriff blockiert', evAttack: 'Angriffswarnung', evWait: 'Neues Gerät wartet auf Freigabe', evNew: 'Neues Gerät im Netzwerk', evPeer: 'VPN-Gerät verbunden',
         evVpnUp: 'VPN-Verbindung aufgebaut', evVpnDown: 'VPN-Verbindung getrennt', evWanUp: 'Internetverbindung ist wieder da', evWanDown: 'Internetverbindung unterbrochen',
-        evSchedOn: 'Zeitplan gestartet', evSchedOff: 'Zeitplan beendet', evLists: 'Blocklisten aktualisiert', evBoot: 'Firewall neu gestartet',
+        evSchedOn: 'Zeitplan gestartet', evSchedOff: 'Zeitplan beendet', evLists: 'Blocklisten aktualisiert', evBoot: 'Firewall neu gestartet', evDisk: 'Die Festplatte der Firewall läuft voll', evTemp: 'Die Firewall ist heiß gelaufen', evUpdate: 'Ein OPNsense-Update wartet',
+        todoDisk: function (n) { return 'Die Festplatte der Firewall ist zu ' + n + ' % voll'; }, todoTemp: function (n) { return 'Die Firewall läuft heiß: ' + n + ' °C'; },
         sysTitle: 'System', upFor: function (s) { return 'Laufzeit ' + s; }, cpu: 'Prozessor', memory: 'Arbeitsspeicher', disk: 'Datenträger', temp: 'Temperatur',
         version: 'Version', cfgChanged: 'Letzte Konfigurationsänderung'
     },

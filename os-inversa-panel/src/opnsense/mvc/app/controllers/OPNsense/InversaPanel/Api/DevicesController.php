@@ -128,6 +128,32 @@ class DevicesController extends ApiControllerBase
         return ['status' => 'ok', 'paused' => $until];
     }
 
+    /**
+     * Wake-on-LAN: the "magic packet" for a device, on every protected network
+     */
+    public function wakeAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $mac = strtolower((string)$this->request->getPost('mac'));
+        if (!preg_match('/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/', $mac)) {
+            return ['status' => 'failed', 'message' => 'mac'];
+        }
+        $ports = [];
+        $protected = (new InversaPanel())->getProtectedInterfaces();
+        foreach (Config::getInstance()->object()->interfaces->children() as $key => $node) {
+            if (in_array($key, $protected) && !empty((string)$node->if)) {
+                $ports[] = (string)$node->if;
+            }
+        }
+        if (empty($ports)) {
+            return ['status' => 'failed', 'message' => 'nonet'];
+        }
+        $sent = (int)trim((string)(new Backend())->configdpRun('inversapanel wake', [implode(',', $ports), $mac]));
+        return ['status' => $sent > 0 ? 'ok' : 'failed'];
+    }
+
     public function resumeAction()
     {
         if (!$this->request->isPost()) {

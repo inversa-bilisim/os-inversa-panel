@@ -74,6 +74,17 @@ class NetworkController extends ApiControllerBase
     }
 
     /**
+     * download and upload speed, measured from the firewall (asks a service outside; only on request)
+     */
+    public function speedAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['ok' => false];
+        }
+        return json_decode((string)(new Backend())->configdRun('inversapanel speedtest'), true) ?? ['ok' => false];
+    }
+
+    /**
      * the address the internet sees this firewall under (asks a service outside; only on request)
      */
     public function extipAction()

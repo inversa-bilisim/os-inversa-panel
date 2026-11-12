@@ -326,6 +326,9 @@
             case 'sched_off': return [o.evSchedOff, h.esc(e.name), ''];
             case 'lists': return [o.evLists, h.esc(T.lgSystem), ''];
             case 'boot': return [o.evBoot, h.esc(T.lgSystem), ''];
+            case 'health_disk': return [o.evDisk, '%' + h.esc(e.v), ''];
+            case 'health_temp': return [o.evTemp, h.esc(e.v) + ' °C', ''];
+            case 'health_update': return [o.evUpdate, h.esc(T.lgSystem), ''];
         }
         return [e.k, '', ''];
     }

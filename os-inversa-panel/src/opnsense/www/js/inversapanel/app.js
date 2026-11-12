@@ -788,6 +788,10 @@
             if (c.enabled && c.kind === 'site' && !c.connected) { list.push([o.todoVpn(c.name), 'tab', 'vpn']); }
         });
         if (ov.ips && ov.ips.available && ov.ips.enabled && !ov.ips.running) { list.push([o.todoIps, 'tab', 'ips']); }
+        /* the firewall itself: a disk that fills up, a processor that runs hot */
+        var sys = ov.system || {};
+        if (sys.disk && sys.disk.total && sys.disk.used / sys.disk.total >= 0.9) { list.push([o.todoDisk(Math.round(sys.disk.used / sys.disk.total * 100)), '', '']); }
+        if (typeof sys.temperature === 'number' && sys.temperature >= 85) { list.push([o.todoTemp(Math.round(sys.temperature)), '', '']); }
         return list;
     }
 
@@ -814,6 +818,9 @@
             case 'sched_off': return ['', o.evSchedOff, e.name];
             case 'lists': return ['', o.evLists, ''];
             case 'boot': return ['', o.evBoot, ''];
+            case 'health_disk': return ['warn', o.evDisk, '%' + e.v];
+            case 'health_temp': return ['warn', o.evTemp, e.v + ' °C'];
+            case 'health_update': return ['', o.evUpdate, ''];
         }
         return null;
     }
@@ -918,6 +925,8 @@
             icon(ICONS.shield + (level === 'ok' ? ICONS.check : ICONS.alert), 28) + '</div>' +
             '<div><h1>' + esc(statusTitle) + '</h1><div class="muted" style="font-size:14px">' + esc(line.join(' · ')) + '</div></div></div>' +
             (todo.length ? '<div class="k-ov-todo"><b>' + esc(o.todoTitle(todo.length)) + '</b>' + todo.map(function (x) {
+                /* without a page of its own to go to (the firewall's disk, its heat): said, not linked */
+                if (!x[1]) { return '<div class="k-ov-todo-row">' + icon(ICONS.warn, 16) + '<span>' + esc(x[0]) + '</span></div>'; }
                 return '<button type="button" class="k-ov-todo-row" data-act="' + x[1] + '" data-v="' + x[2] + '">' + icon(ICONS.warn, 16) +
                     '<span>' + esc(x[0]) + '</span><span class="k-ov-go">' + esc(o.show) + ' →</span></button>';
             }).join('') + '</div>' : '') + '</div>' +
@@ -1289,6 +1298,9 @@
                         return '<button type="button" class="k-btn small" data-act="pause" data-mac="' + esc(h.mac) + '" data-v="' + o[0] + '">' + esc(o[1]) + '</button>';
                     }).join('') + '</div>') +
                 '<span class="muted small" style="font-weight:400">' + esc(t.pauseSub) + '</span></div>') +
+            /* a device that is off can be asked to switch on, if it listens for that (Wake-on-LAN) */
+            (h.online ? '' : '<div class="k-setting" style="padding:0"><div class="k-setting-text"><b>' + esc(t.wakeTitle) + '</b><span class="muted">' + esc(t.wakeSub) + '</span></div>' +
+                '<button type="button" class="k-btn small" data-act="wake" data-mac="' + esc(h.mac) + '">' + esc(t.wakeBtn) + '</button></div>') +
             /* only where it means something: the device's network asks for approval */
             (approvalOn(h.network_key) ? '<div class="k-setting" style="padding:0"><div class="k-setting-text"><b>' + esc(t.dApproval) + '</b><span class="muted">' + esc(t.dApprovalSub) + '</span></div>' +
                 toggle(!!cfg.approved, 'data-act="approval" data-mac="' + esc(h.mac) + '"', t.dApproval) + '</div>' : '') +
@@ -1572,6 +1584,12 @@
                 return;
             case 'resume':
                 pauseDevice(mac, {}, true);
+                return;
+            case 'wake':
+                api('POST', '/api/inversapanel/devices/wake', { mac: mac }).then(function (res) {
+                    S.ui.notice = res && res.status === 'ok' ? { type: 'ok', text: T().wakeSent, list: [] } : { type: 'err', text: T().wakeFailed, list: [], ms: 10000 };
+                    renderPending();
+                }, function () { S.ui.notice = { type: 'err', text: T().wakeFailed, list: [], ms: 10000 }; renderPending(); });
                 return;
             case 'approval':
                 setDev(mac, { approved: !devCfg(mac).approved });

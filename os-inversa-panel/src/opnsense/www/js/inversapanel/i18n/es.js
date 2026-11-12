@@ -37,7 +37,8 @@ window.InversaPanelI18n.es = {
         evTitle: 'Eventos recientes', evNone: 'Aún no hay nada registrado.', times: function (n) { return n === 1 ? '1 vez' : n + ' veces'; },
         evAttackBlocked: 'Ataque bloqueado', evAttack: 'Alerta de ataque', evWait: 'Dispositivo nuevo a la espera de aprobación', evNew: 'Nuevo dispositivo en la red', evPeer: 'Dispositivo VPN conectado',
         evVpnUp: 'Conexión VPN establecida', evVpnDown: 'Conexión VPN perdida', evWanUp: 'La conexión a internet ha vuelto', evWanDown: 'Conexión a internet perdida',
-        evSchedOn: 'Horario iniciado', evSchedOff: 'Horario finalizado', evLists: 'Listas de bloqueo actualizadas', evBoot: 'Cortafuegos reiniciado',
+        evSchedOn: 'Horario iniciado', evSchedOff: 'Horario finalizado', evLists: 'Listas de bloqueo actualizadas', evBoot: 'Cortafuegos reiniciado', evDisk: 'El disco del cortafuegos se está llenando', evTemp: 'El cortafuegos se calienta', evUpdate: 'Hay una actualización de OPNsense pendiente',
+        todoDisk: function (n) { return 'El disco del cortafuegos está al ' + n + ' %'; }, todoTemp: function (n) { return 'El cortafuegos se calienta: ' + n + ' °C'; },
         sysTitle: 'Sistema', upFor: function (s) { return 'en marcha desde hace ' + s; }, cpu: 'Procesador', memory: 'Memoria', disk: 'Disco', temp: 'Temperatura',
         version: 'Versión', cfgChanged: 'Último cambio de configuración'
     },

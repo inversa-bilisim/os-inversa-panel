@@ -37,7 +37,8 @@ window.InversaPanelI18n.fr = {
         evTitle: 'Événements récents', evNone: 'Rien d’enregistré pour l’instant.', times: function (n) { return n + ' fois'; },
         evAttackBlocked: 'Attaque bloquée', evAttack: 'Alerte d’attaque', evWait: 'Nouvel appareil en attente d’approbation', evNew: 'Nouvel appareil sur le réseau', evPeer: 'Appareil VPN connecté',
         evVpnUp: 'Connexion VPN établie', evVpnDown: 'Connexion VPN perdue', evWanUp: 'Connexion Internet rétablie', evWanDown: 'Connexion Internet perdue',
-        evSchedOn: 'Horaire démarré', evSchedOff: 'Horaire terminé', evLists: 'Listes de blocage mises à jour', evBoot: 'Pare-feu redémarré',
+        evSchedOn: 'Horaire démarré', evSchedOff: 'Horaire terminé', evLists: 'Listes de blocage mises à jour', evBoot: 'Pare-feu redémarré', evDisk: 'Le disque du pare-feu se remplit', evTemp: 'Le pare-feu chauffe', evUpdate: 'Une mise à jour d’OPNsense attend',
+        todoDisk: function (n) { return 'Le disque du pare-feu est plein à ' + n + ' %'; }, todoTemp: function (n) { return 'Le pare-feu chauffe : ' + n + ' °C'; },
         sysTitle: 'Système', upFor: function (s) { return 'démarré il y a ' + s; }, cpu: 'Processeur', memory: 'Mémoire', disk: 'Disque', temp: 'Température',
         version: 'Version', cfgChanged: 'Dernière modification de la configuration'
     },

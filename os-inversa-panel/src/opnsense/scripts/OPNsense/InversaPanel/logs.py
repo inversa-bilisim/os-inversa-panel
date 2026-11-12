@@ -544,7 +544,7 @@ EVENT_TYPES = {
     'login': ('login_ok', 'login_fail'),
     'device': ('device_wait', 'device_new'),
     'config': ('config',),
-    'system': ('wan_up', 'wan_down', 'sched_on', 'sched_off', 'lists', 'boot'),
+    'system': ('wan_up', 'wan_down', 'sched_on', 'sched_off', 'lists', 'boot', 'health_disk', 'health_temp', 'health_update'),
 }
 
 
