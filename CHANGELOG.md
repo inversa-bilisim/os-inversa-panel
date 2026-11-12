@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 (2026-11-12)
+
+- The panel's entries in OPNsense's side menu follow the language chosen in the panel; they were always in Turkish. On OPNsense's other pages they show in English.
+- Installing, updating and removing the package clear the menu cache where OPNsense 26.7 keeps it.
+
 ## 1.1.0 (2026-11-12)
 
 For firewalls that were configured before the panel was installed.

@@ -24,7 +24,7 @@ for f in $(find /usr/local/opnsense/mvc/app -path "*InversaPanel*" -name "*.php"
     php -l "$f" > /dev/null || { echo "syntax error in $f"; exit 1; }
 done
 # menu / ACL caches are rebuilt on next page load
-rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
+rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json /var/lib/php/tmp/opnsense_menu_cache.xml /var/lib/php/tmp/opnsense_acl_cache.json
 # configd must re-read actions_inversapanel.conf
 service configd restart > /dev/null
 # pick up inversapanel_cron() (schedules run every minute)

@@ -1486,9 +1486,15 @@
     function syncMenu() {
         if (!document.querySelectorAll) { return; }
         var links = document.querySelectorAll('#mainmenu a[href^="/ui/inversapanel#"]');
+        var t = T();
+        var names = { dash: t.tabDash, net: t.tabNet, vpn: t.tabVpn, devices: t.tabDevices, security: t.tabSecurity, logs: t.tabLogs, settings: t.tabSettings };
         for (var i = 0; i < links.length; i++) {
             var on = groupOf(pageFor(links[i].getAttribute('href').split('#')[1])) === groupOf(S.tab);
             links[i].classList.toggle('active', on);
+            /* the names come from Menu.xml in one language: show them in the panel's */
+            var name = names[links[i].getAttribute('href').split('#')[1]];
+            var cell = links[i].querySelector('div[style*="table-cell"]');
+            if (name && cell && cell.textContent !== name) { cell.textContent = name; }
         }
     }
 

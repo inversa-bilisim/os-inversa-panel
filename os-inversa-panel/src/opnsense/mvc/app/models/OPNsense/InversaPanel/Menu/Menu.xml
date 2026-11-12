@@ -2,15 +2,16 @@
     <!--
         The same entries as the menu of the one page (app.js: MENU), each opens its first sub page (like
         System > Firmware does). OPNsense marks all of them as selected since the part after "#" never
-        reaches the server, app.js corrects that (syncMenu).
+        reaches the server, app.js corrects that (syncMenu). The names here are what OPNsense's other pages
+        show; on the panel's own page app.js puts them in the panel's language.
     -->
     <Inversa order="11" VisibleName="Inversa" cssClass="fa fa-shield">
-        <Overview order="10" VisibleName="Genel bakış" url="/ui/inversapanel#dash" cssClass="fa fa-dashboard fa-fw"/>
-        <Network order="20" VisibleName="Ağ ve İnternet" url="/ui/inversapanel#net" cssClass="fa fa-sitemap fa-fw"/>
+        <Overview order="10" VisibleName="Overview" url="/ui/inversapanel#dash" cssClass="fa fa-dashboard fa-fw"/>
+        <Network order="20" VisibleName="Network &amp; Internet" url="/ui/inversapanel#net" cssClass="fa fa-sitemap fa-fw"/>
         <Vpn order="30" VisibleName="VPN" url="/ui/inversapanel#vpn" cssClass="fa fa-lock fa-fw"/>
-        <Devices order="40" VisibleName="Cihazlar" url="/ui/inversapanel#devices" cssClass="fa fa-laptop fa-fw"/>
-        <Security order="50" VisibleName="Güvenlik" url="/ui/inversapanel#security" cssClass="fa fa-shield fa-fw"/>
-        <Logs order="55" VisibleName="Kayıtlar" url="/ui/inversapanel#logs" cssClass="fa fa-list fa-fw"/>
-        <Settings order="60" VisibleName="Ayarlar" url="/ui/inversapanel#settings" cssClass="fa fa-sliders fa-fw"/>
+        <Devices order="40" VisibleName="Devices" url="/ui/inversapanel#devices" cssClass="fa fa-laptop fa-fw"/>
+        <Security order="50" VisibleName="Security" url="/ui/inversapanel#security" cssClass="fa fa-shield fa-fw"/>
+        <Logs order="55" VisibleName="Logs" url="/ui/inversapanel#logs" cssClass="fa fa-list fa-fw"/>
+        <Settings order="60" VisibleName="Settings" url="/ui/inversapanel#settings" cssClass="fa fa-sliders fa-fw"/>
     </Inversa>
 </menu>

@@ -60,7 +60,7 @@ for table in $(/sbin/pfctl -sT 2>/dev/null | grep '^minnosh_' || true); do
     /sbin/pfctl -t "${table}" -T kill > /dev/null 2>&1 || true
 done
 
-rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
+rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json /var/lib/php/tmp/opnsense_menu_cache.xml /var/lib/php/tmp/opnsense_acl_cache.json
 service configd restart > /dev/null
 echo "old installation removed; now run tools/deploy.sh and press Apply in Inversa Panel"
 REMOTE

@@ -100,7 +100,7 @@ tools/deploy.sh, tools/remove.sh             test cihazına kopyalama / kaldırm
 - [ ] Güvenlik › Ülkeler: "Sadece seçtiğim ülkelere izin ver" + TR + Uygula: `pfctl -sr | grep geo_allow` kuralı gösteriyor; `pfctl -t inversapanel_geo_allow -T test 8.8.8.8` eşleşmiyor, bir Türkiye adresi ve `192.168.1.1` eşleşiyor; istemci yabancı sitelere girmeye devam ediyor.
 
 ### Sorun giderme
-- Sayfa açılmıyor veya menü görünmüyor: `rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json`
+- Sayfa açılmıyor veya menü görünmüyor: `rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json /var/lib/php/tmp/opnsense_menu_cache.xml /var/lib/php/tmp/opnsense_acl_cache.json`
 - API hataları: **Sistem › Günlük Dosyaları › Web GUI**, `/var/log/configd/latest.log`
 - Üretilen kurallar: `pfctl -sr | grep -i inversapanel` ve `grep -i inversapanel /tmp/rules.debug` (pfctl DNS portunu "domain" diye gösterir)
 - OPNsense'te root'un kabuğu `csh`'dir; SSH ile `sh` komutları çalıştırırken `ssh root@firewall /bin/sh -s <<'EOF' ... EOF` kullanın.

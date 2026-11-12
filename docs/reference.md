@@ -100,7 +100,7 @@ tools/deploy.sh, tools/remove.sh             copy to / remove from the test devi
 - [ ] Security › Countries: "Allow only the countries I choose" + TR + Apply: `pfctl -sr | grep geo_allow` shows the rule; `pfctl -t inversapanel_geo_allow -T test 8.8.8.8` does not match, an address in Türkiye and `192.168.1.1` match; the client can still open foreign sites.
 
 ### Troubleshooting
-- The page does not open or the menu does not show: `rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json`
+- The page does not open or the menu does not show: `rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json /var/lib/php/tmp/opnsense_menu_cache.xml /var/lib/php/tmp/opnsense_acl_cache.json`
 - API errors: **System › Log Files › Web GUI**, `/var/log/configd/latest.log`
 - Generated rules: `pfctl -sr | grep -i inversapanel` and `grep -i inversapanel /tmp/rules.debug` (pfctl shows the DNS port as "domain")
 - On OPNsense root's shell is `csh`; when running `sh` commands over SSH use `ssh root@firewall /bin/sh -s <<'EOF' ... EOF`.

@@ -1,4 +1,4 @@
-rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
+rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json /var/lib/php/tmp/opnsense_menu_cache.xml /var/lib/php/tmp/opnsense_acl_cache.json
 if [ -z "${PKG_UPGRADE}" ]; then
     # the panel's own records (data usage, events, logs) go with the package;
     # what it wrote into the OPNsense configuration stays until it is removed there
