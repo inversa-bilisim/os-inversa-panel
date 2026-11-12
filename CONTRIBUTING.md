@@ -6,7 +6,7 @@ Bug reports, test results and pull requests are welcome. Issues can be written i
 
 - **Results on real hardware.** Everything so far was tested on virtual machines. PPPoE on a real line, attack protection in blocking mode on physical network cards and VLANs, and IPsec against other vendors' firewalls are untested.
 - **Translation review.** German, French, Spanish and Italian are machine translations. Corrections to `src/opnsense/www/js/inversapanel/i18n/<language>.js` are welcome, and so are new languages (see [Adding a language](docs/reference.md#adding-a-language)).
-- **Two features people have asked for** around the approval of new devices: a notification when a device is waiting, and a page a waiting device is sent to where it can ask for access. The approval logic is in `library/OPNsense/InversaPanel/Approval.php`, the firewall rule in `src/etc/inc/plugins.inc.d/inversapanel.inc`, the approved devices in the alias `inversapanel_approved`.
+- **A feature people have asked for** around the approval of new devices: a page a waiting device is sent to where it can ask for access (a Telegram notification when a device is waiting exists since 1.2.0, in `scripts/OPNsense/InversaPanel/notify.py`). The approval logic is in `library/OPNsense/InversaPanel/Approval.php`, the firewall rule in `src/etc/inc/plugins.inc.d/inversapanel.inc`, the approved devices in the alias `inversapanel_approved`.
 
 ## Reporting a bug
 

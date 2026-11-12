@@ -9,7 +9,7 @@
  * OPNsense does not keep:
  *  - how much went over the internet connection today
  *  - what happened: internet connection lost / back, a VPN connection made or lost, a device
- *    of a remote access connection coming in, a new device waiting for approval, a restart
+ *    of a remote access connection coming in, a new device (waiting for approval or not), a restart
  * Nothing is changed on the firewall; the first run only remembers how things are.
  */
 
@@ -113,6 +113,21 @@ if (!empty($networks)) {
     }
     $new['waiting'] = array_slice($new['waiting'], -500);
 }
+
+/* ---- devices never seen before on a protected network (where approval is on, "waiting" says it already) */
+$protected = $mdl->getProtectedInterfaces();
+$seen = array_flip($old['seen'] ?? []);
+$learning = !isset($old['seen']);
+foreach (Approval::hosts() as $host) {
+    if (!in_array($host['key'], $protected) || isset($seen[$host['mac']])) {
+        continue;
+    }
+    if (!$first && !$learning && !in_array($host['key'], $networks)) {
+        Overview::event('device_new', ['mac' => $host['mac'], 'net' => $host['key']]);
+    }
+    $seen[$host['mac']] = true;
+}
+$new['seen'] = array_slice(array_keys($seen), -5000);
 
 if (!is_dir(Overview::DIR)) {
     mkdir(Overview::DIR, 0755, true);

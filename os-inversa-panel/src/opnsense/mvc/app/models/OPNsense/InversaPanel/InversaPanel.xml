@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/InversaPanel</mount>
-    <version>1.1.1</version>
+    <version>1.2.0</version>
     <description>Inversa Panel - easy management</description>
     <items>
         <general>
@@ -392,6 +392,41 @@
                 </OptionValues>
             </groups>
         </ips>
+        <!-- notifications by Telegram (scripts/.../notify.py, every minute): only sends, never takes commands -->
+        <notify>
+            <enabled type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </enabled>
+            <token type="TextField">
+                <Mask>/^[0-9]{5,20}:[A-Za-z0-9_-]{20,80}$/</Mask>
+                <ValidationMessage>This does not look like a bot token (numbers, a colon, then letters and numbers).</ValidationMessage>
+            </token>
+            <chat type="TextField">
+                <Mask>/^(-?[0-9]{1,20}|@[A-Za-z0-9_]{4,64})$/</Mask>
+                <ValidationMessage>A chat is a number (it may start with a minus) or a public name starting with @.</ValidationMessage>
+            </chat>
+            <devices type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </devices>
+            <attacks type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </attacks>
+            <vpn type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </vpn>
+            <internet type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </internet>
+            <logins type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </logins>
+        </notify>
         <!--
             VPN connections Inversa Panel manages. A WireGuard one (remote access or site to site) refers to
             its instance in OPNsense's WireGuard models (keys, port, tunnel, peers) by uuid in "server";

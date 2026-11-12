@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 (2026-11-12)
+
+- Settings › Notifications: a Telegram bot tells a chat what happened: a new device, attack alerts, VPN connections, the internet connection going down and coming back, failed logins. Events are collected once a minute and sent as one message; a message that could not be sent is kept and sent later. The firewall only sends, it takes no commands from Telegram.
+- A device seen for the first time on a protected network is recorded as an event (overview, logs), also on networks without approval of new devices.
+- While notifications are on, the firewall connects to `api.telegram.org`.
+- The texts of the Notifications page are in Turkish and English; in the other languages they show in English for now.
+
 ## 1.1.1 (2026-11-12)
 
 - The panel's entries in OPNsense's side menu follow the language chosen in the panel; they were always in Turkish. On OPNsense's other pages they show in English.

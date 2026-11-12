@@ -63,7 +63,7 @@
         ['devices', ['devices', 'sched']],
         ['security', ['filter', 'ips', 'geo', 'lists']],
         ['logs', ['attacks', 'history', 'events']],
-        ['settings', ['settings', 'scan', 'about']]
+        ['settings', ['settings', 'notify', 'scan', 'about']]
     ];
     /* addresses of menu entries that no longer exist */
     var MOVED = { remote: 'vpn', guest: 'nets' };
@@ -801,6 +801,9 @@
             case 'device_wait':
                 host = hostByMac(e.mac);
                 return ['warn', o.evWait, (host ? devName(host) : e.mac) + (host && host.network ? ' · ' + host.network : '')];
+            case 'device_new':
+                host = hostByMac(e.mac);
+                return ['', o.evNew, (host ? devName(host) : e.mac) + (host && host.network ? ' · ' + host.network : '')];
             case 'peer_on': return ['ok', o.evPeer, e.name + ' · ' + e.conn];
             case 'vpn_up': return ['ok', o.evVpnUp, e.name];
             case 'vpn_down': return ['warn', o.evVpnDown, e.name];

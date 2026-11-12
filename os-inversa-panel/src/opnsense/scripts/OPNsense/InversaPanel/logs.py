@@ -542,7 +542,7 @@ def query_history(req):
 EVENT_TYPES = {
     'vpn': ('vpn_up', 'vpn_down', 'peer_on'),
     'login': ('login_ok', 'login_fail'),
-    'device': ('device_wait',),
+    'device': ('device_wait', 'device_new'),
     'config': ('config',),
     'system': ('wan_up', 'wan_down', 'sched_on', 'sched_off', 'lists', 'boot'),
 }

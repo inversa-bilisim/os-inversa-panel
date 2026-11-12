@@ -666,3 +666,6 @@ header.page-content-head { display: none; }
 .inversapanel .k-scan .k-setting-text > span { display: block; margin-top: 3px; }
 .inversapanel .k-scan .k-scan-names { color: #4A5462; overflow-wrap: anywhere; }
 .inversapanel .k-scan .k-count { margin-left: 6px; vertical-align: 1px; }
+
+/* notifications */
+.inversapanel .k-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; line-height: 1.45; }

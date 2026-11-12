@@ -55,6 +55,9 @@ Ekran görüntülerindeki veriler örnektir.
 - İnternet geçmişi: hangi cihaz hangi alan adını sordu, hangisi engellendi. Açılmadıkça kapalıdır; ağ bazında seçilir.
 - Erişim ve değişiklikler: VPN bağlantıları, panele girişler, yeni cihazlar, yapılandırmayı kimin değiştirdiği. 90 gün saklanır.
 
+**Bildirimler**
+- Bir Telegram botu; ağa yeni bir cihaz girdiğinde ya da onay beklediğinde, saldırı önleme uyarı verdiğinde, bir VPN cihazı bağlandığında, internet bağlantısı koptuğunda ve hatalı giriş denemesinde haber verir. Güvenlik duvarı yalnızca gönderir; Telegram'dan komut almaz.
+
 | | |
 |---|---|
 | ![Cihazlar](docs/screenshots/devices-tr.png) | ![VPN ve cihaz başına erişim](docs/screenshots/vpn-tr.png) |

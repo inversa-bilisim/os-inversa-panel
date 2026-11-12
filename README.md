@@ -55,6 +55,9 @@ Screenshots show sample data.
 - Internet history: which device asked for which domain and what was blocked. Off unless switched on, per network.
 - Access and changes: VPN connections, logins to the web interface, new devices, who changed the configuration. Kept 90 days.
 
+**Notifications**
+- A Telegram bot tells you when a new device joins the network or waits for approval, when attack protection raises an alert, when a VPN device connects, when the internet connection was down and when somebody fails to log in. The firewall only sends; it takes no commands from Telegram.
+
 | | |
 |---|---|
 | ![Devices](docs/screenshots/devices-en.png) | ![VPN with per-device access](docs/screenshots/vpn-en.png) |

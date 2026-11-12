@@ -487,6 +487,8 @@ function inversapanel_cron()
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel watch', '*']],
         /* attacks, logins and configuration changes for the logs pages */
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel logcollect', '*']],
+        /* tell by Telegram what happened (does nothing unless notifications are set up) */
+        ['autocron' => ['/usr/local/sbin/configctl -d inversapanel notify run', '*']],
         /* free country database refresh (only acts when country blocking is on and no other source is set) */
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel geoip normal', '40', '4']],
     ];

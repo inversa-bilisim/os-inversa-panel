@@ -314,6 +314,9 @@
             case 'device_wait':
                 host = h.hostByMac(e.mac);
                 return [o.evWait, h.esc(host ? h.devName(host) : e.mac) + sub(host ? host.network : ''), '<span class="mono">' + h.esc(e.mac) + '</span>'];
+            case 'device_new':
+                host = h.hostByMac(e.mac);
+                return [o.evNew, h.esc(host ? h.devName(host) : e.mac) + sub(host ? host.network : ''), '<span class="mono">' + h.esc(e.mac) + '</span>'];
             case 'peer_on': return [o.evPeer, h.esc(e.name) + sub(e.conn), ''];
             case 'vpn_up': return [o.evVpnUp, h.esc(e.name), ''];
             case 'vpn_down': return [o.evVpnDown, h.esc(e.name), ''];
