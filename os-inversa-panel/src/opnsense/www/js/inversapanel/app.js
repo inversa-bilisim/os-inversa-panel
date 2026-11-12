@@ -618,13 +618,11 @@
             '<button type="button" class="k-brand" data-act="tab" data-v="about" title="' + esc(t.tabAbout) + '"><div class="k-logo" aria-hidden="true"></div>' +
             '<div><div class="k-title">Inversa Panel</div><div class="muted">' + esc(t.appSub) + '</div></div></button>' +
             /* pending changes live inside the header so they never push the page down */
-            '<div id="k-pending" class="k-pending-slot"></div>' +
-            '<div class="k-head-right">' +
-            protectionPill() +
-            langSelect() +
-            '</div></div>';
+            '<div id="k-pending" class="k-pending-slot"></div></div>';
         renderPending();
     }
+
+    var LOGOUT = 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l4-4-4-4M14 12H4';
 
     function renderTabs() {
         var t = T();
@@ -640,6 +638,9 @@
                 (on ? ' aria-current="page"' : '') + '>' + icon(labels[key][1]) + '<span class="k-lbl" data-t="' + esc(labels[key][0]) + '">' + esc(labels[key][0]) + '</span>' +
                 (key === 'devices' && wait ? '<span class="k-count warn" title="' + esc(t.apprBanner(wait)) + '">' + wait + '</span>' : '') + '</button>';
         }).join('');
+        /* at the end of the menu row: how protected the network is, the language, the way out */
+        html += '<div class="k-tabs-right">' + protectionPill() + langSelect() +
+            '<a class="k-logout" href="/index.php?logout" title="' + esc(t.logout) + '" aria-label="' + esc(t.logout) + '">' + icon(LOGOUT, 16) + '<span>' + esc(t.logout) + '</span></a></div>';
         document.getElementById('k-tabs').innerHTML = html;
     }
 
@@ -1748,7 +1749,8 @@
         } else if (what === 'main') {
             renderHeader();
             renderMain();
-            if (waitingCount() !== S.ui.waitShown) { renderTabs(); }
+            /* the menu row also says how protected the network is: it follows what was just applied */
+            renderTabs();
         } else if (what === 'pending') {
             renderPending();
         } else if (what === 'main-keepfocus') {

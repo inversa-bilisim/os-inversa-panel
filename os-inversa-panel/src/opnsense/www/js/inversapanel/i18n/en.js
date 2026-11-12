@@ -68,7 +68,7 @@ window.InversaPanelI18n.en = {
     lgTypeLogin: 'Panel login', lgTypeConfig: 'Setting change', lgSystem: 'System',
     lgLogin: 'Login to the panel', lgLoginOk: 'Successful', lgLoginTry: 'Login attempt', lgLoginBad: 'Wrong password', lgConfig: 'Setting changed',
     pgRange: function (a, b, n) { return a + '–' + b + ' of ' + n; }, pgSize: 'Per page', pgPrev: 'Previous page', pgNext: 'Next page', pgPages: 'Pages', pgPage: function (n) { return 'Page ' + n; },
-    tabNotify: 'Notifications', ntSub: 'Tells you by Telegram when something happens on the network. The firewall only sends messages; it takes no commands from Telegram.',
+    logout: 'Log out', tabNotify: 'Notifications', ntSub: 'Tells you by Telegram when something happens on the network. The firewall only sends messages; it takes no commands from Telegram.',
     ntEnable: 'Telegram notifications', ntEnableSub: 'Events are collected once a minute and sent in one message.',
     ntToken: 'Bot token', ntTokenHint: 'The token BotFather gave you. Once saved it is not shown on this page again; type a new one to change it.',
     ntTokenKept: function (end) { return 'Stored (…' + end + ') · type a new one to change it'; },

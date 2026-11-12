@@ -68,7 +68,7 @@ window.InversaPanelI18n.tr = {
     lgTypeLogin: 'Panel girişi', lgTypeConfig: 'Ayar değişikliği', lgSystem: 'Sistem',
     lgLogin: 'Panele giriş', lgLoginOk: 'Başarılı', lgLoginTry: 'Panele giriş denemesi', lgLoginBad: 'Yanlış parola', lgConfig: 'Ayar değişti',
     pgRange: function (a, b, n) { return a + '–' + b + ' / ' + n; }, pgSize: 'Sayfa başına', pgPrev: 'Önceki sayfa', pgNext: 'Sonraki sayfa', pgPages: 'Sayfalar', pgPage: function (n) { return 'Sayfa ' + n; },
-    tabNotify: 'Bildirimler', ntSub: 'Ağda bir şey olduğunda Telegram’dan haber verir. Güvenlik duvarı yalnızca mesaj gönderir; Telegram’dan komut almaz.',
+    logout: 'Çıkış', tabNotify: 'Bildirimler', ntSub: 'Ağda bir şey olduğunda Telegram’dan haber verir. Güvenlik duvarı yalnızca mesaj gönderir; Telegram’dan komut almaz.',
     ntEnable: 'Telegram bildirimleri', ntEnableSub: 'Olaylar dakikada bir toplanır ve tek mesajda gönderilir.',
     ntToken: 'Bot anahtarı', ntTokenHint: 'BotFather’ın verdiği anahtar. Kaydedildikten sonra bu sayfada bir daha gösterilmez; değiştirmek için yenisini yazın.',
     ntTokenKept: function (end) { return 'Kayıtlı (…' + end + ') · değiştirmek için yenisini yazın'; },

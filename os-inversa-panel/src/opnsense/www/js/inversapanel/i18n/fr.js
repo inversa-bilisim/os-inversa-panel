@@ -67,7 +67,7 @@ window.InversaPanelI18n.fr = {
     lgTypeLogin: 'Connexion au panneau', lgTypeConfig: 'Modification de paramètre', lgSystem: 'Système',
     lgLogin: 'Connexion au panneau', lgLoginOk: 'Réussie', lgLoginTry: 'Tentative de connexion', lgLoginBad: 'Mot de passe incorrect', lgConfig: 'Paramètre modifié',
     pgRange: function (a, b, n) { return a + '–' + b + ' sur ' + n; }, pgSize: 'Par page', pgPrev: 'Page précédente', pgNext: 'Page suivante', pgPages: 'Pages', pgPage: function (n) { return 'Page ' + n; },
-    tabBackup: 'Sauvegarde', tabNotify: 'Notifications',
+    tabBackup: 'Sauvegarde', logout: 'Déconnexion', tabNotify: 'Notifications',
     tabScan: 'Réglages existants', scanOpen: 'Ouvrir la page', scanAdopt: 'Reprendre', welcomeScan: 'Examiner les réglages existants',
     tabAbout: 'À propos', aboutSub: 'La version installée, qui la développe, à qui s’adresser et les logiciels sur lesquels le panneau repose.',
     aboutVersion: 'Version', aboutRunsOn: 'Fonctionne sur', aboutLicense: 'Licence', aboutSource: 'Code source',

@@ -3,6 +3,7 @@
 ## 1.4.1 (2026-11-12)
 
 - Settings: **Open Inversa Panel after logging in**, off by default. It applies to the user who switches it on (OPNsense's own "Landing page" of that user) and takes effect at the next login. A page the user chose in OPNsense is replaced only when the switch is turned on.
+- The protection status and the language moved from the header to the end of the menu row, where the language box is lower; a **Log out** link stands beside them.
 - Removing the package clears that setting for the users who had it, so that nobody lands on a page that is gone.
 
 ## 1.4.0 (2026-11-12)

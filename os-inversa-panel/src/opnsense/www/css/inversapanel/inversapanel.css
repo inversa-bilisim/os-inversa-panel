@@ -63,7 +63,13 @@
 /* the mark already is a rounded tile in the accent colour (img/inversapanel/logo.png, 128 px for sharp high-density screens) */
 .inversapanel .k-logo { width: 44px; height: 44px; flex: none; background: url(../../img/inversapanel/logo.png) center / contain no-repeat; }
 .inversapanel .k-title { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
-.inversapanel .k-head-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.inversapanel .k-tabs-right { display: flex; align-items: center; gap: 8px; margin-left: auto; padding: 4px 0 6px; }
+.inversapanel .k-tabs-right .k-pill { min-height: 32px; }
+.inversapanel .k-tabs-right .k-lang { min-height: 34px; height: 34px; padding: 0 8px; }
+.inversapanel .k-tabs-right .k-lang select { min-height: 0 !important; height: 30px !important; padding-top: 0 !important; padding-bottom: 0 !important; line-height: 30px; }
+@media (max-width: 1400px) { .inversapanel .k-logout span { display: none; } }
+.inversapanel .k-logout { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 10px; border: 1px solid var(--k-input); border-radius: 10px; background: #fff; color: var(--k-text-2); font-size: 13px; font-weight: 600; text-decoration: none; }
+.inversapanel .k-logout:hover, .inversapanel .k-logout:focus-visible { color: #9A3B0A; border-color: #F2C99B; text-decoration: none; }
 .inversapanel .k-pill { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 18px; font-size: 13px; font-weight: 600; }
 .inversapanel .k-pill.ok { background: var(--k-ok-soft); color: var(--k-ok-text); }
 .inversapanel .k-pill.warn { background: #FDE7D3; color: var(--k-warn-text); }
