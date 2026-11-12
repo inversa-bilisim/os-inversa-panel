@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.1 (2026-11-12)
+
+- Settings › About, rearranged: on the left the version with the update check beside it, web site, e-mail, licence, source code and where to report; one button copies the support information and shows what was copied. On the right who makes the panel and what it is built on.
+- The software the panel is built on is listed with the installed versions (OPNsense, Unbound, Suricata, WireGuard, strongSwan; the month of the DB-IP country data).
+
 ## 1.3.0 (2026-11-12)
 
 - Settings › About: **Check for an update** asks GitHub for the latest release, only when the button is pressed. A newer version is shown with its release notes and can be installed with one more button.

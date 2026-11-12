@@ -147,10 +147,11 @@ window.InversaPanelI18n.tr = {
         'Inversa Panel, OPNsense’in en çok kullanılan ayarlarını tek ekrandan yönetmek için Inversa Bilişim tarafından geliştirilen açık kaynaklı bir eklentidir.',
         'Amacımız, güçlü bir güvenlik duvarını ağ uzmanı olmayanların da rahatça kullanabilmesi. Cihazlar, internet filtresi, VPN, saldırı önleme ve kayıtlar aynı sade ekranda bir araya gelir; günlük işler için OPNsense menülerinde dolaşmanız gerekmez.',
         'Panel, OPNsense’in kendi ayarlarıyla çalışır: mevcut ayarlarınızı okur, yalnızca değiştirdiğiniz yeri günceller. İstediğiniz zaman OPNsense’in kendi sayfalarına dönebilirsiniz.',
-        'Öneri ve hata bildirimleriniz paneli geliştirmemize yardımcı olur; bize aşağıdaki adreslerden ulaşabilirsiniz.'
+        'Öneri ve hata bildirimleriniz paneli geliştirmemize yardımcı olur; bize bu sayfadaki adreslerden ulaşabilirsiniz.'
     ],
     aboutWeb: 'Web sitesi', aboutMail: 'E-posta', aboutIssues: 'Hata ve istek bildirimi', aboutIssuesLink: 'GitHub’da bildir',
     aboutSupport: 'Destek bilgileri', aboutSupportSub: 'Destek isterken bu özeti iletin. Parola, anahtar ya da cihaz adresi içermez.',
+    aboutNotInstalled: 'kurulu değil',
     aboutCopy: 'Destek bilgilerini kopyala', aboutCopied: 'Kopyalandı',
     aboutBuiltOn: 'Üzerine kurulduğu yazılımlar', aboutBuiltOnSub: 'Inversa Panel bu açık kaynaklı projelerin sunduklarını tek ekranda toplar.',
     aboutOpnsense: 'Güvenlik duvarının kendisi', aboutUnbound: 'DNS çözümleme ve engelleme', aboutSuricata: 'Saldırı önleme',

@@ -181,6 +181,36 @@ class StateController extends ApiControllerBase
             'version' => Catalog::VERSION,
             'product' => (string)($product['product_name'] ?? 'OPNsense'),
             'product_version' => (string)($product['product_version'] ?? ''),
+            'parts' => $this->partVersions((string)($product['product_version'] ?? '')),
         ];
+    }
+
+    /**
+     * the installed versions of what the panel is built on; '' where it is not installed
+     */
+    private function partVersions($opnsense)
+    {
+        $parts = ['OPNsense' => $opnsense, 'Unbound' => '', 'Suricata' => '', 'WireGuard' => '', 'strongSwan' => '', 'DB-IP' => ''];
+        $names = ['unbound' => 'Unbound', 'suricata' => 'Suricata', 'strongswan' => 'strongSwan'];
+        $lines = [];
+        exec('/usr/sbin/pkg query "%n %v" ' . implode(' ', array_keys($names)) . ' 2>/dev/null', $lines);
+        foreach ($lines as $line) {
+            $pair = explode(' ', trim($line), 2);
+            if (count($pair) === 2 && isset($names[$pair[0]])) {
+                $parts[$names[$pair[0]]] = $pair[1];
+            }
+        }
+        /* WireGuard is part of the system: its tools say the version */
+        $out = [];
+        exec('/usr/bin/wg --version 2>/dev/null', $out);
+        if (preg_match('/v([0-9][0-9.]*)/', (string)($out[0] ?? ''), $match)) {
+            $parts['WireGuard'] = $match[1];
+        }
+        /* the country data is a database: the month it is of */
+        $stats = @json_decode((string)@file_get_contents('/usr/local/share/GeoIP/inversapanel-dbip.json'), true);
+        if (is_array($stats) && preg_match('/^[0-9]{4}-[0-9]{2}$/', (string)($stats['month'] ?? ''))) {
+            $parts['DB-IP'] = $stats['month'];
+        }
+        return $parts;
     }
 }

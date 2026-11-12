@@ -74,7 +74,7 @@ window.InversaPanelI18n.it = {
         'Inversa Panel è un plugin open source di Inversa Bilişim per gestire da un’unica schermata le impostazioni più usate di OPNsense.',
         'Il nostro obiettivo è un firewall potente che anche chi non è specialista di reti possa usare con facilità. Dispositivi, filtro Internet, VPN, protezione dagli attacchi e registri sono riuniti in un’unica schermata semplice, senza doversi orientare tra i menu di OPNsense per le operazioni di tutti i giorni.',
         'Il pannello lavora con le impostazioni di OPNsense: legge ciò che c’è e aggiorna solo ciò che viene modificato. Si può tornare alle pagine di OPNsense in qualsiasi momento.',
-        'Suggerimenti e segnalazioni di errori ci aiutano a migliorare il pannello; è possibile contattarci agli indirizzi qui sotto.'
+        'Suggerimenti e segnalazioni di errori ci aiutano a migliorare il pannello; è possibile contattarci agli indirizzi in questa pagina.'
     ],
     aboutWeb: 'Sito web', aboutMail: 'E-mail', aboutIssues: 'Errori e richieste', aboutIssuesLink: 'Segnala su GitHub',
     aboutSupport: 'Informazioni per l’assistenza', aboutSupportSub: 'Inviare questo riepilogo quando si chiede aiuto. Non contiene password, chiavi o indirizzi dei dispositivi.',
