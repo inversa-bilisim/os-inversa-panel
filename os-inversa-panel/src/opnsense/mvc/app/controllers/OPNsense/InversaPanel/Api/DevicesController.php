@@ -11,6 +11,7 @@ use OPNsense\Base\ApiControllerBase;
 use OPNsense\Core\Backend;
 use OPNsense\Core\Config;
 use OPNsense\InversaPanel\InversaPanel;
+use OPNsense\InversaPanel\Pause;
 
 /**
  * Devices seen on the protected networks, merged with what the user saved about them.
@@ -43,6 +44,7 @@ class DevicesController extends ApiControllerBase
         $source = $live['source'] ?? null;
         $now = time();
 
+        $paused = Pause::all();
         $result = [];
         foreach ($live['hosts'] ?? [] as $host) {
             if (!isset($ifmap[$host['interface']])) {
@@ -85,6 +87,59 @@ class DevicesController extends ApiControllerBase
             }
         }
 
+        /* cut off for a while: until when (0: not) */
+        foreach ($result as $mac => $row) {
+            $result[$mac]['paused'] = (int)($paused[$mac] ?? 0);
+        }
+
         return ['source' => $source, 'devices' => array_values($result)];
+    }
+
+    /**
+     * cuts a device off for a while, right away (not part of "Apply"); it comes back by itself
+     */
+    public function pauseAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $this->throwReadOnly();
+        $mac = strtolower((string)$this->request->getPost('mac'));
+        if (!preg_match('/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/', $mac)) {
+            return ['status' => 'failed', 'message' => 'mac'];
+        }
+        if ((string)$this->request->getPost('until') === 'morning') {
+            /* seven in the morning by the firewall's clock: today if that is still to come */
+            $tz = (string)Config::getInstance()->object()->system->timezone;
+            $when = new \DateTime('today 07:00', new \DateTimeZone($tz !== '' ? $tz : 'UTC'));
+            if ($when->getTimestamp() <= time()) {
+                $when->modify('+1 day');
+            }
+            $until = $when->getTimestamp();
+        } else {
+            $minutes = (int)$this->request->getPost('minutes');
+            if ($minutes < 1 || $minutes > 1440) {
+                return ['status' => 'failed', 'message' => 'minutes'];
+            }
+            $until = time() + $minutes * 60;
+        }
+        $until = Pause::set($mac, $until);
+        (new Backend())->configdRun('inversapanel schedule');
+        return ['status' => 'ok', 'paused' => $until];
+    }
+
+    public function resumeAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $this->throwReadOnly();
+        $mac = strtolower((string)$this->request->getPost('mac'));
+        if (!preg_match('/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/', $mac)) {
+            return ['status' => 'failed', 'message' => 'mac'];
+        }
+        Pause::clear($mac);
+        (new Backend())->configdRun('inversapanel schedule');
+        return ['status' => 'ok'];
     }
 }

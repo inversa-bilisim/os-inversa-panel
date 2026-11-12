@@ -63,7 +63,7 @@
         ['devices', ['devices', 'sched']],
         ['security', ['filter', 'ips', 'geo', 'lists']],
         ['logs', ['attacks', 'history', 'events']],
-        ['settings', ['settings', 'notify', 'scan', 'about']]
+        ['settings', ['settings', 'notify', 'backup', 'scan', 'about']]
     ];
     /* addresses of menu entries that no longer exist */
     var MOVED = { remote: 'vpn', guest: 'nets' };
@@ -1162,6 +1162,27 @@
         return pager(devicePage().total, S.ui.page, S.ui.size, 'devpage');
     }
 
+    /* cut off for a while (Devices page): until when, 0 when not or when the time is up */
+    function pausedUntil(h) {
+        return h && h.paused && h.paused * 1000 > Date.now() ? h.paused : 0;
+    }
+
+    function clock(ts) {
+        var d = new Date(ts * 1000), two = function (n) { return (n < 10 ? '0' : '') + n; };
+        return two(d.getHours()) + ':' + two(d.getMinutes());
+    }
+
+    function pauseDevice(mac, payload, resume) {
+        payload.mac = mac;
+        api('POST', '/api/inversapanel/devices/' + (resume ? 'resume' : 'pause'), payload).then(function (res) {
+            if (!res || res.status !== 'ok') { throw res; }
+            return loadHosts();
+        }).then(function () { redraw('main'); }, function () {
+            S.ui.notice = { type: 'err', text: T().applyFailed, list: [] };
+            renderPending();
+        });
+    }
+
     function deviceRows() {
         var t = T(), rows = devicePage().rows;
         if (!rows.length) {
@@ -1169,7 +1190,7 @@
                 esc(S.hosts.length ? t.noResult : (S.hostsLoaded ? t.noDevicesYet : '…')) + '</td></tr>';
         }
         return rows.map(function (h) {
-            var cfg = devCfg(h.mac), cut = !!cfg.blocked, name = devName(h), wait = waiting(h);
+            var cfg = devCfg(h.mac), cut = !!cfg.blocked, name = devName(h), wait = waiting(h), paused = cut ? 0 : pausedUntil(h);
             var status = h.online ? t.online : (ago(h.last_seen) || t.offline);
             /* a fixed address the device did not pick up yet is shown as such, not as a label on the old address */
             var fixed = (S.saved.reservations || {})[h.mac] || '', moving = fixed && hostIp4(h) && h.ips[0] !== fixed;
@@ -1189,7 +1210,7 @@
                 (wait ?
                     '<td><div class="k-net"><span class="k-net-label cut">' + esc(t.apprWaiting) + '</span>' +
                     '<button type="button" class="k-btn small primary" data-act="approve" data-mac="' + esc(h.mac) + '" aria-label="' + esc(t.apprApproveAria(name)) + '">' + esc(t.apprApprove) + '</button></div></td>' :
-                    '<td><div class="k-net"><span class="k-net-label' + (cut ? ' cut' : '') + '">' + esc(cut ? t.netOff : t.netOn) + '</span>' +
+                    '<td><div class="k-net"><span class="k-net-label' + (cut || paused ? ' cut' : '') + '">' + esc(cut ? t.netOff : (paused ? t.pauseUntil(clock(paused)) : t.netOn)) + '</span>' +
                     toggle(!cut, 'data-act="cut" data-mac="' + esc(h.mac) + '"', t.cutAria(name), cut ? 'cut' : '') + '</div></td>') +
                 '</tr>';
         }).join('');
@@ -1256,6 +1277,15 @@
             }).join('') + '</div>' +
             '<div class="k-setting" style="padding:0"><div class="k-setting-text"><b>' + esc(t.dNet) + '</b><span class="muted">' + esc(t.dNetSub) + '</span></div>' +
             toggle(!cut, 'data-act="cut" data-mac="' + esc(h.mac) + '"', t.dNet, cut ? 'cut' : '') + '</div>' +
+            /* for a while, right away, back by itself; not for a device that is cut anyway or still waits */
+            (cut || wait ? '' : '<div class="k-field"><span>' + esc(t.pauseTitle) + '</span>' +
+                (pausedUntil(h) ?
+                    '<div class="k-banner warn" style="margin:0;align-items:center;flex-wrap:wrap">' + icon(ICONS.warn, 20) + '<span style="flex:1 1 140px">' + esc(t.pauseUntilLong(clock(pausedUntil(h)))) + '</span>' +
+                    '<button type="button" class="k-btn small primary" data-act="resume" data-mac="' + esc(h.mac) + '">' + esc(t.pauseResume) + '</button></div>' :
+                    '<div class="k-types">' + [['30', t.pause30], ['60', t.pause60], ['120', t.pause120], ['morning', t.pauseMorning]].map(function (o) {
+                        return '<button type="button" class="k-btn small" data-act="pause" data-mac="' + esc(h.mac) + '" data-v="' + o[0] + '">' + esc(o[1]) + '</button>';
+                    }).join('') + '</div>') +
+                '<span class="muted small" style="font-weight:400">' + esc(t.pauseSub) + '</span></div>') +
             /* only where it means something: the device's network asks for approval */
             (approvalOn(h.network_key) ? '<div class="k-setting" style="padding:0"><div class="k-setting-text"><b>' + esc(t.dApproval) + '</b><span class="muted">' + esc(t.dApprovalSub) + '</span></div>' +
                 toggle(!!cfg.approved, 'data-act="approval" data-mac="' + esc(h.mac) + '"', t.dApproval) + '</div>' : '') +
@@ -1534,6 +1564,12 @@
             case 'approve':
                 setDev(mac, { approved: true });
                 break;
+            case 'pause':
+                pauseDevice(mac, v === 'morning' ? { until: 'morning' } : { minutes: v }, false);
+                return;
+            case 'resume':
+                pauseDevice(mac, {}, true);
+                return;
             case 'approval':
                 setDev(mac, { approved: !devCfg(mac).approved });
                 break;

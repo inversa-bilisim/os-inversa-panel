@@ -663,6 +663,9 @@ header.page-content-head { display: none; }
 .inversapanel .k-about-partver { flex: 0 0 96px; font-size: 13px; }
 .inversapanel .k-about-support b { display: block; font-weight: 600; }
 .inversapanel .k-about-support .k-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: 13px; }
+.inversapanel .k-bk { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; align-items: stretch; }
+.inversapanel .k-bk .k-card { gap: 12px; }
+.inversapanel a.k-btn { text-decoration: none; }
 .inversapanel .k-up { display: flex; flex-direction: column; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--k-line-2); }
 .inversapanel .k-up-new { display: flex; flex-direction: column; gap: 8px; }
 .inversapanel .k-up-notes { max-height: 220px; overflow-y: auto; white-space: pre-wrap; }

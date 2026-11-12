@@ -489,6 +489,8 @@ function inversapanel_cron()
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel logcollect', '*']],
         /* tell by Telegram what happened (does nothing unless notifications are set up) */
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel notify run', '*']],
+        /* a copy of the configuration for the Backup page, when it changed since the last one */
+        ['autocron' => ['/usr/local/sbin/configctl -d inversapanel backup nightly', '15', '3']],
         /* free country database refresh (only acts when country blocking is on and no other source is set) */
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel geoip normal', '40', '4']],
     ];

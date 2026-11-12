@@ -66,7 +66,7 @@ window.InversaPanelI18n.it = {
     lgTypeLogin: 'Accesso al pannello', lgTypeConfig: 'Modifica impostazioni', lgSystem: 'Sistema',
     lgLogin: 'Accesso al pannello', lgLoginOk: 'Riuscito', lgLoginTry: 'Tentativo di accesso', lgLoginBad: 'Password errata', lgConfig: 'Impostazione modificata',
     pgRange: function (a, b, n) { return a + '–' + b + ' di ' + n; }, pgSize: 'Per pagina', pgPrev: 'Pagina precedente', pgNext: 'Pagina successiva', pgPages: 'Pagine', pgPage: function (n) { return 'Pagina ' + n; },
-    tabNotify: 'Notifiche',
+    tabBackup: 'Backup', tabNotify: 'Notifiche',
     tabScan: 'Impostazioni esistenti', scanOpen: 'Apri la pagina', scanAdopt: 'Prendi in carico', welcomeScan: 'Esamina le impostazioni esistenti',
     tabAbout: 'Informazioni', aboutSub: 'La versione installata, chi lo sviluppa, a chi rivolgersi e il software su cui si basa il pannello.',
     aboutVersion: 'Versione', aboutRunsOn: 'In esecuzione su', aboutLicense: 'Licenza', aboutSource: 'Codice sorgente',

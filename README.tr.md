@@ -43,6 +43,7 @@ Ekran görüntülerindeki veriler örnektir.
 - Korunan ağlarda görülen bütün cihazlar; ağı, adresi ve durumuyla. Arama ve filtreler, ad ve tür verme.
 - Tek tıkla bir cihazın internetini kesme, sabit IP verme, onay isteyen ağlarda yeni cihazları onaylama.
 - Zamanlama: seçilen cihazlar için seçilen saatlerde interneti kesme ya da uygulama engelleme.
+- Bir cihazı 30 dakika, bir saat, iki saat ya da sabaha kadar durdurma; süre bitince kendiliğinden açılır.
 
 **Güvenlik**
 - Kategoriler (reklam ve izleyiciler, zararlı yazılım ve oltalama, yetişkin içerik, kumar, VPN ve proxy), on iki uygulama, güvenli arama ve başka DNS sunucusu kullanmaya çalışan cihazlar için "DNS'i zorla".
@@ -54,6 +55,9 @@ Ekran görüntülerindeki veriler örnektir.
 - Saldırılar: saldırı uyarıları, ülke kısıtına takılanlar ve güvenlik duvarının reddettiği bağlantılar; kaynağın ülkesi ve adresi engelleme düğmesiyle. 30 gün saklanır.
 - İnternet geçmişi: hangi cihaz hangi alan adını sordu, hangisi engellendi. Açılmadıkça kapalıdır; ağ bazında seçilir.
 - Erişim ve değişiklikler: VPN bağlantıları, panele girişler, yeni cihazlar, yapılandırmayı kimin değiştirdiği. 90 gün saklanır.
+
+**Yedek**
+- Yapılandırmayı indirme, dosyadan geri yükleme ve her gece alınan kopya (son 7 kopya güvenlik duvarında saklanır).
 
 **Bildirimler**
 - Bir Telegram botu; ağa yeni bir cihaz girdiğinde ya da onay beklediğinde, saldırı önleme uyarı verdiğinde, bir VPN cihazı bağlandığında, internet bağlantısı koptuğunda ve hatalı giriş denemesinde haber verir. Güvenlik duvarı yalnızca gönderir; Telegram'dan komut almaz.

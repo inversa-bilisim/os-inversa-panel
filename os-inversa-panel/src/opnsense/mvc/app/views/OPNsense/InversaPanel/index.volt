@@ -23,6 +23,7 @@
 <script src="/ui/js/inversapanel/views/ips.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/views/logs.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/views/notify.js?v={{ inversapanel_version }}"></script>
+<script src="/ui/js/inversapanel/views/backup.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/views/scan.js?v={{ inversapanel_version }}"></script>
 <script src="/ui/js/inversapanel/views/about.js?v={{ inversapanel_version }}"></script>
 <!-- QR codes for VPN devices: the same library OPNsense's own WireGuard page uses -->

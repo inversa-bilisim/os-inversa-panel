@@ -43,6 +43,7 @@ Screenshots show sample data.
 - Every device seen on the protected networks, with its network, address and state; search and filters; names and types.
 - Cut a device's internet access with one click, give it a fixed address, approve new devices on networks that ask for it.
 - Schedules: cut internet access or block apps for chosen devices at chosen times.
+- Pause a device for 30 minutes, an hour, two hours or until the morning; it comes back by itself.
 
 **Security**
 - Categories (ads and trackers, malware and phishing, adult content, gambling, VPN and proxy), twelve apps, safe search, and "Enforce DNS" for devices that try to use another DNS server.
@@ -54,6 +55,9 @@ Screenshots show sample data.
 - Attacks: attack alerts, what the country rules stopped and connections the firewall refused, with the source's country and a button to block an address. Kept 30 days.
 - Internet history: which device asked for which domain and what was blocked. Off unless switched on, per network.
 - Access and changes: VPN connections, logins to the web interface, new devices, who changed the configuration. Kept 90 days.
+
+**Backup**
+- Download the configuration, put it back from a file, and a copy taken every night (the last 7 are kept on the firewall).
 
 **Notifications**
 - A Telegram bot tells you when a new device joins the network or waits for approval, when attack protection raises an alert, when a VPN device connects, when the internet connection was down and when somebody fails to log in. The firewall only sends; it takes no commands from Telegram.

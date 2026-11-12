@@ -8,6 +8,7 @@
  * Runs every minute (inversapanel_cron) and right after "Apply":
  *  - "cut internet" schedules: current IPs of their devices go into pf table <inversapanel_sched>
  *    (blocked by a rule from inversapanel_firewall), existing states of newly cut devices are killed
+ *  - devices paused for a while on the Devices page are cut the same way until their time is up
  *  - "block apps" schedules: one Unbound blocklist policy per schedule, limited to the devices'
  *    addresses, enabled only while the schedule is active; rewritten only when that changes
  */
@@ -19,6 +20,7 @@ use OPNsense\Core\Config;
 use OPNsense\InversaPanel\Catalog;
 use OPNsense\InversaPanel\InversaPanel;
 use OPNsense\InversaPanel\Overview;
+use OPNsense\InversaPanel\Pause;
 use OPNsense\Unbound\Unbound;
 
 $state_file = '/var/run/inversapanel_schedule.json';
@@ -87,6 +89,13 @@ foreach ($mdl->schedules->schedule->iterateItems() as $uuid => $sched) {
             'wildcards' => array_values(array_unique($domains)),
             'name' => (string)$sched->name,
         ];
+    }
+}
+
+/* ---- devices paused for a while: cut until their time is up */
+foreach (Pause::tidy() as $mac => $until) {
+    if ($enabled) {
+        $cut_ips = array_merge($cut_ips, $hosts[strtolower($mac)] ?? []);
     }
 }
 
