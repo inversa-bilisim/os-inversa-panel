@@ -27,7 +27,13 @@
 
     function load() {
         return h.api('GET', '/api/inversapanel/state/about').then(function (data) { A.data = data; }, function () { A.data = {}; })
-            .then(function () { return poll(); });
+            .then(function () { return poll(); })
+            .then(function () {
+                /* the page was reloaded by an update that went through: say how it went */
+                if (flag(false) && U.status && U.status.state === 'done') {
+                    h.notice((U.status.problems || []).length ? 'err' : 'ok', doneText(h.T(), U.status), [], SHOW);
+                }
+            });
     }
 
     /* while an update runs the page asks how it goes; the firewall's web server may not answer for a moment */
@@ -45,7 +51,12 @@
             /* the update went through while this page was open: load the new version of the page */
             if (status.state === 'done' && U.wasRunning) {
                 U.wasRunning = false;
-                setTimeout(function () { window.location.reload(); }, 2500);
+                flag(true);
+                setTimeout(function () { window.location.reload(); }, 1500);
+            }
+            if (status.state === 'failed' && U.wasRunning) {
+                U.wasRunning = false;
+                h.notice('err', h.T().upFailed + ' ' + (h.T().upErrors[status.error] || status.error || '') + (status.detail ? ' (' + status.detail + ')' : ''), [], SHOW);
             }
         }, function () { /* asked again on the next round */ }).then(function () {
             var busy = !!U.asked || (U.status && U.status.state === 'running');
@@ -54,29 +65,40 @@
         });
     }
 
+    /* how long a message about updates stays at the top */
+    var SHOW = 10000;
+
+    function doneText(T, s) {
+        var lines = [T.upDone(s.from, s.to)];
+        (s.restored || []).forEach(function (k) { lines.push(T.upRestored[k] || k); });
+        (s.problems || []).forEach(function (k) { lines.push(T.upProblems[k] || k); });
+        if (!(s.restored || []).length && !(s.problems || []).length) { lines.push(T.upAllThere); }
+        return lines.join(' ');
+    }
+
+    function flag(set) {
+        try {
+            if (set) { window.sessionStorage.setItem('inversapanelUpdated', '1'); return true; }
+            var was = window.sessionStorage.getItem('inversapanelUpdated') === '1';
+            window.sessionStorage.removeItem('inversapanelUpdated');
+            return was;
+        } catch (e) { return false; }
+    }
+
     function updateBox(T) {
         var s = U.status || {}, c = U.check, html = '';
         var note = function (kind, text) { return '<div class="k-note ' + kind + '">' + h.esc(text) + '</div>'; };
         if (s.state === 'running') {
             return '<div class="k-up">' + note('info', T.upRunning(s.to || '…') + ' ' + (T.upSteps[s.step] || '')) + '</div>';
         }
-        if (s.state === 'done') {
-            var lines = [T.upDone(s.from, s.to)];
-            (s.restored || []).forEach(function (k) { lines.push(T.upRestored[k] || k); });
-            (s.problems || []).forEach(function (k) { lines.push(T.upProblems[k] || k); });
-            if (!(s.restored || []).length && !(s.problems || []).length) { lines.push(T.upAllThere); }
-            html += note((s.problems || []).length ? 'warn' : 'ok', lines.join(' '));
-        } else if (s.state === 'failed') {
-            html += note('warn', T.upFailed + ' ' + (T.upErrors[s.error] || s.error || '') + (s.detail ? ' (' + s.detail + ')' : ''));
+        /* what was put back or could not be: stays until the next update; the rest is said at the top and goes */
+        if (s.state === 'done' && ((s.restored || []).length || (s.problems || []).length)) {
+            html += note((s.problems || []).length ? 'warn' : 'ok', doneText(T, s));
         }
-        if (c && c.error) {
-            html += note('warn', T.upErrors[c.error] || c.error);
-        } else if (c && c.newer) {
+        if (c && c.newer) {
             html += '<div class="k-up-new"><b>' + h.esc(T.upNew(c.latest)) + '</b>' +
                 (c.notes ? '<pre class="k-about-pre k-up-notes">' + h.esc(c.notes) + '</pre>' : '') +
                 '<span class="muted small">' + h.esc(T.upBackupNote) + '</span></div>';
-        } else if (c) {
-            html += note('ok', T.upCurrent(c.installed));
         }
         if (c && c.newer) {
             html += '<div class="k-btns"><button type="button" class="k-btn primary" data-act="about:install">' + h.esc(T.upInstall(c.latest)) + '</button></div>';
@@ -163,7 +185,13 @@
                 U.checking = true;
                 h.api('POST', '/api/inversapanel/update/check', {}).then(function (res) {
                     U.check = res && res.status === 'ok' ? res : { error: (res && res.error) || 'unreachable' };
-                }, function () { U.check = { error: 'unreachable' }; }).then(function () { U.checking = false; h.redraw('main'); });
+                }, function () { U.check = { error: 'unreachable' }; }).then(function () {
+                    var T = h.T(), c = U.check;
+                    U.checking = false;
+                    /* said at the top, gone after ten seconds; a new version also stays in the card with its button */
+                    if (c.error) { h.notice('err', T.upErrors[c.error] || c.error, [], SHOW); U.check = null; } else if (c.newer) { h.notice('ok', T.upNew(c.latest), [], SHOW); } else { h.notice('ok', T.upCurrent(c.installed), [], SHOW); U.check = null; }
+                    h.redraw('main');
+                });
                 return 'main';
             }
             if (name === 'install' && U.check && U.check.newer && window.confirm(h.T().upConfirm(U.check.latest))) {

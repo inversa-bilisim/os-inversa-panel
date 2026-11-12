@@ -647,7 +647,7 @@ header.page-content-head { display: none; }
 
 /* about */
 .inversapanel button.k-brand { border: none; background: transparent; padding: 0; text-align: left; cursor: pointer; color: inherit; font: inherit; }
-.inversapanel .k-about { display: grid; grid-template-columns: minmax(0, 250fr) minmax(0, 350fr); gap: 16px; align-items: start; }
+.inversapanel .k-about { display: grid; grid-template-columns: minmax(0, 215fr) minmax(0, 385fr); gap: 16px; align-items: start; }
 .inversapanel .k-about-left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 @media (max-width: 900px) { .inversapanel .k-about { grid-template-columns: minmax(0, 1fr); } }
 .inversapanel .k-about-brand { display: flex; align-items: center; gap: 14px; }

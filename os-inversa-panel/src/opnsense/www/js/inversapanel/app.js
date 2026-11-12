@@ -708,10 +708,11 @@
             '<div class="k-note" style="flex:1 1 auto">' + esc(nt.text) + list + '</div>' +
             (nt.type === 'ok' && !list ? '' : '<button type="button" class="k-icon-btn" data-act="dismiss" aria-label="' + esc(t.close) + '">' + icon(ICONS.close, 16) + '</button>') +
             '</div>';
-        if (nt.type === 'ok' && !list && !nt.timer) {
+        /* a good message without a list goes by itself; so does any message that says for how long it stays (ms) */
+        if (((nt.type === 'ok' && !list) || nt.ms) && !nt.timer) {
             /* fade, then drop the message */
             nt.timer = setTimeout(function () {
-                var box = slot.querySelector('.k-pending-inline.ok');
+                var box = slot.querySelector('.k-pending-inline');
                 if (box) { box.classList.add('fade'); }
                 setTimeout(function () {
                     if (S.ui.notice === nt) {
@@ -719,7 +720,7 @@
                         renderPending();
                     }
                 }, 650);
-            }, 6000);
+            }, nt.ms || 6000);
         }
     }
 
@@ -1830,7 +1831,7 @@
         T: function () { return T(); },
         S: function () { return S; },
         redraw: redraw,
-        notice: function (type, text, list) { S.ui.notice = { type: type, text: text, list: list || [] }; renderPending(); },
+        notice: function (type, text, list, ms) { S.ui.notice = { type: type, text: text, list: list || [], ms: ms || 0 }; renderPending(); },
         hosts: function () { return S.hosts; },
         /* confirm-or-put-back countdown: the running one (or null), start one */
         countdown: function () { return S.ui.countdown; },
