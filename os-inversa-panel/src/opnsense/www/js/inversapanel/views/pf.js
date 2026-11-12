@@ -4,7 +4,8 @@
  *
  * Port forwarding on top of OPNsense's NAT port forward rules. Adding, switching and deleting
  * act immediately (like in Firewall > NAT); complex existing rules are listed read-only.
- * The outer port suggests the ports people forward most and fills in name, inner port and protocol.
+ * The outer port suggests the ports people forward most and fills in name, inner port and protocol;
+ * the target suggests the devices on the network. Both lists work with the arrow keys and Enter.
  */
 (function () {
     'use strict';
@@ -15,7 +16,7 @@
     var KNOWN = [['443', 'tcp'], ['80', 'tcp'], ['22', 'tcp'], ['3389', 'tcp'], ['5900', 'tcp'], ['21', 'tcp'], ['25', 'tcp'], ['8080', 'tcp'], ['8123', 'tcp'],
         ['554', 'tcp'], ['32400', 'tcp'], ['25565', 'tcp'], ['27015', 'tcp/udp'], ['3074', 'tcp/udp'], ['1194', 'udp'], ['51820', 'udp']];
 
-    var P = { data: null, form: { name: '', autoName: '', protocol: 'tcp', port: '', target_port: '', target: '' }, open: false, busy: false, error: null };
+    var P = { data: null, form: { name: '', autoName: '', protocol: 'tcp', port: '', target_port: '', target: '' }, open: false, hi: -1, busy: false, error: null };
 
     /* the known ports that start with what was typed */
     function suggestions() {
@@ -26,11 +27,125 @@
     /* a known port brings its name, the same inner port and its protocol, unless those were typed by hand */
     function applyKnown() {
         var f = P.form, hit = KNOWN.filter(function (k) { return k[0] === f.port; })[0];
-        if (!hit) { return; }
+        /* a name that came from a known port goes with it */
+        if (!hit) { if (f.name && f.name === f.autoName) { f.name = ''; f.autoName = ''; } return; }
         var name = h.T().pfPorts[hit[0]] || '';
         if (!f.name || f.name === f.autoName) { f.name = name; f.autoName = name; }
         if (!f.target_port || f.target_port === f.autoPort) { f.target_port = hit[0]; f.autoPort = hit[0]; }
         f.protocol = hit[1];
+    }
+
+    /* the inner port follows the outer one until it is typed by hand */
+    function follow() {
+        var f = P.form;
+        if (!f.target_port || f.target_port === f.autoPort) { f.target_port = f.port; f.autoPort = f.port; }
+    }
+
+    /* the devices that can be a target, the ones that are on now first; narrowed by what was typed (name or address) */
+    function targets() {
+        var typed = P.form.target.toLowerCase();
+        return h.hosts().filter(function (x) { return x.ips.length && x.ips[0].indexOf(':') < 0; }).map(function (x) {
+            return { ip: x.ips[0], name: h.devName(x), online: !!x.online };
+        }).filter(function (o) {
+            return !typed || o.ip.indexOf(typed) >= 0 || o.name.toLowerCase().indexOf(typed) >= 0;
+        }).sort(function (a, b) { return (b.online - a.online) || a.name.localeCompare(b.name); });
+    }
+
+    /* the list under the outer port ('port') or under the target ('target') */
+    function listHtml(kind) {
+        var T = h.T(), items;
+        if (kind === 'port') {
+            items = suggestions().map(function (o) {
+                return '<button type="button" class="k-combo-item" role="option" tabindex="-1" data-act="pf:pick" data-v="' + o.port + '"><span class="mono">' + o.port + '</span><span>' + h.esc(o.name) + '</span></button>';
+            });
+        } else {
+            items = targets().map(function (o) {
+                return '<button type="button" class="k-combo-item" role="option" tabindex="-1" data-act="pf:picktarget" data-v="' + h.esc(o.ip) + '"><span class="k-dot ' + (o.online ? 'ok' : '') + '"></span>' +
+                    '<span class="k-combo-name">' + h.esc(o.name) + '</span><span class="mono k-combo-ip">' + h.esc(o.ip) + '</span></button>';
+            });
+        }
+        if (!items.length) { return ''; }
+        return '<div class="k-combo-list' + (kind === 'target' ? ' wide' : '') + '" role="listbox">' + items.join('') +
+            '<div class="k-combo-hint">' + h.esc(kind === 'port' ? T.pfListHint : T.pfTargetHint) + '</div></div>';
+    }
+
+    /* lists open, narrow and close without a redraw, so the field that is being typed in keeps the cursor */
+    function closeList() {
+        P.open = false;
+        P.hi = -1;
+        var lists = document.querySelectorAll('.inversapanel .k-combo-list');
+        for (var i = 0; i < lists.length; i++) { lists[i].parentNode.removeChild(lists[i]); }
+    }
+
+    function showList(kind) {
+        closeList();
+        var input = document.querySelector('[data-input="pf:' + kind + '"]'), html = listHtml(kind);
+        P.open = kind;
+        if (input && html) { input.insertAdjacentHTML('afterend', html); }
+    }
+
+    function items() {
+        return document.querySelectorAll('.inversapanel .k-combo-list .k-combo-item');
+    }
+
+    function highlight(index) {
+        var all = items();
+        if (!all.length) { P.hi = -1; return; }
+        P.hi = (index + all.length) % all.length;
+        for (var i = 0; i < all.length; i++) { all[i].className = 'k-combo-item' + (i === P.hi ? ' hi' : ''); }
+        if (all[P.hi].scrollIntoView) { all[P.hi].scrollIntoView({ block: 'nearest' }); }
+    }
+
+    function focusOn(selector, select) {
+        setTimeout(function () {
+            var el = document.querySelector(selector);
+            if (el && !el.disabled) { el.focus(); if (select && el.select) { el.select(); } }
+        }, 0);
+    }
+
+    function outside(el) {
+        return !(el && el.closest && el.closest('.k-combo'));
+    }
+
+    function fieldOf(el) {
+        var kind = el && el.getAttribute && el.getAttribute('data-input');
+        return kind && kind.indexOf('pf:') === 0 ? kind.slice(3) : '';
+    }
+
+    if (document.addEventListener) {
+        document.addEventListener('click', function (event) { if (P.open && outside(event.target)) { closeList(); } });
+        document.addEventListener('focusin', function (event) {
+            var el = event.target, field = fieldOf(el);
+            if (P.open && outside(el)) { closeList(); }
+            /* the target shows the devices as soon as it is entered */
+            if (field === 'target' && P.open !== 'target') { showList('target'); }
+            if (field === 'port' && P.open === 'target') { closeList(); }
+            /* the inner port comes filled in: selected, so typing replaces it and Tab keeps it */
+            if (field === 'target_port' && el.select) { el.select(); }
+        });
+        /* arrows walk the list, Enter takes the marked one (or goes on to the next field), Escape closes */
+        document.addEventListener('keydown', function (event) {
+            var field = fieldOf(event.target), key = event.key;
+            if (!field) { return; }
+            var combo = field === 'port' || field === 'target';
+            if (key === 'Escape' && P.open) { closeList(); return; }
+            if (combo && (key === 'ArrowDown' || key === 'ArrowUp')) {
+                event.preventDefault();
+                if (P.open !== field || !items().length) { showList(field); if (key === 'ArrowUp') { return; } }
+                highlight(P.hi + (key === 'ArrowDown' ? 1 : -1));
+                return;
+            }
+            if (key !== 'Enter') { return; }
+            event.preventDefault();
+            var marked = combo && P.open === field && P.hi >= 0 ? items()[P.hi] : null;
+            if (marked) { marked.click(); return; }
+            /* a name was typed and one device answers to it: that one */
+            if (field === 'target' && P.open === 'target' && items().length === 1 && !/^[0-9.]+$/.test(P.form.target)) { items()[0].click(); return; }
+            closeList();
+            if (field === 'port') { focusOn('[data-input="pf:target_port"]', true); }
+            if (field === 'target_port') { focusOn('[data-input="pf:target"]'); }
+            if (field === 'target' || field === 'name') { focusOn('[data-act="pf:add"]'); }
+        });
     }
 
     function load() {
@@ -71,19 +186,16 @@
             if (!P.data) { return html + '<div class="k-loading">…</div></div>'; }
             if (P.error) { html += '<div class="k-banner err" style="margin:0">' + h.icon(h.ICONS.warn, 20) + '<span>' + h.esc(P.error) + '</span></div>'; }
 
-            var targets = h.hosts().filter(function (x) { return x.ips.length && x.ips[0].indexOf(':') < 0; });
-            var list = P.open ? suggestions() : [], dev = deviceFor(f.target);
+            var dev = deviceFor(f.target);
             html += '<section class="k-card k-nform"><div class="k-card-head"><h2>' + h.esc(T.pfNew) + '</h2><span class="muted small">' + h.esc(T.pfWanIs(P.data.wan_address || '—')) + '</span></div>' +
                 '<div class="k-pfline">' +
                 '<div class="k-nf k-combo"><span class="k-nl">' + h.esc(T.pfExt) + '</span><input type="text" inputmode="numeric" class="mono" style="width:92px" autocomplete="off" data-input="pf:port" data-act="pf:open" value="' + h.esc(f.port) + '" aria-label="' + h.esc(T.pfExt) + '">' +
-                (list.length ? '<div class="k-combo-list" role="listbox">' + list.map(function (o) {
-                    return '<button type="button" class="k-combo-item" role="option" data-act="pf:pick" data-v="' + o.port + '"><span class="mono">' + o.port + '</span><span>' + h.esc(o.name) + '</span></button>';
-                }).join('') + '<div class="k-combo-hint">' + h.esc(T.pfListHint) + '</div></div>' : '') + '</div>' +
+                (P.open === 'port' ? listHtml('port') : '') + '</div>' +
                 '<span class="k-pfarrow" aria-hidden="true">→</span>' +
-                '<label class="k-nf k-pfgrow"><span class="k-nl">' + h.esc(T.pfTarget) + (dev ? ' · <span style="font-weight:400">' + h.esc(dev) + '</span>' : '') + '</span>' +
-                '<input type="text" class="mono" list="k-pf-devices" autocomplete="off" data-input="pf:target" value="' + h.esc(f.target) + '" placeholder="' + h.esc(T.pfTargetPh) + '">' +
-                '<datalist id="k-pf-devices">' + targets.map(function (x) { return '<option value="' + h.esc(x.ips[0]) + '">' + h.esc(h.devName(x)) + '</option>'; }).join('') + '</datalist></label>' +
                 '<label class="k-nf"><span class="k-nl">' + h.esc(T.pfInt) + '</span><input type="text" inputmode="numeric" class="mono" style="width:92px" data-input="pf:target_port" value="' + h.esc(f.target_port) + '" placeholder="' + h.esc(f.port) + '"></label>' +
+                '<div class="k-nf k-pfgrow k-combo"><span class="k-nl">' + h.esc(T.pfTarget) + '<span id="k-pf-dev" style="font-weight:400">' + (dev ? ' · ' + h.esc(dev) : '') + '</span></span>' +
+                '<input type="text" class="mono" autocomplete="off" spellcheck="false" data-input="pf:target" value="' + h.esc(f.target) + '" placeholder="' + h.esc(T.pfTargetPh) + '" aria-label="' + h.esc(T.pfTarget) + '">' +
+                (P.open === 'target' ? listHtml('target') : '') + '</div>' +
                 '<div class="k-nf"><span class="k-nl">' + h.esc(T.pfProto) + '</span><div class="k-seg">' + [['tcp', 'TCP'], ['udp', 'UDP'], ['tcp/udp', 'TCP+UDP']].map(function (o) {
                     return '<button type="button" class="' + (f.protocol === o[0] ? 'on' : '') + '" data-act="pf:proto" data-v="' + o[0] + '">' + o[1] + '</button>';
                 }).join('') + '</div></div>' +
@@ -111,15 +223,26 @@
         act: function (name, el) {
             var v = el.getAttribute('data-v'), f = P.form;
             switch (name) {
-                case 'open': P.open = true; return 'main-keepfocus';
+                case 'open': P.open = 'port'; P.hi = -1; return 'main-keepfocus';
                 case 'pick':
                     f.port = v;
                     P.open = false;
+                    P.hi = -1;
+                    follow();
                     applyKnown();
+                    /* on to the inner port, selected: typing replaces it, Tab keeps it */
+                    focusOn('[data-input="pf:target_port"]', true);
+                    return 'main';
+                case 'picktarget':
+                    f.target = v;
+                    P.open = false;
+                    P.hi = -1;
+                    focusOn('[data-act="pf:add"]');
                     return 'main';
                 case 'proto': f.protocol = v; return 'main';
                 case 'add':
                     P.open = false;
+                    P.hi = -1;
                     call('/api/inversapanel/portforward/add', { name: f.name || 'Port ' + f.port, protocol: f.protocol, port: f.port, target: f.target, target_port: f.target_port || f.port });
                     return null;
                 case 'toggle':
@@ -138,12 +261,18 @@
             if (name === 'port') {
                 /* the list narrows while typing; a port it knows fills in the rest */
                 if (type === 'change') { return null; }
-                P.open = true;
+                P.open = 'port';
+                P.hi = -1;
+                follow();
                 applyKnown();
                 return 'main-keepfocus';
             }
-            P.open = false;
-            return type === 'change' ? 'main' : null;
+            /* no redraw here: it would take the cursor away from the field Tab just went to */
+            if (name === 'target' && type !== 'change') { showList('target'); }
+            var add = document.querySelector('[data-act="pf:add"]'), dev = document.getElementById('k-pf-dev');
+            if (add) { add.disabled = P.busy || !P.form.target || !P.form.port; }
+            if (dev) { var who = deviceFor(P.form.target); dev.textContent = who ? ' · ' + who : ''; }
+            return null;
         }
     });
 })();

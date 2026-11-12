@@ -19,6 +19,18 @@ class Scan
 {
     /* at most this many names per finding, the count says the rest */
     const NAMES = 8;
+    /* at most this many lines where a finding is listed one by one */
+    const LINES = 60;
+
+    /**
+     * one firewall rule in a line: where, what it does, what it is called (or from where to where)
+     */
+    private static function ruleLine($interface, $action, $descr, $source, $destination, $enabled)
+    {
+        $where = $interface !== '' ? strtoupper(str_replace(',', ', ', $interface)) : '*';
+        $what = $descr !== '' ? $descr : ($source !== '' || $destination !== '' ? ($source ?: '*') . ' → ' . ($destination ?: '*') : '—');
+        return $where . ' · ' . $action . ' · ' . $what . ($enabled ? '' : ' (off)');
+    }
 
     private static function finding($id, $level, array $names, $page = '', $count = null)
     {
@@ -153,11 +165,26 @@ class Scan
 
         /* --- firewall rules and NAT made in OPNsense --- */
         self::attempt($out, function () use ($cfg) {
-            $rules = isset($cfg->filter->rule) ? count($cfg->filter->rule) : 0;
+            $rules = 0;
+            $lines = [];
+            foreach ($cfg->filter->rule ?? [] as $rule) {
+                $rules++;
+                $lines[] = self::ruleLine((string)($rule->interface ?? ''), (string)($rule->type ?? 'pass'), (string)($rule->descr ?? ''), '', '', !isset($rule->disabled));
+            }
             $nat = 0;
             if (class_exists('\OPNsense\Firewall\Filter')) {
                 $filter = new \OPNsense\Firewall\Filter();
-                $rules += iterator_count($filter->rules->rule->iterateItems());
+                foreach ($filter->rules->rule->iterateItems() as $rule) {
+                    $rules++;
+                    $lines[] = self::ruleLine(
+                        (string)$rule->interface,
+                        (string)$rule->action,
+                        (string)$rule->description,
+                        (string)$rule->source_net,
+                        (string)$rule->destination_net,
+                        !$rule->enabled->isEmpty()
+                    );
+                }
                 foreach (['snatrules', 'onetoone', 'npt'] as $section) {
                     $nat += iterator_count($filter->$section->rule->iterateItems());
                 }
@@ -169,10 +196,16 @@ class Scan
                 $nat += count($cfg->nat->onetoone);
             }
             $mode = isset($cfg->nat->outbound->mode) ? (string)$cfg->nat->outbound->mode : 'automatic';
-            return [
-                $rules > 0 ? self::finding('rules', 'stays', [], '', $rules) : null,
-                $nat > 0 || !in_array($mode, ['automatic', '']) ? self::finding('nat', 'stays', [], '', max($nat, 1)) : null,
-            ];
+            $found = $rules > 0 ? self::finding('rules', 'stays', [], '', $rules) : null;
+            if ($found !== null) {
+                $found['lines'] = array_slice($lines, 0, self::LINES);
+                $found['link'] = '/ui/firewall/filter';
+            }
+            $foundNat = $nat > 0 || !in_array($mode, ['automatic', '']) ? self::finding('nat', 'stays', [], '', max($nat, 1)) : null;
+            if ($foundNat !== null) {
+                $foundNat['link'] = '/ui/firewall/source_nat';
+            }
+            return [$found, $foundNat];
         });
 
         /* --- VPN --- */

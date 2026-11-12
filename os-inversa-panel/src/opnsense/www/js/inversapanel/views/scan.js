@@ -23,6 +23,9 @@
         var text = (T.scanFindings || {})[f.id] || [f.id, ''];
         var names = (f.names || []).map(h.esc).join(', ');
         if (names && f.count > f.names.length) { names += ' … (+' + (f.count - f.names.length) + ')'; }
+        /* where each one matters by itself (firewall rules), one per line */
+        var lines = (f.lines || []).map(function (l) { return '<span class="k-scan-line">' + h.esc(l) + '</span>'; }).join('');
+        if (lines && f.count > f.lines.length) { lines += '<span class="k-scan-line">… (+' + (f.count - f.lines.length) + ')</span>'; }
         var buttons = '';
         if (f.id === 'dns_names') {
             buttons += '<button type="button" class="k-btn" data-act="scan:adopt"' + (C.busy ? ' disabled' : '') + '>' + h.esc(T.scanAdopt) + '</button>';
@@ -30,9 +33,13 @@
         if (f.page) {
             buttons += '<button type="button" class="k-btn" data-act="tab" data-v="' + h.esc(f.page) + '">' + h.esc(T.scanOpen) + '</button>';
         }
+        if (f.link) {
+            buttons += '<a class="k-btn" href="' + h.esc(f.link) + '">' + h.esc(T.scanOpenOpn) + '</a>';
+        }
         return '<div class="k-setting k-scan-row"><div class="k-setting-text"><b>' + h.esc(text[0]) +
-            (f.count > 1 || names ? ' <span class="k-count">' + h.esc(f.count) + '</span>' : '') + '</b>' +
+            (f.count > 1 || names || lines ? ' <span class="k-count">' + h.esc(f.count) + '</span>' : '') + '</b>' +
             (names ? '<span class="mono small k-scan-names">' + names + '</span>' : '') +
+            (lines ? '<span class="mono small k-scan-names k-scan-lines">' + lines + '</span>' : '') +
             '<span class="muted">' + h.esc(text[1]) + '</span></div>' +
             (buttons ? '<div class="k-btns">' + buttons + '</div>' : '') + '</div>';
     }

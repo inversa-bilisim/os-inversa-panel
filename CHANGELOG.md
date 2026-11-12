@@ -6,6 +6,9 @@
 - A device seen for the first time on a protected network is recorded as an event (overview, logs), also on networks without approval of new devices.
 - While notifications are on, the firewall connects to `api.telegram.org`.
 - The texts of the Notifications page are in Turkish and English; in the other languages they show in English for now.
+- Port forwarding: the outer and the inner port are side by side and the inner port follows the outer one, selected when you get to it. The list of known ports and a new list of the devices on the network work with the arrow keys and Enter, and close on Escape or a click elsewhere; an address that is not in the list can be typed. Moving through the form with Tab no longer loses the cursor.
+- Existing settings: the firewall rules made in OPNsense are listed one by one (interface, action, description), with a link to OPNsense's own page.
+- Internet connection: the Advanced card can be closed again.
 
 ## 1.1.1 (2026-11-12)
 
