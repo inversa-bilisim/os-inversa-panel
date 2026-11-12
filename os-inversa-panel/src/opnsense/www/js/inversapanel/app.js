@@ -1211,7 +1211,10 @@
                     '<td><div class="k-net"><span class="k-net-label cut">' + esc(t.apprWaiting) + '</span>' +
                     '<button type="button" class="k-btn small primary" data-act="approve" data-mac="' + esc(h.mac) + '" aria-label="' + esc(t.apprApproveAria(name)) + '">' + esc(t.apprApprove) + '</button></div></td>' :
                     '<td><div class="k-net"><span class="k-net-label' + (cut || paused ? ' cut' : '') + '">' + esc(cut ? t.netOff : (paused ? t.pauseUntil(clock(paused)) : t.netOn)) + '</span>' +
-                    toggle(!cut, 'data-act="cut" data-mac="' + esc(h.mac) + '"', t.cutAria(name), cut ? 'cut' : '') + '</div></td>') +
+                    toggle(!cut, 'data-act="cut" data-mac="' + esc(h.mac) + '"', t.cutAria(name), cut ? 'cut' : '') + '</div>' +
+                    /* on a network that asks for approval: the permission to be on it, next to the internet switch */
+                    (approvalOn(h.network_key) ? '<div class="k-net k-net-appr"><span class="k-net-label">' + esc(t.dApprovalShort) + '</span>' +
+                        toggle(!!cfg.approved, 'data-act="approval" data-mac="' + esc(h.mac) + '"', t.apprToggleAria(name)) + '</div>' : '') + '</td>') +
                 '</tr>';
         }).join('');
     }

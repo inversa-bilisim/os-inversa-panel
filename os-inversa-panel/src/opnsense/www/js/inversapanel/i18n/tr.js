@@ -231,6 +231,7 @@ window.InversaPanelI18n.tr = {
     pauseUntil: function (c) { return c + '’e kadar durdu'; }, pauseUntilLong: function (c) { return 'İnternet saat ' + c + '’e kadar durduruldu.'; },
     pauseSub: 'Hemen etki eder, süre bitince internet kendiliğinden açılır.',
     dNet: 'İnternet erişimi', dNetSub: 'Kapatırsanız cihaz internete çıkamaz.',
+    dApprovalShort: 'Ağ izni', apprToggleAria: function (n) { return n + ' cihazının ağ izni'; },
     dApproval: 'Ağ onayı', dApprovalSub: 'Bu ağ yeni cihazlar için onay istiyor. Kapalıyken cihaz internete ve diğer ağlara çıkamaz.',
     apprWaiting: 'Onay bekliyor', apprApproved: 'Onaylı', apprApprove: 'Onayla',
     apprApproveAria: function (n) { return n + ' cihazını onayla'; },

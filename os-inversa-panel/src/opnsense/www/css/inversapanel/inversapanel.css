@@ -248,6 +248,7 @@
 .inversapanel .k-net { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
 .inversapanel .k-net-label { font-size: 13px; font-weight: 600; color: var(--k-text-2); }
 .inversapanel .k-net-label.cut { color: #9A3B0A; }
+.inversapanel .k-net-appr { margin-top: 4px; }
 .inversapanel .k-empty { padding: 32px; text-align: center; color: var(--k-muted); }
 .inversapanel .k-types { display: flex; flex-wrap: wrap; gap: 6px; }
 .inversapanel .k-type { width: 44px; height: 44px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--k-input); background: #fff; color: var(--k-muted); }
