@@ -237,7 +237,7 @@ window.InversaPanelI18n.en = {
     pauseUntil: function (c) { return 'Paused until ' + c; }, pauseUntilLong: function (c) { return 'Internet access is paused until ' + c + '.'; },
     pauseSub: 'Takes effect right away; the internet comes back by itself when the time is up.',
     dNet: 'Internet access', dNetSub: 'When off, the device cannot reach the internet.',
-    dApprovalShort: 'Network', apprToggleAria: function (n) { return 'Permission of ' + n + ' to be on the network'; },
+    apprAllowed: 'Allowed', apprRevoke: 'Remove the permission to be on this network', apprToggleAria: function (n) { return 'Permission of ' + n + ' to be on the network'; },
     dApproval: 'Network approval', dApprovalSub: 'This network asks for approval of new devices. When off, the device cannot reach the internet or other networks.',
     apprWaiting: 'Waiting for approval', apprApproved: 'Approved', apprApprove: 'Approve',
     apprApproveAria: function (n) { return 'Approve ' + n; },

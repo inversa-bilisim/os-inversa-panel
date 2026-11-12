@@ -1153,8 +1153,14 @@
     function networkBadge(h) {
         if (!h.network) { return '<span class="muted">—</span>'; }
         var net = (S.options.interfaces || []).filter(function (i) { return i.key === h.network_key; })[0];
-        return '<span class="k-netbadge"><span class="k-dot" style="background:' + esc(net && net.color ? net.color : '#5B6573') + '"></span>' +
-            esc(h.network) + '</span>';
+        var t = T(), dot = '<span class="k-dot" style="background:' + esc(net && net.color ? net.color : '#5B6573') + '"></span>';
+        if (!approvalOn(h.network_key)) { return '<span class="k-netbadge">' + dot + esc(h.network) + '</span>'; }
+        /* a network that asks for approval: the permission to be on it is the second half of the badge */
+        var wait = waiting(h), name = devName(h);
+        return '<span class="k-netbadge k-netperm">' + dot + esc(h.network) +
+            '<button type="button" class="k-netperm-btn ' + (wait ? 'wait' : 'ok') + '" data-act="' + (wait ? 'approve' : 'approval') + '" data-mac="' + esc(h.mac) + '" ' +
+            'title="' + esc(wait ? t.apprApproveAria(name) : t.apprRevoke) + '" aria-label="' + esc(wait ? t.apprApproveAria(name) : t.apprToggleAria(name)) + '">' +
+            (wait ? esc(t.apprApprove) : icon(ICONS.ok, 13) + esc(t.apprAllowed)) + '</button></span>';
     }
 
     /* the devices on the open page; a changed filter, search or order starts at the first page again */
@@ -1217,13 +1223,9 @@
                 '<span class="k-dot ' + (h.online ? 'ok' : '') + '"></span>' + esc(status) + '</span></td>' +
                 '<td style="font-variant-numeric:tabular-nums">' + esc(fmt(h.states)) + '</td>' +
                 (wait ?
-                    '<td><div class="k-net"><span class="k-net-label cut">' + esc(t.apprWaiting) + '</span>' +
-                    '<button type="button" class="k-btn small primary" data-act="approve" data-mac="' + esc(h.mac) + '" aria-label="' + esc(t.apprApproveAria(name)) + '">' + esc(t.apprApprove) + '</button></div></td>' :
+                    '<td><div class="k-net"><span class="k-net-label cut">' + esc(t.apprWaiting) + '</span></div></td>' :
                     '<td><div class="k-net"><span class="k-net-label' + (cut || paused ? ' cut' : '') + '">' + esc(cut ? t.netOff : (paused ? t.pauseUntil(clock(paused)) : t.netOn)) + '</span>' +
-                    toggle(!cut, 'data-act="cut" data-mac="' + esc(h.mac) + '"', t.cutAria(name), cut ? 'cut' : '') + '</div>' +
-                    /* on a network that asks for approval: the permission to be on it, next to the internet switch */
-                    (approvalOn(h.network_key) ? '<div class="k-net k-net-appr"><span class="k-net-label">' + esc(t.dApprovalShort) + '</span>' +
-                        toggle(!!cfg.approved, 'data-act="approval" data-mac="' + esc(h.mac) + '"', t.apprToggleAria(name)) + '</div>' : '') + '</td>') +
+                    toggle(!cut, 'data-act="cut" data-mac="' + esc(h.mac) + '"', t.cutAria(name), cut ? 'cut' : '') + '</div></td>') +
                 '</tr>';
         }).join('');
     }

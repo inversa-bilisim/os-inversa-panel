@@ -3,7 +3,7 @@
 ## 1.4.0 (2026-11-12)
 
 - Devices: **Pause for a while**. A device can be cut off for 30 minutes, an hour, two hours or until 07:00; it takes effect right away and the internet comes back by itself. "Resume" ends it earlier. The list shows until when a device is paused.
-- Devices: on a network that asks for approval of new devices, the list shows the permission to be on the network as a second switch, next to the internet switch.
+- Devices: on a network that asks for approval of new devices, the permission to be on the network is the second half of the network badge in the list: "Allowed" (click to remove it) or "Approve" for a device that waits.
 - Devices: **Wake up** for a device that is off (Wake-on-LAN); the device must have that enabled.
 - Internet connection: **Speed test**. Download, upload and latency, measured from the firewall itself against Cloudflare's speed test servers when the button is pressed. Cloudflare refuses tests made in a row for a while (about an hour after three tests on a fast line); the page then says how long to wait.
 - Health of the firewall: a disk that is 90% full, a processor at 85 °C or more and an OPNsense update that waits are events (overview, logs); the first two also show under "needs attention". Settings › Notifications has a switch for them, on by default.
