@@ -1,5 +1,5 @@
 PLUGIN_NAME=		inversa-panel
-PLUGIN_VERSION=		1.4.0
+PLUGIN_VERSION=		1.4.1
 PLUGIN_COMMENT=		Easy single-screen management: devices, DNS blocking, overview
 PLUGIN_MAINTAINER=	yazilim@inversa.com.tr
 PLUGIN_WWW=		https://github.com/inversa-bilisim/os-inversa-panel

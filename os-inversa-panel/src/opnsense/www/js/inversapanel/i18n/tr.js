@@ -231,6 +231,8 @@ window.InversaPanelI18n.tr = {
     dIpRenew: 'Uygulandıktan sonra cihaz yeni adresi bir sonraki bağlanışında alır (Wi-Fi’yi kapatıp açmak yeterli).',
     wakeTitle: 'Uzaktan uyandır', wakeSub: 'Kapalı cihaza açılma isteği gönderir (Wake-on-LAN); cihazda bu özellik açık olmalı.', wakeBtn: 'Uyandır',
     wakeSent: 'Uyandırma isteği gönderildi; cihaz destekliyorsa birazdan açılır.', wakeFailed: 'Uyandırma isteği gönderilemedi.',
+    landLabel: 'Girişten sonra Inversa Panel açılsın', landSub: 'Yalnızca sizin kullanıcınız için; kapalıyken giriş OPNsense’in kendi sayfasına açılır.',
+    landOther: function (p) { return 'Kullanıcınız için OPNsense’te başka bir giriş sayfası seçilmiş: ' + p + '. Açarsanız onun yerini alır.'; },
     pauseTitle: 'Bir süre durdur', pause30: '30 dakika', pause60: '1 saat', pause120: '2 saat', pauseMorning: 'Sabah 07:00’ye kadar', pauseResume: 'Devam ettir',
     pauseUntil: function (c) { return c + '’e kadar durdu'; }, pauseUntilLong: function (c) { return 'İnternet saat ' + c + '’e kadar durduruldu.'; },
     pauseSub: 'Hemen etki eder, süre bitince internet kendiliğinden açılır.',

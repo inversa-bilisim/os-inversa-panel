@@ -123,6 +123,42 @@ class ServiceController extends ApiControllerBase
      * Inversa Panel off, which also removes its automatic firewall rules. Port forwards, networks and VPN
      * devices are things the user explicitly created and still uses: they stay.
      */
+    /**
+     * The page the logged-in user gets after logging in: OPNsense keeps it per user ("Landing page").
+     * GET says whether it is the panel; POST (on=1/0) makes it the panel or clears it. A page the user
+     * chose in OPNsense is left alone.
+     */
+    public function landingAction()
+    {
+        $name = (string)$this->getUserName();
+        $users = new \OPNsense\Auth\User();
+        $user = null;
+        foreach ($users->user->iterateItems() as $node) {
+            if ((string)$node->name === $name) {
+                $user = $node;
+            }
+        }
+        if ($user === null) {
+            return ['status' => 'failed', 'on' => false, 'other' => ''];
+        }
+        $current = (string)$user->landing_page;
+        if ($this->request->isPost()) {
+            $this->throwReadOnly();
+            $on = !empty($this->request->getPost('on'));
+            if ($on || $current === Catalog::LANDING) {
+                $user->landing_page = $on ? Catalog::LANDING : '';
+                $users->serializeToConfig(false, true);
+                \OPNsense\Core\Config::getInstance()->save();
+                $current = (string)$user->landing_page;
+            }
+        }
+        return [
+            'status' => 'ok',
+            'on' => $current === Catalog::LANDING,
+            'other' => $current !== '' && $current !== Catalog::LANDING ? $current : '',
+        ];
+    }
+
     public function cleanupAction()
     {
         if (!$this->request->isPost()) {

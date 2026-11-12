@@ -68,6 +68,7 @@ tools/deploy.sh, tools/remove.sh             test cihazına kopyalama / kaldırm
 | `GET /api/inversapanel/backup/list`, `GET …/download[/ad]`, `POST …/now`, `POST …/restore/ad`, `POST …/upload` | Yedek: gecelik kopyalar, indirme, şimdi kopya alma, bir kopyayı ya da yüklenen dosyayı geri koyma (güvenlik duvarını yeniden başlatır) |
 | `POST /api/inversapanel/devices/wake` (`mac`) | Bir cihaz için, korunan her ağda Wake-on-LAN paketi |
 | `POST /api/inversapanel/network/speed` | Güvenlik duvarından speed.cloudflare.com'a karşı hız testi (indirme, yükleme, gecikme) |
+| `GET /api/inversapanel/service/landing`, `POST …` (`on`) | Giriş yapan kullanıcı için girişten sonra panelin açılıp açılmadığı; o kullanıcının OPNsense'teki "Landing page" ayarını yazar ya da siler |
 | `POST /api/inversapanel/update/check`, `POST …/install`, `GET …/status` | GitHub sürümlerinden güncelleme: kurulu ve son sürüm, güncellemeyi arka planda başlatma, nasıl gittiği |
 | `GET /api/inversapanel/notify/get`, `POST …/set`, `POST …/test`, `POST …/chats` | Telegram bildirimleri: ayarlar (bot anahtarı geri döndürülmez), deneme mesajı, bota yazan sohbetler |
 | `GET /api/inversapanel/state/scan`, `POST /api/inversapanel/service/adoptdns` | Mevcut ayarlar: panelden önce OPNsense'te yapılmış ayarlar (yalnızca okur); OPNsense'te oluşturulmuş yerel adları panele alma |

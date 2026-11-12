@@ -68,6 +68,7 @@ tools/deploy.sh, tools/remove.sh             copy to / remove from the test devi
 | `GET /api/inversapanel/backup/list`, `GET …/download[/name]`, `POST …/now`, `POST …/restore/name`, `POST …/upload` | Backup: nightly copies, download, a copy now, put a copy or an uploaded file back (restarts the firewall) |
 | `POST /api/inversapanel/devices/wake` (`mac`) | Wake-on-LAN packet for a device, on every protected network |
 | `POST /api/inversapanel/network/speed` | Speed test from the firewall against speed.cloudflare.com (download, upload, latency) |
+| `GET /api/inversapanel/service/landing`, `POST …` (`on`) | Whether the logged-in user gets the panel after logging in; sets or clears OPNsense's "Landing page" of that user |
 | `POST /api/inversapanel/update/check`, `POST …/install`, `GET …/status` | Update from the GitHub releases: what is installed and what is the latest, start the update in the background, how it goes or went |
 | `GET /api/inversapanel/notify/get`, `POST …/set`, `POST …/test`, `POST …/chats` | Telegram notifications: settings (the bot token is never returned), test message, chats that wrote to the bot |
 | `GET /api/inversapanel/state/scan`, `POST /api/inversapanel/service/adoptdns` | Existing settings: what was set up in OPNsense before the panel (read only); take over the local names made in OPNsense |

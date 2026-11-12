@@ -233,6 +233,8 @@ window.InversaPanelI18n.en = {
     dIpRenew: 'After applying, the device gets the new address the next time it connects (turning Wi-Fi off and on is enough).',
     wakeTitle: 'Wake up', wakeSub: 'Asks a device that is off to switch on (Wake-on-LAN); the device must have that enabled.', wakeBtn: 'Wake',
     wakeSent: 'The wake-up request was sent; the device switches on shortly if it supports that.', wakeFailed: 'The wake-up request could not be sent.',
+    landLabel: 'Open Inversa Panel after logging in', landSub: 'For your user only; when off, logging in opens OPNsense’s own page.',
+    landOther: function (p) { return 'Another page is set for your user in OPNsense: ' + p + '. Switching this on replaces it.'; },
     pauseTitle: 'Pause for a while', pause30: '30 minutes', pause60: '1 hour', pause120: '2 hours', pauseMorning: 'Until 07:00', pauseResume: 'Resume',
     pauseUntil: function (c) { return 'Paused until ' + c; }, pauseUntilLong: function (c) { return 'Internet access is paused until ' + c + '.'; },
     pauseSub: 'Takes effect right away; the internet comes back by itself when the time is up.',

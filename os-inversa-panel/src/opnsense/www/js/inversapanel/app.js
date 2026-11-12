@@ -1434,6 +1434,16 @@
         html += '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.statsLabel) + '</b><span class="muted">' + esc(t.statsSub) + '</span></div>' +
             toggle(g.dnsstats, 'data-act="general" data-v="dnsstats"', t.statsLabel) + '</div>';
 
+        /* for the user who is logged in, stored right away: OPNsense's own "Landing page" of that user */
+        if (S.landing === undefined) {
+            S.landing = null;
+            api('GET', '/api/inversapanel/service/landing').then(function (r) { S.landing = r || {}; }, function () { S.landing = {}; })
+                .then(function () { if (S.tab === 'settings') { redraw('main'); } });
+        }
+        var land = S.landing || {};
+        html += '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.landLabel) + '</b><span class="muted">' + esc(land.other ? t.landOther(land.other) : t.landSub) + '</span></div>' +
+            toggle(!!land.on, 'data-act="landing"' + (S.landing ? '' : ' disabled'), t.landLabel) + '</div>';
+
         html += '</section><div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.infoNote) + '</span></div>';
         html += '<section class="k-card tight"><div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.cleanupTitle) + '</b>' +
             '<span class="muted">' + esc(t.cleanupText) + '</span></div>' +
@@ -1582,6 +1592,15 @@
             case 'approve':
                 setDev(mac, { approved: true });
                 break;
+            case 'landing':
+                api('POST', '/api/inversapanel/service/landing', { on: S.landing && S.landing.on ? '' : '1' }).then(function (r) {
+                    if (!r || r.status !== 'ok') { throw r; }
+                    S.landing = r;
+                }).catch(function () {
+                    S.ui.notice = { type: 'err', text: T().applyFailed, list: [], ms: 10000 };
+                    renderPending();
+                }).then(function () { redraw('main'); });
+                return;
             case 'pause':
                 pauseDevice(mac, v === 'morning' ? { until: 'morning' } : { minutes: v }, false);
                 return;
