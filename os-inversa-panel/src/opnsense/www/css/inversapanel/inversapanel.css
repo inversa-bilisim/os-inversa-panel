@@ -660,14 +660,15 @@ header.page-content-head { display: none; }
 .inversapanel .k-about-ver { align-items: center; }
 .inversapanel .k-about-ver > span:last-child { display: inline-flex; align-items: center; gap: 12px; }
 .inversapanel .k-about-ver .k-btn { min-height: 32px; font-size: 13px; padding: 0 12px; }
-.inversapanel .k-about-partver { flex: 0 0 110px; font-size: 13px; }
+.inversapanel .k-about-partver { flex: 0 0 96px; font-size: 13px; }
 .inversapanel .k-about-support b { display: block; font-weight: 600; }
 .inversapanel .k-about-support .k-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: 13px; }
 .inversapanel .k-up { display: flex; flex-direction: column; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--k-line-2); }
 .inversapanel .k-up-new { display: flex; flex-direction: column; gap: 8px; }
 .inversapanel .k-up-notes { max-height: 220px; overflow-y: auto; white-space: pre-wrap; }
 .inversapanel .k-about-pre { margin: 0; padding: 10px 12px; background: var(--k-soft); border: 1px solid var(--k-line); border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; color: var(--k-text-2); white-space: pre-wrap; overflow-wrap: anywhere; }
-.inversapanel .k-about-part { flex: 0 0 110px; font-weight: 600; }
+.inversapanel .k-about-part { flex: 0 0 96px; font-weight: 600; }
+.inversapanel .k-about-parts .k-list-row { padding: 5px 0; gap: 10px; }
 .inversapanel .k-about-co { display: flex; flex-direction: column; gap: 12px; }
 .inversapanel .k-about-co h2 { font-size: 22px; letter-spacing: -0.01em; }
 .inversapanel .k-about-co p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--k-text-2); }

@@ -156,7 +156,7 @@
                 (U.status && U.status.state === 'running' ? '' : '<button type="button" class="k-btn" data-act="about:check"' + (U.checking ? ' disabled' : '') + '>' + h.esc(U.checking ? T.upChecking : T.upCheck) + '</button>') + '</span></div>' +
                 updateBox(T) +
                 kv(T.aboutWeb, link(SITE, 'inversa.com.tr')) +
-                kv(T.aboutMail, '<span class="mono">' + h.esc(MAIL) + '</span>') +
+                kv(T.aboutMail, '<a href="mailto:' + h.esc(MAIL) + '">' + h.esc(MAIL) + '</a>') +
                 kv(T.aboutLicense, link(REPO + '/blob/main/LICENSE', 'BSD-2-Clause')) +
                 kv(T.aboutSource, link(REPO, 'github.com/inversa-bilisim/os-inversa-panel')) +
                 kv(T.aboutIssues, link(REPO + '/issues', T.aboutIssuesLink)) + '</div>' +
