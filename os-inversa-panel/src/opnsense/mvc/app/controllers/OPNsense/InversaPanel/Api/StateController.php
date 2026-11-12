@@ -13,6 +13,7 @@ use OPNsense\InversaPanel\Dhcp;
 use OPNsense\InversaPanel\Dns;
 use OPNsense\InversaPanel\InversaPanel;
 use OPNsense\InversaPanel\Rollback;
+use OPNsense\InversaPanel\Scan;
 
 /**
  * Read the complete Inversa Panel configuration in the shape the single page UI uses.
@@ -160,6 +161,14 @@ class StateController extends ApiControllerBase
                 'dns_locked' => Dns::locked($unbound),
             ],
         ];
+    }
+
+    /**
+     * what this firewall held before the panel: see Scan
+     */
+    public function scanAction()
+    {
+        return ['findings' => Scan::report(new InversaPanel())];
     }
 
     /**

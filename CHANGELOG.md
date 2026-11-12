@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0 (2026-11-12)
+
+For firewalls that were configured before the panel was installed.
+
+- Settings › Existing settings: lists what was set up in OPNsense before the panel, in three groups: what can cause problems with a feature of the panel, what the panel uses as it is, and what stays on OPNsense's own pages. Each finding says what it means and links to the page concerned. The page only reads.
+- Local names made in OPNsense (Unbound overrides) can be taken over, so that they are edited on the panel's DNS page.
+- The welcome card links to the page.
+- The texts of this page are in Turkish and English; in German, French, Spanish and Italian the explanations show in English for now.
+
+A fresh OPNsense installation is still what we recommend.
+
 ## 1.0.0 (2026-11-12)
 
 First release, as a package for OPNsense 26.7.

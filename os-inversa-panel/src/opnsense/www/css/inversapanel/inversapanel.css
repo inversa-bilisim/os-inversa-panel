@@ -659,3 +659,10 @@ header.page-content-head { display: none; }
 .inversapanel .k-about-co p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--k-text-2); }
 .inversapanel .k-about-co .k-kv { font-size: 16px; padding: 7px 0; }
 .inversapanel .k-about-co .k-kv .muted, .inversapanel .k-about-co .k-kv .mono { font-size: 16px; }
+
+/* existing settings (scan) */
+.inversapanel .k-scan.warn { border-color: var(--k-warn-line, #F2C9A0); }
+.inversapanel .k-scan .k-scan-row { align-items: flex-start; }
+.inversapanel .k-scan .k-setting-text > span { display: block; margin-top: 3px; }
+.inversapanel .k-scan .k-scan-names { color: #4A5462; overflow-wrap: anywhere; }
+.inversapanel .k-scan .k-count { margin-left: 6px; vertical-align: 1px; }

@@ -84,6 +84,18 @@ class ServiceController extends ApiControllerBase
     }
 
     /**
+     * the local names made in OPNsense are managed on the panel's DNS page from now on
+     */
+    public function adoptdnsAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $this->throwReadOnly();
+        return ['status' => 'ok', 'count' => \OPNsense\InversaPanel\Scan::adoptDnsNames()];
+    }
+
+    /**
      * interface language is a UI preference: store it immediately, nothing to apply
      */
     public function languageAction()

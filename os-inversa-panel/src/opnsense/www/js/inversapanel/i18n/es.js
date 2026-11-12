@@ -66,6 +66,7 @@ window.InversaPanelI18n.es = {
     lgTypeLogin: 'Acceso al panel', lgTypeConfig: 'Cambio de ajustes', lgSystem: 'Sistema',
     lgLogin: 'Inicio de sesión en el panel', lgLoginOk: 'Correcto', lgLoginTry: 'Intento de acceso', lgLoginBad: 'Contraseña incorrecta', lgConfig: 'Ajuste cambiado',
     pgRange: function (a, b, n) { return a + '–' + b + ' de ' + n; }, pgSize: 'Por página', pgPrev: 'Página anterior', pgNext: 'Página siguiente', pgPages: 'Páginas', pgPage: function (n) { return 'Página ' + n; },
+    tabScan: 'Ajustes existentes', scanOpen: 'Abrir la página', scanAdopt: 'Asumir', welcomeScan: 'Revisar los ajustes existentes',
     tabAbout: 'Acerca de', aboutSub: 'La versión instalada, quién lo desarrolla, adónde dirigirse y el software en el que se basa el panel.',
     aboutVersion: 'Versión', aboutRunsOn: 'Funciona sobre', aboutLicense: 'Licencia', aboutSource: 'Código fuente',
     aboutCompany: [

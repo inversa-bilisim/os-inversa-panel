@@ -63,7 +63,7 @@
         ['devices', ['devices', 'sched']],
         ['security', ['filter', 'ips', 'geo', 'lists']],
         ['logs', ['attacks', 'history', 'events']],
-        ['settings', ['settings', 'about']]
+        ['settings', ['settings', 'scan', 'about']]
     ];
     /* addresses of menu entries that no longer exist */
     var MOVED = { remote: 'vpn', guest: 'nets' };
@@ -885,7 +885,8 @@
                 '<div class="k-ibox big on">' + icon(ICONS.shield + ICONS.check, 24) + '</div>' +
                 '<div class="k-setting-text"><b style="font-size:16px">' + esc(t.welcomeTitle) + '</b>' +
                 '<span class="muted" style="font-size:14px">' + esc(t.welcomeText) + '</span></div>' +
-                '<div class="k-btns"><button type="button" class="k-btn" data-act="welcome-no">' + esc(t.welcomeNo) + '</button>' +
+                '<div class="k-btns"><button type="button" class="k-btn" data-act="tab" data-v="scan">' + esc(t.welcomeScan) + '</button>' +
+                '<button type="button" class="k-btn" data-act="welcome-no">' + esc(t.welcomeNo) + '</button>' +
                 '<button type="button" class="k-btn primary" data-act="welcome-yes">' + esc(t.welcomeYes) + '</button></div>' +
                 '</div></section>';
         }
