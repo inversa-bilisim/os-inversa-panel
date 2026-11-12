@@ -131,4 +131,4 @@ A text that is missing in a language file is shown in English.
 
 ## Building as a package
 
-Copy the `os-inversa-panel` folder into the `opnsense/plugins` repository of a FreeBSD/OPNsense build environment (e.g. as `security/inversa-panel`). Then run `make package` in that folder.
+Run `tools/build-pkg.sh` on FreeBSD or on an OPNsense box, from a checkout of this repository; the package ends up in `dist/`. The script fetches the build files of `opnsense/plugins` and runs `make package`. Every push builds the package on GitHub as well, and a tag `v<version>` publishes it as a release (`.github/workflows/package.yml`).

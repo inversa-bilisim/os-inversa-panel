@@ -84,19 +84,20 @@ Panel, işlemci destekliyorsa (SSSE3) Hyperscan'i kendisi seçer, Suricata'yı b
 
 ## Kurulum
 
-Henüz bir paket deposu yok. Dosyaları bu deponun bir kopyasından güvenlik duvarına kopyalayın:
+Güvenlik duvarında, root olarak (SSH ya da konsol kabuğu):
 
 ```sh
-git clone https://github.com/inversa-bilisim/os-inversa-panel.git
-cd os-inversa-panel
-tools/deploy.sh root@<güvenlik duvarı adresi>
+pkg add https://github.com/inversa-bilisim/os-inversa-panel/releases/latest/download/os-inversa-panel.pkg
 ```
 
-Bunun için root olarak anahtarla SSH erişimi gerekir (*Sistem › Ayarlar › Yönetim*). Ardından `https://<güvenlik duvarı adresi>/ui/inversapanel` adresini ya da OPNsense menüsünde **Inversa**'yı açın.
+Ardından OPNsense menüsünde **Inversa**'yı ya da `https://<güvenlik duvarı adresi>/ui/inversapanel` adresini açın. Panelde bir şeyi açana kadar güvenlik duvarında hiçbir şey değişmez.
 
-`tools/remove.sh root@<güvenlik duvarı adresi>` dosyaları geri kaldırır. Panelin yapılandırmaya eklediklerinin de gitmesini istiyorsanız önce *Ayarlar › Inversa Panel'in eklediklerini kaldır*'ı çalıştırın.
+- **Güncelleme:** aynı komutu yeniden çalıştırın. Ayarlar ve kayıtlar korunur.
+- **Kaldırma:** `pkg delete os-inversa-panel`. Paneli, güvenlik duvarı kurallarını ve kayıtlarını (veri kullanımı, olaylar, günlükler) kaldırır. OPNsense yapılandırmasına yazdıkları (takma adlar, engelleme listesi ilkesi, VPN bağlantıları, ağlar) kalır; onların da gitmesini istiyorsanız paketi kaldırmadan önce *Ayarlar › Inversa Panel'in eklediklerini kaldır*'ı çalıştırın.
 
-Paket olarak derlemek için `os-inversa-panel` klasörünü bir OPNsense derleme ortamındaki `opnsense/plugins` deposuna (ör. `security/inversa-panel`) kopyalayıp orada `make package` çalıştırın.
+Paket OPNsense 26.7 için derlenir. Bütün sürümler ve dosyaları [sürümler sayfasında](https://github.com/inversa-bilisim/os-inversa-panel/releases), değişiklikler [değişiklik günlüğünde](CHANGELOG.md) yer alır.
+
+Geliştirme için `tools/deploy.sh root@<güvenlik duvarı adresi>` dosyaları paket olmadan bir test güvenlik duvarına kopyalar; `tools/build-pkg.sh` paketi FreeBSD'de ya da bir OPNsense kutusunda derler.
 
 ## Diller
 

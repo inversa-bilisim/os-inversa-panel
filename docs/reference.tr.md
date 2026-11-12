@@ -131,4 +131,4 @@ Bir dil dosyasında eksik kalan metin İngilizcesiyle gösterilir.
 
 ## Paket olarak derleme
 
-`os-inversa-panel` klasörünü bir FreeBSD/OPNsense derleme ortamındaki `opnsense/plugins` deposuna (ör. `security/inversa-panel`) kopyalayın. Ardından o klasörde `make package` çalıştırın.
+`tools/build-pkg.sh` betiğini FreeBSD'de ya da bir OPNsense kutusunda, bu deponun bir kopyasından çalıştırın; paket `dist/` klasörüne yazılır. Betik `opnsense/plugins` deposunun derleme dosyalarını indirir ve `make package` çalıştırır. Her gönderimde paket GitHub'da da derlenir; `v<sürüm>` etiketi onu sürüm olarak yayımlar (`.github/workflows/package.yml`).

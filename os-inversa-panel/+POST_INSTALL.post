@@ -1,0 +1,8 @@
+# the menu and the access rights are cached; the panel's entries appear on the next page load
+rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json
+if [ -x /usr/local/sbin/configctl ]; then
+    # the panel's jobs run from cron (schedules, overview data, logs)
+    /usr/local/sbin/configctl cron restart > /dev/null 2>&1 || true
+    # rules of a panel that is already switched on come from this version from now on
+    /usr/local/sbin/configctl filter reload > /dev/null 2>&1 || true
+fi

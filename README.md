@@ -84,19 +84,20 @@ The panel picks Hyperscan when the processor supports it (SSSE3), checks free me
 
 ## Installation
 
-There is no package repository yet. Copy the files onto the firewall from a checkout of this repository:
+On the firewall, as root (SSH, or the console's shell):
 
 ```sh
-git clone https://github.com/inversa-bilisim/os-inversa-panel.git
-cd os-inversa-panel
-tools/deploy.sh root@<firewall address>
+pkg add https://github.com/inversa-bilisim/os-inversa-panel/releases/latest/download/os-inversa-panel.pkg
 ```
 
-This needs SSH access as root with a key (*System › Settings › Administration*). Then open `https://<firewall address>/ui/inversapanel`, or **Inversa** in OPNsense's menu.
+Then open **Inversa** in OPNsense's menu, or `https://<firewall address>/ui/inversapanel`. Nothing changes on the firewall until you switch something on in the panel.
 
-`tools/remove.sh root@<firewall address>` removes the files again. Run *Settings › Remove what Inversa Panel added* first if you want its entries gone from the configuration as well.
+- **Update:** run the same command again. Settings and records are kept.
+- **Remove:** `pkg delete os-inversa-panel`. This removes the panel, its firewall rules and its records (data usage, events, logs). What it wrote into the OPNsense configuration (aliases, the blocklist policy, VPN connections, networks) stays; run *Settings › Remove what Inversa Panel added* before removing the package if you want those gone as well.
 
-To build a package instead, copy the `os-inversa-panel` folder into a checkout of `opnsense/plugins` (for example as `security/inversa-panel`) on an OPNsense build host and run `make package` there.
+The package is built for OPNsense 26.7. All releases and their files are on the [releases page](https://github.com/inversa-bilisim/os-inversa-panel/releases); changes are listed in the [changelog](CHANGELOG.md).
+
+For development, `tools/deploy.sh root@<firewall address>` copies the files from a checkout onto a test firewall without a package, and `tools/build-pkg.sh` builds the package on FreeBSD or on an OPNsense box.
 
 ## Languages
 
