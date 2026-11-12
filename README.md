@@ -9,6 +9,13 @@
   <b>English</b> · <a href="README.tr.md">Türkçe</a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/inversa-bilisim/os-inversa-panel/releases/latest"><img src="https://img.shields.io/github/v/release/inversa-bilisim/os-inversa-panel" alt="Latest release"></a>
+  <a href="https://github.com/inversa-bilisim/os-inversa-panel/actions/workflows/package.yml"><img src="https://github.com/inversa-bilisim/os-inversa-panel/actions/workflows/package.yml/badge.svg" alt="Package build"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/inversa-bilisim/os-inversa-panel" alt="License"></a>
+  <img src="https://img.shields.io/badge/OPNsense-26.7-d94f00" alt="OPNsense 26.7">
+</p>
+
 ![Overview page](docs/screenshots/overview-en.png)
 
 Inversa Panel is an open source plugin for [OPNsense](https://opnsense.org) 26.7. It puts devices, the internet filter, VPN, attack protection and logs on one screen, so everyday work on a home or small-office firewall does not need a tour of OPNsense's menus.

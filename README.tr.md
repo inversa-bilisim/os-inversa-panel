@@ -9,6 +9,13 @@
   <a href="README.md">English</a> · <b>Türkçe</b>
 </p>
 
+<p align="center">
+  <a href="https://github.com/inversa-bilisim/os-inversa-panel/releases/latest"><img src="https://img.shields.io/github/v/release/inversa-bilisim/os-inversa-panel" alt="Latest release"></a>
+  <a href="https://github.com/inversa-bilisim/os-inversa-panel/actions/workflows/package.yml"><img src="https://github.com/inversa-bilisim/os-inversa-panel/actions/workflows/package.yml/badge.svg" alt="Package build"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/inversa-bilisim/os-inversa-panel" alt="License"></a>
+  <img src="https://img.shields.io/badge/OPNsense-26.7-d94f00" alt="OPNsense 26.7">
+</p>
+
 ![Genel bakış sayfası](docs/screenshots/overview-tr.png)
 
 Inversa Panel, [OPNsense](https://opnsense.org) 26.7 için açık kaynaklı bir eklentidir. Cihazları, internet filtresini, VPN'i, saldırı önlemeyi ve kayıtları tek ekranda toplar; ev ya da küçük ofis güvenlik duvarında günlük işler için OPNsense menülerinde dolaşmak gerekmez.

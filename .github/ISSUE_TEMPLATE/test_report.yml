@@ -1,0 +1,33 @@
+name: Test report
+description: You tried the panel on real hardware or in a setup we have not tested
+labels: [test report]
+body:
+  - type: markdown
+    attributes:
+      value: The panel was developed on virtual machines. A report that says "this works" is as useful as one that says "this does not".
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware and OPNsense version
+      placeholder: e.g. Protectli VP2420, Intel i226 network cards, OPNsense 26.7.9
+    validations:
+      required: true
+  - type: checkboxes
+    id: tried
+    attributes:
+      label: What you tried
+      options:
+        - label: PPPoE internet connection
+        - label: VLANs and isolation between networks
+        - label: WireGuard from a phone or laptop
+        - label: IPsec with a firewall of another vendor
+        - label: Attack protection, alert only
+        - label: Attack protection, blocking
+        - label: DNS blocking with the large lists
+        - label: Installation on a firewall that was already configured
+  - type: textarea
+    id: result
+    attributes:
+      label: What worked and what did not
+    validations:
+      required: true

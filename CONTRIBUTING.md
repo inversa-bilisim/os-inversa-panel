@@ -16,7 +16,7 @@ Open an [issue](https://github.com/inversa-bilisim/os-inversa-panel/issues) with
 - the summary from *Settings › About › Copy support information* (it holds versions and which features are on; no passwords, keys or device addresses);
 - whether the firewall was configured before the panel was installed, and what *Settings › Existing settings* lists.
 
-For a security problem, write to yazilim@inversa.com.tr instead of opening a public issue.
+For a security problem, see [SECURITY.md](SECURITY.md); please do not open a public issue.
 
 ## How the panel is meant to behave
 

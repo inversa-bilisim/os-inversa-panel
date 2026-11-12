@@ -1,0 +1,38 @@
+name: Bug report
+description: Something does not work the way the page says
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead. English or Turkish.
+    validations:
+      required: true
+  - type: textarea
+    id: support
+    attributes:
+      label: Support information
+      description: Paste the text from Settings › About › Copy support information. It holds versions and which features are on; no passwords, keys or device addresses.
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: hardware
+    attributes:
+      label: Where does OPNsense run
+      options:
+        - Real hardware
+        - Virtual machine
+    validations:
+      required: true
+  - type: textarea
+    id: existing
+    attributes:
+      label: Existing settings
+      description: If the firewall was configured before the panel was installed, what does Settings › Existing settings list?
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else
+      description: Screenshots, log lines (System › Log Files › General, search "inversapanel").
