@@ -35,6 +35,9 @@ class StateController extends ApiControllerBase
                 'type' => (string)$device->type,
                 'blocked' => !$device->blocked->isEmpty(),
                 'approved' => !$device->approved->isEmpty(),
+                /* approved for a while: until when (0: for good) */
+                'until' => (int)(string)$device->approved_until,
+                'rejected' => !$device->rejected->isEmpty(),
             ];
         }
 

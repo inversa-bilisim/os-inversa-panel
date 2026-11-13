@@ -16,10 +16,91 @@
 require_once('config.inc');
 
 use OPNsense\Core\Backend;
+use OPNsense\Core\Config;
 use OPNsense\InversaPanel\Approval;
+use OPNsense\InversaPanel\Forgotten;
 use OPNsense\InversaPanel\InversaPanel;
 use OPNsense\InversaPanel\Overview;
 use OPNsense\InversaPanel\Vpn;
+
+/**
+ * New devices on the protected networks: "waiting" for the ones held back until somebody approves
+ * them, "new" for the others (where approval is on, "waiting" says it already). Told once.
+ * @return array [waiting MACs, seen MACs, number of events written]
+ */
+function watch_devices(InversaPanel $mdl, array $known, $seenBefore, $first)
+{
+    $told = 0;
+    $networks = $mdl->getApprovalInterfaces();
+    $approved = $mdl->getApprovedMacs();
+    /* turned away: held back, but not news */
+    $rejected = [];
+    foreach ($mdl->devices->device->iterateItems() as $device) {
+        if (!$device->rejected->isEmpty()) {
+            $rejected[] = (string)$device->mac;
+        }
+    }
+    $waiting = [];
+    if (!empty($networks)) {
+        foreach (Approval::hosts() as $host) {
+            if (in_array($host['key'], $networks) && !in_array($host['mac'], $approved)) {
+                if (!$first && !in_array($host['mac'], $known) && !in_array($host['mac'], $rejected)) {
+                    Overview::event('device_wait', ['mac' => $host['mac'], 'net' => $host['key']]);
+                    $told++;
+                }
+                $waiting[] = $host['mac'];
+            }
+        }
+        /* announced once: a device that left and came back unapproved is not news */
+        foreach ($known as $mac) {
+            if (!in_array($mac, $approved) && !in_array($mac, $waiting)) {
+                $waiting[] = $mac;
+            }
+        }
+        $waiting = array_slice($waiting, -500);
+    }
+
+    $protected = $mdl->getProtectedInterfaces();
+    $seen = array_flip($seenBefore ?? []);
+    $learning = $seenBefore === null;
+    foreach (Approval::hosts() as $host) {
+        if (!in_array($host['key'], $protected) || isset($seen[$host['mac']])) {
+            continue;
+        }
+        if (!$first && !$learning && !in_array($host['key'], $networks)) {
+            Overview::event('device_new', ['mac' => $host['mac'], 'net' => $host['key']]);
+            $told++;
+        }
+        $seen[$host['mac']] = true;
+    }
+    return [$waiting, array_slice(array_keys($seen), -5000), $told];
+}
+
+/**
+ * devices deleted on the Devices page since the last look ($done): no longer known, so they are
+ * told again when they come back
+ * @return array [waiting MACs, seen MACs, time of the newest deletion handled]
+ */
+function drop_forgotten(array $waiting, $seen, $done)
+{
+    $latest = $done;
+    foreach (Forgotten::all() as $mac => $when) {
+        if ((int)$when > $done) {
+            $waiting = array_values(array_diff($waiting, [$mac]));
+            $seen = $seen === null ? null : array_values(array_diff($seen, [$mac]));
+            $latest = max($latest, (int)$when);
+        }
+    }
+    return [$waiting, $seen, $latest];
+}
+
+/* a new device is told by Telegram right away, not with the next minute */
+function tell_now($told)
+{
+    if ($told > 0) {
+        exec('/usr/local/sbin/configctl -d inversapanel notify run > /dev/null 2>&1');
+    }
+}
 
 Overview::timezone();
 $backend = new Backend();
@@ -91,43 +172,9 @@ foreach (Overview::vpn($mdl) as $conn) {
     $new['vpn'][$conn['id']] = $entry;
 }
 
-/* ---- devices held back until somebody approves them */
-$networks = $mdl->getApprovalInterfaces();
-$approved = $mdl->getApprovedMacs();
-$known = $old['waiting'] ?? [];
-$new['waiting'] = [];
-if (!empty($networks)) {
-    foreach (Approval::hosts() as $host) {
-        if (in_array($host['key'], $networks) && !in_array($host['mac'], $approved)) {
-            if (!$first && !in_array($host['mac'], $known)) {
-                Overview::event('device_wait', ['mac' => $host['mac'], 'net' => $host['key']]);
-            }
-            $new['waiting'][] = $host['mac'];
-        }
-    }
-    /* announced once: a device that left and came back unapproved is not news */
-    foreach ($known as $mac) {
-        if (!in_array($mac, $approved) && !in_array($mac, $new['waiting'])) {
-            $new['waiting'][] = $mac;
-        }
-    }
-    $new['waiting'] = array_slice($new['waiting'], -500);
-}
-
-/* ---- devices never seen before on a protected network (where approval is on, "waiting" says it already) */
-$protected = $mdl->getProtectedInterfaces();
-$seen = array_flip($old['seen'] ?? []);
-$learning = !isset($old['seen']);
-foreach (Approval::hosts() as $host) {
-    if (!in_array($host['key'], $protected) || isset($seen[$host['mac']])) {
-        continue;
-    }
-    if (!$first && !$learning && !in_array($host['key'], $networks)) {
-        Overview::event('device_new', ['mac' => $host['mac'], 'net' => $host['key']]);
-    }
-    $seen[$host['mac']] = true;
-}
-$new['seen'] = array_slice(array_keys($seen), -5000);
+/* ---- devices: held back until somebody approves them, or never seen before */
+list($known, $seenBefore, $new['forgot']) = drop_forgotten($old['waiting'] ?? [], $old['seen'] ?? null, (int)($old['forgot'] ?? 0));
+list($new['waiting'], $new['seen'], $told) = watch_devices($mdl, $known, $seenBefore, $first);
 
 /*
  * health of the firewall itself: a disk that fills up, a processor that runs hot, an OPNsense update
@@ -186,3 +233,26 @@ if (!is_dir(Overview::DIR)) {
 file_put_contents(Overview::WATCH . '.tmp', json_encode($new));
 rename(Overview::WATCH . '.tmp', Overview::WATCH);
 Overview::trimEvents();
+tell_now($told);
+
+/*
+ * The rest of the minute: look for new devices every 15 seconds, so that a device waiting for
+ * approval is told within seconds of showing up. Settings are read again each time (somebody may
+ * have just approved it); the next run takes over at the full minute.
+ */
+while (!$first && time() - $now < 40) {
+    sleep(15);
+    Config::getInstance()->forceReload();
+    Approval::forget();
+    $mdl = new InversaPanel();
+    list($known, $seenBefore, $forgot) = drop_forgotten($new['waiting'], $new['seen'], $new['forgot']);
+    list($waiting, $seen, $told) = watch_devices($mdl, $known, $seenBefore, false);
+    if ($told > 0 || $waiting !== $new['waiting'] || $seen !== $new['seen'] || $forgot !== $new['forgot']) {
+        $new['waiting'] = $waiting;
+        $new['seen'] = $seen;
+        $new['forgot'] = $forgot;
+        file_put_contents(Overview::WATCH . '.tmp', json_encode($new));
+        rename(Overview::WATCH . '.tmp', Overview::WATCH);
+    }
+    tell_now($told);
+}

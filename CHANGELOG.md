@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0 (2026-11-13)
+
+- Devices: a device waiting for approval can be **allowed for 1 hour, 1 day, 1 week, until midnight or until a time chosen on a calendar** (at most 30 days ahead). It takes effect right away (no "Apply"); when the time is up the device waits again, and the notification about a waiting device is sent again. The list shows until when a device is allowed.
+- Devices: **Turn away** a waiting device. It stays held back as before, is no longer counted as waiting and is not announced again. Approving it later works as usual.
+- **Phone screen**: opened on a phone while devices wait for approval, the panel shows only those devices, each with these choices, "For good" and "Turn away"; "Open the full panel" goes on to the panel. Together with "Open Inversa Panel after logging in" and a VPN connection, a notification about a new device can be answered from a phone in a few taps.
+- Devices: **Delete device**. Its name, approval, fixed IP, place in schedules and a pause are removed and it drops out of the list. A device that comes back afterwards is a new device: it is told again and, on a network that asks, waits for approval again.
+- Notifications: a new device is told within seconds instead of one to three minutes: new devices are looked for every 15 seconds and the message goes out right away.
+
 ## 1.4.1 (2026-11-12)
 
 - Settings: **Open Inversa Panel after logging in**, off by default. It applies to the user who switches it on (OPNsense's own "Landing page" of that user) and takes effect at the next login. A page the user chose in OPNsense is replaced only when the switch is turned on.

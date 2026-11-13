@@ -704,3 +704,35 @@ header.page-content-head { display: none; }
 
 /* notifications */
 .inversapanel .k-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; line-height: 1.45; }
+
+/* ---- phone screen: devices waiting for approval (renderQuick), kept short so a device fits on screen */
+.inversapanel .k-quick { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+.inversapanel .k-quick .k-banner { margin: 0; padding: 8px 12px; font-size: 13px; }
+.inversapanel .k-qhead { display: flex; align-items: center; gap: 8px; }
+.inversapanel .k-qhead .k-logo { width: 26px; height: 26px; }
+.inversapanel .k-qhead b { flex: 1 1 auto; font-size: 16px; font-weight: 600; }
+.inversapanel .k-qtitle { display: flex; flex-direction: column; gap: 2px; }
+.inversapanel .k-qtitle b { font-size: 17px; font-weight: 600; }
+.inversapanel .k-qtitle span { font-size: 12px; }
+.inversapanel .k-qcard { gap: 10px; padding: 12px; border-radius: 14px; }
+.inversapanel .k-qdev { display: flex; align-items: flex-start; gap: 10px; }
+.inversapanel .k-qdev .k-ibox { width: 32px; height: 32px; border-radius: 8px; }
+.inversapanel .k-qdev-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 12px; }
+.inversapanel .k-qdev-text b { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.inversapanel .k-qdev-text > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inversapanel .k-qdev-text .mono { font-size: 12px; }
+.inversapanel .k-qgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.inversapanel .k-qgrid .k-btn { min-height: 40px; padding: 0 6px; font-size: 13px; }
+.inversapanel .k-qgrid .k-btn.on { border-color: var(--k-accent); background: var(--k-accent-soft); color: var(--k-accent); }
+.inversapanel .k-qreject { min-height: 36px; font-size: 13px; color: #9A3B0A; border-color: var(--k-warn-line); }
+.inversapanel .k-qempty { align-items: center; text-align: center; color: var(--k-ok-text); padding: 16px; }
+/* an end of one's own for an approval: a calendar under the ready made lengths */
+.inversapanel .k-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.inversapanel .k-pick input[type=datetime-local] {
+    flex: 1 1 160px; min-width: 0; font-family: inherit; font-size: 16px; color: var(--k-text); background: #fff; box-sizing: border-box;
+    min-height: 40px; border: 1px solid var(--k-input); border-radius: 10px; padding: 0 10px; box-shadow: none;
+}
+.inversapanel .k-pick .k-btn { flex: none; min-height: 40px; }
+/* the narrow side panel on a computer: the calendar on a line of its own; the phone keeps it beside the button */
+.inversapanel .k-side .k-pick input[type=datetime-local] { flex-basis: 100%; }
+.inversapanel .k-types .k-btn.on { border-color: var(--k-accent); background: var(--k-accent-soft); color: var(--k-accent); }

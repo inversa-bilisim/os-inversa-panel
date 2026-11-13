@@ -41,7 +41,8 @@ Screenshots show sample data.
 
 **Devices**
 - Every device seen on the protected networks, with its network, address and state; search and filters; names and types.
-- Cut a device's internet access with one click, give it a fixed address, approve new devices on networks that ask for it.
+- Cut a device's internet access with one click, give it a fixed address, approve new devices on networks that ask for it — for good, for an hour, a day, a week or until a chosen time — or turn them away, delete devices.
+- On a phone the panel opens on a short screen with only the devices waiting for approval: a Telegram message says one is waiting, you connect over the VPN, log in and decide in one tap.
 - Schedules: cut internet access or block apps for chosen devices at chosen times.
 - Pause a device for 30 minutes, an hour, two hours or until the morning; it comes back by itself. Wake a device that is off (Wake-on-LAN).
 

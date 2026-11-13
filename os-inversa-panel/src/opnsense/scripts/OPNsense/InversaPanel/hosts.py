@@ -11,6 +11,9 @@
       - DHCP leases from dnsmasq and Kea (hostnames, the address a device holds right now)
       - pf state table (active connection count per address)
 
+    A device deleted on the Devices page (FORGOTTEN: mac => epoch) is left out until it is seen again
+    after that; it then counts as first seen at that moment.
+
     Host discovery remembers every address a device ever used. Only the current ones are reported, the
     address in use first: a device that moved to another address (new fixed IP, new lease) must not keep
     showing the old one.
@@ -107,6 +110,18 @@ def leases():
             if address and ':' not in address and not record.get('state') and (expire == 0 or expire > now):
                 addresses.setdefault(mac, []).append((record.get('if') or '', address))
     return names, addresses
+
+
+FORGOTTEN = '/var/db/inversapanel/forgotten.json'
+
+
+def forgotten():
+    try:
+        with open(FORGOTTEN) as f:
+            data = ujson.load(f)
+        return {k.lower(): datetime.fromtimestamp(int(v), timezone.utc).replace(tzinfo=None) for k, v in data.items()} if isinstance(data, dict) else {}
+    except (OSError, ValueError, TypeError):
+        return {}
 
 
 def parse_ts(value):
@@ -409,5 +424,19 @@ if __name__ == '__main__':
         del host['seen']
         host['states'] = sum(states.get(ip, 0) for ip in host['ips'])
         host['in_arp'] = any(ip in in_arp for ip in host['ips'])
+
+    gone = forgotten()
+    for mac, when in gone.items():
+        host = hosts.get(mac)
+        if host is None:
+            continue
+        seen = parse_ts(host['last_seen'])
+        if seen is None or seen <= when:
+            del hosts[mac]
+        else:
+            # back after it was deleted: a new device from that moment on
+            first = parse_ts(host['first_seen'])
+            if first is None or first < when:
+                host['first_seen'] = when.strftime('%Y-%m-%dT%H:%M:%SZ')
 
     print(ujson.dumps({'source': source, 'hosts': list(hosts.values())}))

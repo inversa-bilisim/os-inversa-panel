@@ -418,7 +418,13 @@ class ServiceController extends ApiControllerBase
                     $node->blocked->setValue(self::flag($props['blocked']));
                 }
                 if (isset($props['approved'])) {
-                    $node->approved->setValue(self::flag($props['approved']));
+                    $on = self::flag($props['approved']);
+                    /* approving here is for good and ends a "turned away"; taking it back ends an approval for a while */
+                    if ($on !== ($node->approved->isEmpty() ? '0' : '1')) {
+                        $node->approved_until->setValue('');
+                        $node->rejected->setValue('0');
+                    }
+                    $node->approved->setValue($on);
                 }
             }
         }

@@ -41,7 +41,8 @@ Ekran görüntülerindeki veriler örnektir.
 
 **Cihazlar**
 - Korunan ağlarda görülen bütün cihazlar; ağı, adresi ve durumuyla. Arama ve filtreler, ad ve tür verme.
-- Tek tıkla bir cihazın internetini kesme, sabit IP verme, onay isteyen ağlarda yeni cihazları onaylama.
+- Tek tıkla bir cihazın internetini kesme, sabit IP verme, onay isteyen ağlarda yeni cihazları süresiz ya da bir saatliğine, bir günlüğüne, bir haftalığına veya seçilen saate kadar onaylama, reddetme, cihaz silme.
+- Telefonda panel yalnızca onay bekleyen cihazları gösteren kısa bir ekranla açılır: Telegram'dan bir cihazın beklediği haberi gelir, VPN ile bağlanıp giriş yaparsınız ve tek dokunuşla karar verirsiniz.
 - Zamanlama: seçilen cihazlar için seçilen saatlerde interneti kesme ya da uygulama engelleme.
 - Bir cihazı 30 dakika, bir saat, iki saat ya da sabaha kadar durdurma; süre bitince kendiliğinden açılır. Kapalı bir cihazı uzaktan uyandırma (Wake-on-LAN).
 

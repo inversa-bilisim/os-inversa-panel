@@ -47,6 +47,12 @@ class Approval
         return self::$hosts;
     }
 
+    /* the next hosts() asks again (watch.php looks several times a minute) */
+    public static function forget()
+    {
+        self::$hosts = null;
+    }
+
     /**
      * addresses held back right now: on a network with approval, device not approved
      */
@@ -64,6 +70,79 @@ class Approval
             }
         }
         return array_values(array_unique($ips));
+    }
+
+    /**
+     * A decision about one device, effective at once (not part of "Apply"), like a pause:
+     * allow it until $until (unix time, 0: for good), or turn it away. A device turned away stays held back
+     * exactly as before; it is only no longer counted or announced as waiting.
+     * @return int unix time the permission ends, 0 when it does not
+     */
+    public static function decide(InversaPanel $mdl, $mac, $allow, $until = 0)
+    {
+        $node = $mdl->getDeviceByMac($mac);
+        if ($node === null) {
+            $node = $mdl->devices->device->Add();
+            $node->mac->setValue($mac);
+        }
+        $wasApproved = in_array($mac, $mdl->getApprovedMacs());
+        $until = $allow ? (int)$until : 0;
+        $node->approved->setValue($allow ? '1' : '0');
+        $node->approved_until->setValue($until > 0 ? (string)$until : '');
+        $node->rejected->setValue($allow ? '0' : '1');
+        self::store($mdl, $wasApproved && !$allow ? [$mac] : []);
+        return $until;
+    }
+
+    /**
+     * Ends the approvals whose time is up: the device waits again, and is announced again
+     * (scripts/.../watch.php). Runs every minute from schedule.php.
+     * @return array MAC addresses that lost their permission
+     */
+    public static function expire(InversaPanel $mdl)
+    {
+        $now = time();
+        $ended = [];
+        foreach ($mdl->devices->device->iterateItems() as $node) {
+            $until = (int)(string)$node->approved_until;
+            if ($until > 0 && $until <= $now) {
+                $node->approved_until->setValue('');
+                if (!$node->approved->isEmpty()) {
+                    $node->approved->setValue('0');
+                    $ended[] = (string)$node->mac;
+                }
+            }
+        }
+        if (!empty($ended)) {
+            self::store($mdl, $ended);
+        }
+        return $ended;
+    }
+
+    /**
+     * writes the devices and the alias of approved devices, refreshes the alias table; the open
+     * connections of $cut (MAC addresses) end, otherwise they would keep working until timeout
+     */
+    public static function store(InversaPanel $mdl, array $cut)
+    {
+        $aliasMdl = (new Integration($mdl))->syncAlias();
+        $mdl->serializeToConfig(false, true);
+        $aliasMdl->serializeToConfig(false, true);
+        Config::getInstance()->save();
+        $backend = new Backend();
+        /* the alias tables are filled from the generated alias list, not from config.xml */
+        $backend->configdRun('template reload OPNsense/Filter');
+        $backend->configdRun('filter refresh_aliases');
+        $ips = [];
+        foreach (self::hosts() as $host) {
+            if (in_array($host['mac'], $cut)) {
+                $ips = array_merge($ips, $host['ips']);
+            }
+        }
+        $ips = array_filter($ips, fn($ip) => filter_var($ip, FILTER_VALIDATE_IP));
+        if (!empty($ips)) {
+            $backend->configdpRun('inversapanel killstates', [implode(',', $ips)]);
+        }
     }
 
     /**

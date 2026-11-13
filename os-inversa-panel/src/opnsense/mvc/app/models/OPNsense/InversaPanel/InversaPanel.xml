@@ -82,6 +82,16 @@
                     <Default>0</Default>
                     <Required>Y</Required>
                 </approved>
+                <!-- approved for a while: unix time the permission ends (empty: for good), see Approval::expire -->
+                <approved_until type="IntegerField">
+                    <MinimumValue>0</MinimumValue>
+                    <MaximumValue>4102444800</MaximumValue>
+                </approved_until>
+                <!-- turned away: stays held back, no longer counted or announced as waiting -->
+                <rejected type="BooleanField">
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </rejected>
             </device>
         </devices>
         <filtering>

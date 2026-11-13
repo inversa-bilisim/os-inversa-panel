@@ -7,6 +7,7 @@
     Notifications by Telegram. Runs every minute (inversapanel_cron) and tells the chosen chat what
     happened since the last run: a new device, an attack alert, a VPN connection, the internet
     connection coming back, a failed login. One message per run at most, whatever happened.
+    watch.php also starts a run as soon as it notes a new device, so that one is told within seconds.
 
     Only sends: the firewall never takes commands from Telegram.
 
@@ -15,6 +16,7 @@
         notify.py chats    who wrote to the bot lately, to find the chat id: {"ok": ..., "chats": [...]}
 """
 
+import fcntl
 import hashlib
 import json
 import os
@@ -338,7 +340,11 @@ def main():
                     chats[str(chat['id'])] = {'id': str(chat['id']), 'name': name, 'type': chat.get('type', '')}
         print(json.dumps({'ok': error is None, 'error': error or '', 'chats': list(chats.values())}))
     else:
-        run()
+        # the minute job and watch.php may start a run at the same moment: one after the other,
+        # so the second one sees what the first one sent
+        with open(STATE + '.lock', 'w') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            run()
 
 
 if __name__ == '__main__':

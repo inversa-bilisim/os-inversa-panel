@@ -207,14 +207,16 @@ class InversaPanel extends BaseModel
     }
 
     /**
-     * MAC addresses of approved devices
+     * MAC addresses of approved devices; an approval for a while counts until its time is up
      * @return array
      */
     public function getApprovedMacs()
     {
         $result = [];
+        $now = time();
         foreach ($this->devices->device->iterateItems() as $device) {
-            if (!$device->approved->isEmpty()) {
+            $until = (int)(string)$device->approved_until;
+            if (!$device->approved->isEmpty() && ($until === 0 || $until > $now)) {
                 $result[] = (string)$device->mac;
             }
         }

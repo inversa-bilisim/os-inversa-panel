@@ -237,7 +237,7 @@
 
     function devCfg(mac, source) {
         var devices = (source || S.draft).devices;
-        return devices[mac] || { name: '', type: 'unknown', blocked: false, approved: false };
+        return devices[mac] || { name: '', type: 'unknown', blocked: false, approved: false, until: 0, rejected: false };
     }
 
     function setDev(mac, patch) {
@@ -259,8 +259,29 @@
         return !!key && !!(S.saved.approval || {})[key];
     }
 
+    /* held back: on a network that asks for approval, not approved (or approved for a while that ended) */
+    function held(host, source) {
+        if (!approvalOn(host.network_key)) { return false; }
+        var cfg = devCfg(host.mac, source);
+        return !cfg.approved || (!!cfg.until && cfg.until * 1000 <= Date.now());
+    }
+
+    /* waiting for somebody to decide: held back and not turned away */
     function waiting(host, source) {
-        return approvalOn(host.network_key) && !devCfg(host.mac, source).approved;
+        return held(host, source) && !devCfg(host.mac, source).rejected;
+    }
+
+    /* approved for a while: until when, 0 when for good or not approved */
+    function approvedUntil(mac) {
+        var cfg = devCfg(mac);
+        return cfg.approved && cfg.until ? cfg.until : 0;
+    }
+
+    /* the end of an approval for a while: the time today, otherwise the day as well */
+    function untilText(ts) {
+        var d = new Date(ts * 1000);
+        if (d.toDateString() === new Date().toDateString()) { return clock(ts); }
+        return d.toLocaleString(T().locale, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     }
 
     function waitingCount(source) {
@@ -536,6 +557,10 @@
         if (inputFocused()) {
             return;
         }
+        if (S.ui.quick) {
+            renderQuick();
+            return;
+        }
         if (S.tab === 'dash' || S.tab === 'devices') {
             renderMain();
             renderHeader();
@@ -545,6 +570,10 @@
     /* ------------------------------------------------------------------ rendering: frame */
 
     function render() {
+        if (S.ui.quick) {
+            renderQuick();
+            return;
+        }
         root.innerHTML =
             '<div id="k-header"></div>' +
             '<nav class="k-tabs" id="k-tabs" aria-label="Inversa Panel"></nav>' +
@@ -1159,10 +1188,10 @@
         var t = T(), dot = '<span class="k-dot" style="background:' + esc(net && net.color ? net.color : '#5B6573') + '"></span>';
         if (!approvalOn(h.network_key)) { return '<span class="k-netbadge">' + dot + esc(h.network) + '</span>'; }
         /* a network that asks for approval: the permission to be on it is the second half of the badge */
-        var wait = waiting(h), name = devName(h);
+        var wait = held(h), name = devName(h), until = wait ? 0 : approvedUntil(h.mac);
         return '<span class="k-netbadge k-netperm">' + dot + esc(h.network) +
             '<button type="button" class="k-netperm-btn ' + (wait ? 'wait' : 'ok') + '" data-act="' + (wait ? 'approve' : 'approval') + '" data-mac="' + esc(h.mac) + '" ' +
-            'title="' + esc(wait ? t.apprApproveAria(name) : t.apprRevoke) + '" aria-label="' + esc(wait ? t.apprApproveAria(name) : t.apprToggleAria(name)) + '">' +
+            'title="' + esc(wait ? t.apprApproveAria(name) : (until ? t.apprUntil(untilText(until)) + ' · ' : '') + t.apprRevoke) + '" aria-label="' + esc(wait ? t.apprApproveAria(name) : t.apprToggleAria(name)) + '">' +
             (wait ? esc(t.apprApprove) : icon(ICONS.ok, 13) + esc(t.apprAllowed)) + '</button></span>';
     }
 
@@ -1201,6 +1230,137 @@
         });
     }
 
+    /* ------------------------------------------------------------------ approval: decide at once */
+
+    /*
+     * Let a waiting device in for 1, 24 or 168 hours ('0': for good) or turn it away ('reject').
+     * Takes effect at once, outside the pending changes: the saved and the draft state both follow.
+     */
+    function decide(mac, v) {
+        var t = T(), allow = v !== 'reject', host = hostByMac(mac), name = host ? devName(host) : mac;
+        if (S.ui.deciding) { return; }
+        S.ui.deciding = mac;
+        refreshDecided();
+        var payload = { mac: mac, decision: allow ? 'allow' : 'reject', hours: '0' };
+        if (v === 'midnight') { payload.until = 'midnight'; }
+        else if (/^@\d+$/.test(v)) { payload.until = v.slice(1); }
+        else if (allow) { payload.hours = v; }
+        api('POST', '/api/inversapanel/devices/decide', payload).then(function (res) {
+            if (!res || res.status !== 'ok') { throw res; }
+            var patch = allow ? { approved: true, until: Number(res.until) || 0, rejected: false } : { approved: false, until: 0, rejected: true };
+            S.saved.devices[mac] = Object.assign({}, devCfg(mac, S.saved), patch);
+            S.draft.devices[mac] = Object.assign({}, devCfg(mac, S.draft), patch);
+            S.ui.notice = { type: 'ok', text: allow ? t.qAllowed(name, patch.until ? untilText(patch.until) : '') : t.qRejected(name), list: [] };
+        }).catch(function (err) {
+            S.ui.notice = { type: 'err', text: err && err.pending_confirm ? t.qPending : (err && err.message === 'until' ? t.allowPickBad : t.applyFailed), list: [], ms: 10000 };
+        }).then(function () {
+            S.ui.deciding = null;
+            if (S.ui.notice && S.ui.notice.type === 'ok') { S.ui.pick = null; S.ui.pickVal = ''; }
+            refreshDecided();
+        });
+    }
+
+    /* delete a device: right away, outside the pending changes; it drops out of the list */
+    function forgetDevice(mac) {
+        var t = T(), host = hostByMac(mac), name = host ? devName(host) : mac;
+        api('POST', '/api/inversapanel/devices/forget', { mac: mac }).then(function (res) {
+            if (!res || res.status !== 'ok') { throw res; }
+            [S.saved, S.draft].forEach(function (st) {
+                delete st.devices[mac];
+                if (st.reservations) { delete st.reservations[mac]; }
+                (st.schedules || []).forEach(function (sc) {
+                    if (Array.isArray(sc.devices)) { sc.devices = sc.devices.filter(function (m) { return m !== mac; }); }
+                });
+            });
+            S.hosts = S.hosts.filter(function (h) { return h.mac !== mac; });
+            if (S.ui.sel === mac) { S.ui.sel = null; }
+            S.ui.notice = { type: 'ok', text: t.forgetDone(name), list: [] };
+        }).catch(function (err) {
+            S.ui.notice = { type: 'err', text: err && err.pending_confirm ? t.qPending : t.applyFailed, list: [], ms: 10000 };
+        }).then(function () { redraw('main'); });
+    }
+
+    /*
+     * the ways to let a waiting device in for a while: ready made lengths, the coming midnight, an end
+     * chosen on a calendar (at most 30 days ahead). big: the phone screen (two columns, large buttons).
+     */
+    function allowChoices(mac, big) {
+        var t = T(), busy = S.ui.deciding ? ' disabled' : '', cls = big ? 'k-btn' : 'k-btn small';
+        var btn = function (v, label, extra) {
+            return '<button type="button" class="' + cls + (extra || '') + '" data-act="decide" data-mac="' + esc(mac) + '" data-v="' + v + '"' + busy + '>' + esc(label) + '</button>';
+        };
+        var picking = S.ui.pick === mac;
+        var pickBtn = '<button type="button" class="' + cls + (picking ? ' on' : '') + '" data-act="pick" data-mac="' + (picking ? '' : esc(mac)) + '"' + busy + '>' +
+            esc(big ? t.allowPickShort : t.allowPick) + '</button>';
+        /* the phone: three short columns, "for good" among them, so that a device fits in a few lines */
+        var html = big ?
+            '<div class="k-qgrid">' + btn('1', t.allow1h) + btn('24', t.allow1d) + btn('168', t.allow1w) +
+                btn('midnight', t.allowMidnightShort) + pickBtn + btn('0', t.allowForever, ' primary') + '</div>' :
+            '<div class="k-types">' + btn('1', t.allow1h) + btn('midnight', t.allowMidnight) + btn('24', t.allow1d) + btn('168', t.allow1w) + pickBtn + '</div>';
+        if (!picking) {
+            return html;
+        }
+        var two = function (n) { return (n < 10 ? '0' : '') + n; };
+        var local = function (d) { return d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + 'T' + two(d.getHours()) + ':' + two(d.getMinutes()); };
+        var now = new Date(), max = new Date(now.getTime() + 30 * 86400000);
+        if (!S.ui.pickVal) {
+            /* three hours from now, on the full hour */
+            var start = new Date(now.getTime() + 3 * 3600000);
+            start.setMinutes(0, 0, 0);
+            S.ui.pickVal = local(start);
+        }
+        return html + '<div class="k-pick">' +
+            '<input type="datetime-local" data-input="pickuntil" aria-label="' + esc(t.allowPickLabel) + '" value="' + esc(S.ui.pickVal) + '" min="' + local(now) + '" max="' + local(max) + '">' +
+            '<button type="button" class="' + cls + ' primary" data-act="decide-pick" data-mac="' + esc(mac) + '"' + busy + '>' + esc(t.qAllow) + '</button>' +
+            (big ? '' : '<span class="muted small" style="font-weight:400;flex:1 1 100%">' + esc(t.allowPickSub) + '</span>') + '</div>';
+    }
+
+    function refreshDecided() {
+        if (S.ui.quick) {
+            renderQuick();
+        } else {
+            redraw('main');
+        }
+    }
+
+    function isPhone() {
+        return !!(window.matchMedia && window.matchMedia('(max-width: 640px)').matches);
+    }
+
+    /* what the phone screen offers: devices waiting, by the saved state (nothing to "Apply" there) */
+    function quickList() {
+        return S.hosts.filter(function (h) { return waiting(h, S.saved); })
+            .sort(function (a, b) { return (b.online - a.online) || String(b.first_seen).localeCompare(String(a.first_seen)); });
+    }
+
+    /*
+     * The phone screen: opened from a phone while devices wait for approval, it shows only those,
+     * each with "allow for 1 hour / 1 day / 1 week / for good" and "turn away". The full panel is one tap away.
+     */
+    function renderQuick() {
+        var t = T(), list = quickList(), nt = S.ui.notice, busy = S.ui.deciding ? ' disabled' : '';
+        var cards = list.map(function (h) {
+            var cfg = devCfg(h.mac, S.saved), name = devName(h), first = ago(h.first_seen);
+            var sub = [h.vendor || t.unknownVendor, h.network].filter(Boolean).join(' · ');
+            return '<div class="k-card k-qcard">' +
+                '<div class="k-qdev"><div class="k-ibox cut">' + icon(ICONS[cfg.type] || ICONS.unknown, 18) + '</div>' +
+                '<div class="k-qdev-text"><b><span class="k-dot' + (h.online ? ' ok' : '') + '" title="' + esc(h.online ? t.online : t.offline) + '"></span>' + esc(name) + '</b>' +
+                '<span class="muted">' + esc(sub) + '</span>' +
+                '<span class="muted"><span class="mono">' + esc(h.mac) + '</span>' + (first ? ' · ' + esc(first) : '') + '</span></div></div>' +
+                allowChoices(h.mac, true) +
+                '<button type="button" class="k-btn k-qreject" data-act="decide" data-mac="' + esc(h.mac) + '" data-v="reject"' + busy + '>' + esc(t.apprReject) + '</button>' +
+                '</div>';
+        }).join('');
+        root.innerHTML = '<div class="k-quick">' +
+            '<div class="k-qhead"><div class="k-logo" aria-hidden="true"></div><b>Inversa Panel</b>' +
+            '<button type="button" class="k-btn small" data-act="quick-close">' + esc(t.qFullShort) + '</button></div>' +
+            (nt ? '<div class="k-banner ' + (nt.type === 'ok' ? 'ok' : 'err') + '" role="status">' + icon(nt.type === 'ok' ? ICONS.ok : ICONS.warn, 16) + '<span>' + esc(nt.text) + '</span></div>' : '') +
+            (list.length ?
+                '<div class="k-qtitle"><b>' + esc(t.qTitle(list.length)) + '</b><span class="muted">' + esc(t.qHint) + '</span></div>' + cards :
+                '<div class="k-card k-qempty">' + icon(ICONS.ok, 24) + '<b>' + esc(t.qNone) + '</b></div>') +
+            '</div>';
+    }
+
     function deviceRows() {
         var t = T(), rows = devicePage().rows;
         if (!rows.length) {
@@ -1208,7 +1368,7 @@
                 esc(S.hosts.length ? t.noResult : (S.hostsLoaded ? t.noDevicesYet : '…')) + '</td></tr>';
         }
         return rows.map(function (h) {
-            var cfg = devCfg(h.mac), cut = !!cfg.blocked, name = devName(h), wait = waiting(h), paused = cut ? 0 : pausedUntil(h);
+            var cfg = devCfg(h.mac), cut = !!cfg.blocked, name = devName(h), wait = held(h), paused = cut ? 0 : pausedUntil(h);
             var status = h.online ? t.online : (ago(h.last_seen) || t.offline);
             /* a fixed address the device did not pick up yet is shown as such, not as a label on the old address */
             var fixed = (S.saved.reservations || {})[h.mac] || '', moving = fixed && hostIp4(h) && h.ips[0] !== fixed;
@@ -1226,7 +1386,7 @@
                 '<span class="k-dot ' + (h.online ? 'ok' : '') + '"></span>' + esc(status) + '</span></td>' +
                 '<td style="font-variant-numeric:tabular-nums">' + esc(fmt(h.states)) + '</td>' +
                 (wait ?
-                    '<td><div class="k-net"><span class="k-net-label cut">' + esc(t.apprWaiting) + '</span></div></td>' :
+                    '<td><div class="k-net"><span class="k-net-label cut">' + esc(cfg.rejected ? t.apprRejected : t.apprWaiting) + '</span></div></td>' :
                     '<td><div class="k-net"><span class="k-net-label' + (cut || paused ? ' cut' : '') + '">' + esc(cut ? t.netOff : (paused ? t.pauseUntil(clock(paused)) : t.netOn)) + '</span>' +
                     toggle(!cut, 'data-act="cut" data-mac="' + esc(h.mac) + '"', t.cutAria(name), cut ? 'cut' : '') + '</div></td>') +
                 '</tr>';
@@ -1263,7 +1423,7 @@
     function devicePanel() {
         var t = T(), h = hostByMac(S.ui.sel);
         if (!h) { return ''; }
-        var cfg = devCfg(h.mac), cut = !!cfg.blocked, name = devName(h), wait = waiting(h);
+        var cfg = devCfg(h.mac), cut = !!cfg.blocked, name = devName(h), wait = held(h), until = wait ? 0 : approvedUntil(h.mac);
         var info = [
             [t.dMac, h.mac],
             [t.dVendor, h.vendor || t.unknownVendor],
@@ -1278,8 +1438,12 @@
             '<div style="flex:1 1 auto;min-width:0"><div style="font-weight:600;font-size:16px">' + esc(name) + '</div>' +
             '<div class="muted">' + esc(h.ips[0] || h.mac) + '</div></div>' +
             '<button type="button" class="k-icon-btn" data-act="sel" data-mac="" aria-label="' + esc(t.close) + '">' + icon(ICONS.close, 18) + '</button></div>' +
-            (wait ? '<div class="k-banner warn" style="margin:0;align-items:center;flex-wrap:wrap">' + icon(ICONS.warn, 20) + '<span style="flex:1 1 180px">' + esc(t.apprPanel) + '</span>' +
-                '<button type="button" class="k-btn small primary" data-act="approve" data-mac="' + esc(h.mac) + '">' + esc(t.apprApprove) + '</button></div>' : '') +
+            (wait ? '<div class="k-banner warn" style="margin:0;align-items:center;flex-wrap:wrap">' + icon(ICONS.warn, 20) + '<span style="flex:1 1 180px">' + esc(cfg.rejected ? t.apprRejectedPanel : t.apprPanel) + '</span>' +
+                '<button type="button" class="k-btn small primary" data-act="approve" data-mac="' + esc(h.mac) + '">' + esc(t.apprApprove) + '</button>' +
+                /* for a while, or turned away: right away, like a pause */
+                '<div class="k-field" style="flex:1 1 100%;margin:0"><span>' + esc(t.apprFor) + '</span>' + allowChoices(h.mac, false) +
+                (cfg.rejected ? '' : '<div><button type="button" class="k-btn small k-danger" style="margin-right:0" data-act="decide" data-mac="' + esc(h.mac) + '" data-v="reject"' + (S.ui.deciding ? ' disabled' : '') + '>' + esc(t.apprReject) + '</button></div>') +
+                '<span class="muted small" style="font-weight:400">' + esc(t.apprNow) + '</span></div></div>' : '') +
             '<label class="k-field"><span>' + esc(t.dName) + '</span>' +
             '<input type="text" maxlength="64" data-input="devname" data-mac="' + esc(h.mac) + '" value="' + esc(cfg.name) + '" placeholder="' + esc(h.hostname || t.unnamed) + '"></label>' +
             fixedIpField(h) +
@@ -1307,8 +1471,11 @@
             (h.online ? '' : '<div class="k-setting" style="padding:0"><div class="k-setting-text"><b>' + esc(t.wakeTitle) + '</b><span class="muted">' + esc(t.wakeSub) + '</span></div>' +
                 '<button type="button" class="k-btn small" data-act="wake" data-mac="' + esc(h.mac) + '">' + esc(t.wakeBtn) + '</button></div>') +
             /* only where it means something: the device's network asks for approval */
-            (approvalOn(h.network_key) ? '<div class="k-setting" style="padding:0"><div class="k-setting-text"><b>' + esc(t.dApproval) + '</b><span class="muted">' + esc(t.dApprovalSub) + '</span></div>' +
+            (approvalOn(h.network_key) ? '<div class="k-setting" style="padding:0"><div class="k-setting-text"><b>' + esc(t.dApproval) + '</b><span class="muted">' + esc(until ? t.apprUntilLong(untilText(until)) : t.dApprovalSub) + '</span></div>' +
                 toggle(!!cfg.approved, 'data-act="approval" data-mac="' + esc(h.mac) + '"', t.dApproval) + '</div>' : '') +
+            /* everything saved about it goes; back on the network, it is a new device */
+            '<div class="k-setting" style="padding:0"><div class="k-setting-text"><b>' + esc(t.forgetTitle) + '</b><span class="muted">' + esc(t.forgetSub) + '</span></div>' +
+                '<button type="button" class="k-btn small k-danger" style="margin-right:0" data-act="forget" data-mac="' + esc(h.mac) + '">' + esc(t.forgetBtn) + '</button></div>' +
             '</aside>';
     }
 
@@ -1591,8 +1758,41 @@
                 setDev(mac, { blocked: !devCfg(mac).blocked });
                 break;
             case 'approve':
+                /* an approval for a while that just ended is still "approved" in the saved state: let it in at once */
+                if (devCfg(mac, S.saved).approved && devCfg(mac, S.saved).until) {
+                    decide(mac, '0');
+                    return;
+                }
                 setDev(mac, { approved: true });
                 break;
+            case 'decide':
+                decide(mac, v);
+                return;
+            case 'pick':
+                /* open (or close, without a MAC) the calendar for an end of one's own */
+                S.ui.pick = mac || null;
+                S.ui.pickVal = '';
+                refreshDecided();
+                return;
+            case 'decide-pick':
+                var end = new Date(S.ui.pickVal || '').getTime();
+                if (isNaN(end) || end < Date.now() + 60000 || end > Date.now() + 30 * 86400000) {
+                    S.ui.notice = { type: 'err', text: T().allowPickBad, list: [], ms: 10000 };
+                    refreshDecided();
+                    return;
+                }
+                decide(mac, '@' + Math.round(end / 1000));
+                return;
+            case 'forget':
+                var who = hostByMac(mac);
+                if (window.confirm(T().forgetConfirm(who ? devName(who) : mac))) { forgetDevice(mac); }
+                return;
+            case 'quick-close':
+                S.ui.quick = false;
+                S.ui.notice = null;
+                window.scrollTo(0, 0);
+                render();
+                return;
             case 'landing':
                 api('POST', '/api/inversapanel/service/landing', { on: S.landing && S.landing.on ? '' : '1' }).then(function (r) {
                     if (!r || r.status !== 'ok') { throw r; }
@@ -1781,6 +1981,10 @@
         if (!kind || viewInput(kind, el, 'input')) {
             return;
         }
+        if (kind === 'pickuntil') {
+            S.ui.pickVal = el.value;
+            return;
+        }
         if (kind === 'search') {
             S.ui.search = el.value;
             document.getElementById('k-devrows').innerHTML = deviceRows();
@@ -1847,6 +2051,10 @@
         };
 
         loadState().then(function () {
+            /* on a phone, with devices waiting, the panel opens on the short screen that lets them in or not */
+            if (hashTab || !isPhone()) { return null; }
+            return loadHosts().then(function () { S.ui.quick = quickList().length > 0; }, function () {});
+        }).then(function () {
             render();
             root.addEventListener('click', onClick);
             root.addEventListener('input', onInput);

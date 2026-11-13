@@ -9,6 +9,7 @@
  *  - "cut internet" schedules: current IPs of their devices go into pf table <inversapanel_sched>
  *    (blocked by a rule from inversapanel_firewall), existing states of newly cut devices are killed
  *  - devices paused for a while on the Devices page are cut the same way until their time is up
+ *  - devices approved for a while lose the approval when their time is up (Approval::expire)
  *  - "block apps" schedules: one Unbound blocklist policy per schedule, limited to the devices'
  *    addresses, enabled only while the schedule is active; rewritten only when that changes
  */
@@ -17,6 +18,7 @@ require_once('config.inc');
 
 use OPNsense\Core\Backend;
 use OPNsense\Core\Config;
+use OPNsense\InversaPanel\Approval;
 use OPNsense\InversaPanel\Catalog;
 use OPNsense\InversaPanel\InversaPanel;
 use OPNsense\InversaPanel\Overview;
@@ -48,6 +50,11 @@ foreach ($listing['rows'] ?? [] as $row) {
 }
 
 $mdl = new InversaPanel();
+try {
+    Approval::expire($mdl);
+} catch (\Exception $e) {
+    syslog(LOG_ERR, 'inversapanel: schedule could not end approvals: ' . $e->getMessage());
+}
 $enabled = !$mdl->general->enabled->isEmpty();
 $cut_ips = [];
 $app_policies = [];
