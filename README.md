@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/OPNsense-26.7-d94f00" alt="OPNsense 26.7">
 </p>
 
-![Overview page](docs/screenshots/overview-en.png)
+![Overview page](docs/screenshots/en/overview.png)
 
 Inversa Panel is an open source plugin for [OPNsense](https://opnsense.org) 26.7. It puts devices, the internet filter, VPN, attack protection and logs on one screen, so everyday work on a home or small-office firewall does not need a tour of OPNsense's menus.
 
@@ -66,8 +66,8 @@ Screenshots show sample data.
 
 | | |
 |---|---|
-| ![Devices](docs/screenshots/devices-en.png) | ![VPN with per-device access](docs/screenshots/vpn-en.png) |
-| ![Attacks](docs/screenshots/attacks-en.png) | ![Internet history](docs/screenshots/history-en.png) |
+| ![Devices](docs/screenshots/en/devices.png) | ![VPN with per-device access](docs/screenshots/en/vpn.png) |
+| ![Attacks](docs/screenshots/en/attacks.png) | ![Internet history](docs/screenshots/en/history.png) |
 
 ### New devices, from your phone
 
@@ -75,7 +75,7 @@ On a network that asks for approval, a new device gets no further than the firew
 
 Switch on **Settings › Open Inversa Panel after logging in** so that the phone lands on this screen right after the login.
 
-<p align="center"><img src="docs/screenshots/phone-en.png" width="300" alt="The phone screen: two devices waiting for approval"></p>
+<p align="center"><img src="docs/screenshots/en/phone.png" width="300" alt="The phone screen: two devices waiting for approval"></p>
 
 ## How it treats your firewall
 

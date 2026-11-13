@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/OPNsense-26.7-d94f00" alt="OPNsense 26.7">
 </p>
 
-![Genel bakış sayfası](docs/screenshots/overview-tr.png)
+![Genel bakış sayfası](docs/screenshots/tr/overview.png)
 
 Inversa Panel, [OPNsense](https://opnsense.org) 26.7 için açık kaynaklı bir eklentidir. Cihazları, internet filtresini, VPN'i, saldırı önlemeyi ve kayıtları tek ekranda toplar; ev ya da küçük ofis güvenlik duvarında günlük işler için OPNsense menülerinde dolaşmak gerekmez.
 
@@ -66,8 +66,8 @@ Ekran görüntülerindeki veriler örnektir.
 
 | | |
 |---|---|
-| ![Cihazlar](docs/screenshots/devices-tr.png) | ![VPN ve cihaz başına erişim](docs/screenshots/vpn-tr.png) |
-| ![Saldırılar](docs/screenshots/attacks-tr.png) | ![İnternet geçmişi](docs/screenshots/history-tr.png) |
+| ![Cihazlar](docs/screenshots/tr/devices.png) | ![VPN ve cihaz başına erişim](docs/screenshots/tr/vpn.png) |
+| ![Saldırılar](docs/screenshots/tr/attacks.png) | ![İnternet geçmişi](docs/screenshots/tr/history.png) |
 
 ### Yeni cihazlar, telefondan
 
@@ -75,7 +75,7 @@ Onay isteyen bir ağda yeni cihaz, siz izin verene kadar güvenlik duvarından �
 
 Telefonun girişten hemen sonra bu ekrana düşmesi için **Ayarlar › Girişten sonra Inversa Panel açılsın** ayarını açın.
 
-<p align="center"><img src="docs/screenshots/phone-tr.png" width="300" alt="Telefon ekranı: onay bekleyen iki cihaz"></p>
+<p align="center"><img src="docs/screenshots/tr/phone.png" width="300" alt="Telefon ekranı: onay bekleyen iki cihaz"></p>
 
 ## Güvenlik duvarınıza nasıl davranır
 
