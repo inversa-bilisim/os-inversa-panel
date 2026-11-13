@@ -68,6 +68,14 @@ Ekran görüntülerindeki veriler örnektir.
 | ![Cihazlar](docs/screenshots/devices-tr.png) | ![VPN ve cihaz başına erişim](docs/screenshots/vpn-tr.png) |
 | ![Saldırılar](docs/screenshots/attacks-tr.png) | ![İnternet geçmişi](docs/screenshots/history-tr.png) |
 
+### Yeni cihazlar, telefondan
+
+Onay isteyen bir ağda yeni cihaz, siz izin verene kadar güvenlik duvarından öteye geçemez. Bir cihazın beklediğini Telegram birkaç saniye içinde haber verir. VPN ile güvenlik duvarına bağlanıp giriş yaparsınız; telefonda panel yalnızca bekleyen cihazları gösteren kısa bir ekranla açılır. Tek dokunuşla cihaza bir saatliğine, bir günlüğüne, bir haftalığına, gece yarısına, seçtiğiniz saate kadar ya da süresiz izin verirsiniz veya reddedersiniz. Süre dolunca cihaz yeniden onay bekler ve yeniden haber gelir.
+
+Telefonun girişten hemen sonra bu ekrana düşmesi için **Ayarlar › Girişten sonra Inversa Panel açılsın** ayarını açın.
+
+<p align="center"><img src="docs/screenshots/phone-tr.png" width="300" alt="Telefon ekranı: onay bekleyen iki cihaz"></p>
+
 ## Güvenlik duvarınıza nasıl davranır
 
 - **Sorulmadan hiçbir şey açılmaz.** İlk açılışta panel önerilen korumaları teklif eder; kabul edene kadar yalnızca okur.

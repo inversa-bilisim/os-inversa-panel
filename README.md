@@ -68,6 +68,14 @@ Screenshots show sample data.
 | ![Devices](docs/screenshots/devices-en.png) | ![VPN with per-device access](docs/screenshots/vpn-en.png) |
 | ![Attacks](docs/screenshots/attacks-en.png) | ![Internet history](docs/screenshots/history-en.png) |
 
+### New devices, from your phone
+
+On a network that asks for approval, a new device gets no further than the firewall until you let it in. Telegram tells you within seconds that a device is waiting. You connect to the firewall over the VPN and log in; on a phone the panel opens on a short screen with only the waiting devices. One tap lets a device in for an hour, a day, a week, until midnight, until a time you pick or for good, or turns it away. When the time is up the device waits again and you are told again.
+
+Switch on **Settings › Open Inversa Panel after logging in** so that the phone lands on this screen right after the login.
+
+<p align="center"><img src="docs/screenshots/phone-en.png" width="300" alt="The phone screen: two devices waiting for approval"></p>
+
 ## How it treats your firewall
 
 - **Nothing is switched on unasked.** On first start the panel offers the recommended protections; until you accept, it only reads.
