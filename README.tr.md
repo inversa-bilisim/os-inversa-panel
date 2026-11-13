@@ -43,6 +43,7 @@ Ekran görüntülerindeki veriler örnektir.
 **Cihazlar**
 - Korunan ağlarda görülen bütün cihazlar; ağı, adresi ve durumuyla. Arama ve filtreler, ad ve tür verme.
 - Tek tıkla bir cihazın internetini kesme, sabit IP verme, onay isteyen ağlarda yeni cihazları süresiz ya da bir saatliğine, bir günlüğüne, bir haftalığına veya seçilen saate kadar onaylama, reddetme, cihaz silme.
+- Cihaz kimliği takibi (isteğe bağlı): kopyalanmış bir MAC adresi, kopya IP adresini başka türden bir cihaz gibi isterse, iki cihaz aynı adresi kullanırsa ya da onaylı bir cihaz IP'sini birden kendisi vermeye başlarsa fark edilir; haber verilir ya da onay geri alınır. Kopyalamayı fark ettirir ama engellemez; engellemek için cihaz başına Wi-Fi parolası (PPSK) ya da 802.1X gerekir.
 - Telefonda panel yalnızca onay bekleyen cihazları gösteren kısa bir ekranla açılır: Telegram'dan bir cihazın beklediği haberi gelir, VPN ile bağlanıp giriş yaparsınız ve tek dokunuşla karar verirsiniz.
 - Zamanlama: seçilen cihazlar için seçilen saatlerde interneti kesme ya da uygulama engelleme.
 - Bir cihazı 30 dakika, bir saat, iki saat ya da sabaha kadar durdurma; süre bitince kendiliğinden açılır. Kapalı bir cihazı uzaktan uyandırma (Wake-on-LAN).

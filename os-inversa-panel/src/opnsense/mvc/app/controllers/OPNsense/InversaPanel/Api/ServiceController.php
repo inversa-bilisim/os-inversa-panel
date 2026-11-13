@@ -394,6 +394,9 @@ class ServiceController extends ApiControllerBase
             if (isset($general['dnsstats'])) {
                 $mdl->general->dnsstats->setValue(self::flag($general['dnsstats']));
             }
+            if (isset($general['idwatch']) && in_array($general['idwatch'], ['off', 'tell', 'hold'])) {
+                $mdl->general->idwatch->setValue($general['idwatch']);
+            }
         }
 
         $filtering = $this->request->getPost('filtering');
@@ -443,6 +446,10 @@ class ServiceController extends ApiControllerBase
                     if ($on !== ($node->approved->isEmpty() ? '0' : '1')) {
                         $node->approved_until->setValue('');
                         $node->rejected->setValue('0');
+                        /* let in again after an identity alert: the identity seen last is this device's */
+                        if ($on === '1') {
+                            \OPNsense\InversaPanel\Identity::accept($mac);
+                        }
                     }
                     $node->approved->setValue($on);
                 }

@@ -40,7 +40,7 @@ class Approval
             $live = json_decode((string)(new Backend())->configdpRun('inversapanel hosts', ['-']), true);
             foreach ($live['hosts'] ?? [] as $host) {
                 if (isset($ifmap[$host['interface']])) {
-                    self::$hosts[] = ['mac' => strtolower($host['mac']), 'ips' => $host['ips'], 'key' => $ifmap[$host['interface']]];
+                    self::$hosts[] = ['mac' => strtolower($host['mac']), 'ips' => $host['ips'], 'key' => $ifmap[$host['interface']], 'dhcp' => !empty($host['dhcp'])];
                 }
             }
         }
@@ -90,6 +90,10 @@ class Approval
         $node->approved->setValue($allow ? '1' : '0');
         $node->approved_until->setValue($until > 0 ? (string)$until : '');
         $node->rejected->setValue($allow ? '0' : '1');
+        /* let in after an identity alert: the identity seen last is this device's from now on */
+        if ($allow) {
+            Identity::accept($mac);
+        }
         self::store($mdl, $wasApproved && !$allow ? [$mac] : []);
         return $until;
     }

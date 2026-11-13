@@ -46,6 +46,10 @@ TEXT = {
     'en': {
         'device_wait': 'New device is waiting for approval: {dev} ({net})',
         'device_new': 'New device on the network: {dev} ({net})',
+        'id_change': 'A device looks different, its address may have been copied: {dev} ({net}). {whytext}{heldtext}',
+        'id_why': {'fp': 'It asked for its address like another kind of device.', 'both': 'Two different devices use this address.',
+                   'name': 'It gave another name.', 'manual': 'It set its IP address itself instead of asking.'},
+        'id_held': ' Its approval was taken back: it waits until you let it in again.',
         'peer_on': 'VPN device connected: {name} ({conn})',
         'vpn_up': 'VPN connection is up: {name}',
         'vpn_down': 'VPN connection lost: {name}',
@@ -67,6 +71,10 @@ TEXT = {
     'tr': {
         'device_wait': 'Yeni cihaz onay bekliyor: {dev} ({net})',
         'device_new': 'Ağa yeni bir cihaz girdi: {dev} ({net})',
+        'id_change': 'Bir cihaz farklı görünüyor, MAC adresi kopyalanmış olabilir: {dev} ({net}). {whytext}{heldtext}',
+        'id_why': {'fp': 'Adresini başka türden bir cihaz gibi istedi.', 'both': 'Bu adresi iki farklı cihaz kullanıyor.',
+                   'name': 'Başka bir ad verdi.', 'manual': 'IP adresini istemek yerine kendisi verdi.'},
+        'id_held': ' Onayı geri alındı: siz yeniden izin verene kadar bekleyecek.',
         'peer_on': 'VPN cihazı bağlandı: {name} ({conn})',
         'vpn_up': 'VPN bağlantısı kuruldu: {name}',
         'vpn_down': 'VPN bağlantısı koptu: {name}',
@@ -89,7 +97,7 @@ TEXT = {
 
 # which switch of the settings lets a kind of event through
 SWITCH = {
-    'device_wait': 'devices', 'device_new': 'devices',
+    'device_wait': 'devices', 'device_new': 'devices', 'id_change': 'devices',
     'peer_on': 'vpn', 'vpn_up': 'vpn', 'vpn_down': 'vpn',
     'wan_up': 'internet', 'wan_down': 'internet', 'boot': 'internet',
     'login_fail': 'logins',
@@ -189,7 +197,10 @@ def word(cfg, row, names):
         return None
     t = TEXT[cfg['lang']]
     data = {k: str(v) for k, v in row.items()}
-    if kind in ('device_wait', 'device_new'):
+    if kind == 'id_change':
+        data['whytext'] = t['id_why'].get(data.get('why', ''), '')
+        data['heldtext'] = t['id_held'] if data.get('held') == '1' else ''
+    if kind in ('device_wait', 'device_new', 'id_change'):
         mac = data.get('mac', '')
         if names.get('loaded') is None:
             names['loaded'] = hostnames()

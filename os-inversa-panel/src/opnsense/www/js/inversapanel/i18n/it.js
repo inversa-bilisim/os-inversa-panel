@@ -741,3 +741,22 @@ window.InversaPanelI18n.it = {
     t.wanSpeedLimited = function (m) { return 'Il server di misura rifiuta test ripetuti di seguito per un po’. Riprovare tra circa ' + m + ' minuti.'; };
     t.pfTargetHint = 'Scegliere dall’elenco o digitare un indirizzo IP.';
 })(window.InversaPanelI18n.it);
+
+/* device identity watch (1.7.0) */
+(function (t) {
+    t.ov.evId = 'Identità del dispositivo cambiata';
+    t.ov.evIdHeld = 'Identità del dispositivo cambiata, approvazione revocata';
+    t.idwLabel = 'Controllo dell’identità dei dispositivi';
+    t.idwSub = 'Un indirizzo MAC si può copiare, il modo in cui un dispositivo chiede il proprio indirizzo IP quasi mai. Riceve un avviso quando un dispositivo approvato sembra un altro tipo di dispositivo, quando due dispositivi usano lo stesso indirizzo contemporaneamente o quando all’improvviso imposta da solo il proprio IP. Rende visibile una copia, ma non la impedisce: la copia di un dispositivo dello stesso tipo (iPhone di un iPhone) può passare inosservata. Funziona solo con il server DHCP dnsmasq di OPNsense.';
+    t.idwModes = { off: 'Disattivato', tell: 'Avvisami', hold: 'Revoca l’approvazione' };
+    t.idwConflict = function (f) { return 'In dnsmasq è già configurato un altro script dei lease (' + f + '). dnsmasq ne accetta uno solo, quindi il pannello lo lascia com’è e il controllo non funziona.'; };
+    t.idwNoDnsmasq = 'Questo OPNsense non ha una cartella per le estensioni di dnsmasq; il controllo non funziona.';
+    t.idwKinds = { apple: 'Dispositivo Apple', windows: 'Windows', android: 'Android', linux: 'Linux', other: 'Tipo sconosciuto' };
+    t.idwKnown = 'Identità nota';
+    t.idwBadge = 'Identità cambiata';
+    t.idwWhy = { fp: 'Ha chiesto il proprio indirizzo IP come un altro tipo di dispositivo.', both: 'Due dispositivi diversi usano questo indirizzo MAC.', name: 'Ha indicato un altro nome.', manual: 'Ha impostato da solo il proprio indirizzo IP invece di chiederlo.' };
+    t.idwSeen = function (k, n) { return 'Visto per ultimo: ' + k + (n ? ' · ' + n : '') + '.'; };
+    t.idwWhen = function (a) { return '(' + a + ')'; };
+    t.idwAccept = 'È mio, accetta';
+    t.idwAccepted = 'La nuova identità è stata accettata per questo dispositivo.';
+})(window.InversaPanelI18n.it);

@@ -40,6 +40,16 @@
                 <Default>0</Default>
                 <Required>Y</Required>
             </welcomed>
+            <!-- device identity watch: off | tell (an event and Telegram) | hold (also take the approval back), see Identity -->
+            <idwatch type="OptionField">
+                <Default>off</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <off>Off</off>
+                    <tell>Tell</tell>
+                    <hold>Hold</hold>
+                </OptionValues>
+            </idwatch>
             <!-- the version whose "what is new" card was closed (or that was installed fresh) -->
             <news type="TextField">
                 <Mask>/^[0-9]+(\.[0-9]+){0,3}$/</Mask>

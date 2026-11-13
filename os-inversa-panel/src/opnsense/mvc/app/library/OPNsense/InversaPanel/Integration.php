@@ -213,6 +213,13 @@ class Integration
         Config::getInstance()->save();
 
         $backend = new Backend();
+        /* device identity watch: dnsmasq's lease script is set up or removed (a restart takes a second) */
+        if (Identity::syncConf($this->inversapanel)) {
+            $backend->configdRun('dnsmasq restart');
+        }
+        if (Identity::mode($this->inversapanel) !== 'off' && Identity::conflict() !== null) {
+            $this->messages[] = 'Device identity watch: another lease script is set up in dnsmasq (' . Identity::conflict() . '); the panel left it as it is and does not watch.';
+        }
         Extras::applyShaper();
         if ($geoUrlChanged) {
             /* a source set in OPNsense (MaxMind key): fetched in the background, the rules are loaded again after it */

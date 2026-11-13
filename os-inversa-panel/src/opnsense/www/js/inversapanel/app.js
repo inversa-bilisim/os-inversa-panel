@@ -288,6 +288,11 @@
         return S.hosts.filter(function (h) { return waiting(h, source); }).length;
     }
 
+    /* the identity watch saw this device differently, in the last week, and nobody said "this is mine" */
+    function idAlert(h) {
+        return !!(h && h.identity && h.identity.alert && Date.now() / 1000 - h.identity.alert < 7 * 86400);
+    }
+
     function hostByMac(mac) {
         for (var i = 0; i < S.hosts.length; i++) {
             if (S.hosts[i].mac === mac) { return S.hosts[i]; }
@@ -381,6 +386,9 @@
                 });
             });
         });
+        if ((d.general.idwatch || 'off') !== (s.general.idwatch || 'off')) {
+            add(t.idwLabel, t.idwModes[s.general.idwatch || 'off'], t.idwModes[d.general.idwatch || 'off'], function () { S.draft.general.idwatch = s.general.idwatch; });
+        }
         if (d.filtering.response !== s.filtering.response) {
             var resp = { zero: '0.0.0.0', nxdomain: 'NXDOMAIN' };
             add(t.respLabel, resp[s.filtering.response], resp[d.filtering.response], function () { S.draft.filtering.response = s.filtering.response; });
@@ -438,6 +446,8 @@
             S.draft = clone(S.saved);
             S.options = data.options;
             S.version = data.version || '';
+            S.idwatch = data.idwatch || {};
+            if (!S.saved.general.idwatch) { S.saved.general.idwatch = S.draft.general.idwatch = 'off'; }
             /* a change is waiting for its confirmation (this page was reloaded, or somebody else made it) */
             if (data.rollback && !S.ui.countdown) {
                 startCountdown(data.rollback.remaining);
@@ -840,6 +850,9 @@
             case 'device_wait':
                 host = hostByMac(e.mac);
                 return ['warn', o.evWait, (host ? devName(host) : e.mac) + (host && host.network ? ' · ' + host.network : '')];
+            case 'id_change':
+                host = hostByMac(e.mac);
+                return ['warn', e.held ? o.evIdHeld : o.evId, (host ? devName(host) : e.mac) + ' · ' + (T().idwWhy[e.why] || '')];
             case 'device_new':
                 host = hostByMac(e.mac);
                 return ['', o.evNew, (host ? devName(host) : e.mac) + (host && host.network ? ' · ' + host.network : '')];
@@ -1379,7 +1392,8 @@
             return '<tr class="' + (S.ui.sel === h.mac ? 'sel' : (cut || wait ? 'cut' : '')) + '">' +
                 '<td><div class="k-dev"><div class="k-ibox ' + (cut || wait ? 'cut' : 'on') + '">' + icon(ICONS[cfg.type] || ICONS.unknown, 20) + '</div>' +
                 '<button type="button" class="k-dev-name" data-act="sel" data-mac="' + esc(h.mac) + '" aria-label="' + esc(t.editAria(name)) + '">' +
-                '<span style="min-width:0"><b>' + esc(name) + '</b><span class="muted">' + esc(h.vendor || t.unknownVendor) + '</span></span>' +
+                '<span style="min-width:0"><b>' + esc(name) + (idAlert(h) ? ' <span class="k-badge warn" title="' + esc(t.idwWhy[h.identity.why] || '') + '">' + esc(t.idwBadge) + '</span>' : '') + '</b>' +
+                '<span class="muted">' + esc(h.vendor || t.unknownVendor) + '</span></span>' +
                 '<span style="color:#5B6573;flex:none">' + icon(ICONS.pencil, 15) + '</span></button></div></td>' +
                 '<td>' + networkBadge(h) + '</td>' +
                 '<td class="mono">' + esc(h.ips[0] || '—') + (h.ips.length > 1 ? ' <span class="muted">+' + (h.ips.length - 1) + '</span>' : '') +
@@ -1437,11 +1451,18 @@
             [t.dFirst, ago(h.first_seen) || '—'],
             [t.dLast, h.online ? t.online : (ago(h.last_seen) || '—')]
         ];
+        if (h.identity) {
+            info.push([t.idwKnown, t.idwKinds[h.identity.kind] + (h.identity.name ? ' · ' + h.identity.name : '')]);
+        }
         return '<aside class="k-card k-side" aria-label="' + esc(name) + '" style="gap:18px">' +
             '<div style="display:flex;align-items:center;gap:12px"><div class="k-ibox big ' + (cut || wait ? 'cut' : 'on') + '">' + icon(ICONS[cfg.type] || ICONS.unknown, 24) + '</div>' +
             '<div style="flex:1 1 auto;min-width:0"><div style="font-weight:600;font-size:16px">' + esc(name) + '</div>' +
             '<div class="muted">' + esc(h.ips[0] || h.mac) + '</div></div>' +
             '<button type="button" class="k-icon-btn" data-act="sel" data-mac="" aria-label="' + esc(t.close) + '">' + icon(ICONS.close, 18) + '</button></div>' +
+            (idAlert(h) ? '<div class="k-banner warn" style="margin:0;align-items:center;flex-wrap:wrap">' + icon(ICONS.warn, 20) +
+                '<span style="flex:1 1 180px"><b>' + esc(t.idwBadge) + '</b> · ' + esc(t.idwWhy[h.identity.why] || '') +
+                (h.identity.other_kind ? ' ' + esc(t.idwSeen(t.idwKinds[h.identity.other_kind], h.identity.other_name)) : '') + ' ' + esc(t.idwWhen(ago(new Date(h.identity.alert * 1000).toISOString()))) + '</span>' +
+                '<button type="button" class="k-btn small" data-act="idaccept" data-mac="' + esc(h.mac) + '">' + esc(t.idwAccept) + '</button></div>' : '') +
             (wait ? '<div class="k-banner warn" style="margin:0;align-items:center;flex-wrap:wrap">' + icon(ICONS.warn, 20) + '<span style="flex:1 1 180px">' + esc(cfg.rejected ? t.apprRejectedPanel : t.apprPanel) + '</span>' +
                 '<button type="button" class="k-btn small primary" data-act="approve" data-mac="' + esc(h.mac) + '">' + esc(t.apprApprove) + '</button>' +
                 /* for a while, or turned away: right away, like a pause */
@@ -1769,6 +1790,15 @@
                 return '<button type="button" class="' + (on ? 'on' : '') + '" data-act="resp" data-v="' + o[0] + '" aria-pressed="' + on + '">' + esc(o[1]) + '</button>';
             }).join('') + '</div></div>';
 
+        /* device identity watch: a copied MAC address is noticed (Identity.php) */
+        var iw = S.idwatch || {};
+        html += '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.idwLabel) + '</b><span class="muted">' + esc(t.idwSub) + '</span>' +
+            (iw.conflict ? '<span class="k-note warn">' + esc(t.idwConflict(iw.conflict)) + '</span>' : (iw.possible === false ? '<span class="k-note warn">' + esc(t.idwNoDnsmasq) + '</span>' : '')) + '</div>' +
+            '<div class="k-seg" role="group" aria-label="' + esc(t.idwLabel) + '">' + ['off', 'tell', 'hold'].map(function (m) {
+                var on = (g.idwatch || 'off') === m;
+                return '<button type="button" class="' + (on ? 'on' : '') + '" data-act="idwatch" data-v="' + m + '" aria-pressed="' + on + '">' + esc(t.idwModes[m]) + '</button>';
+            }).join('') + '</div></div>';
+
         html += '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.statsLabel) + '</b><span class="muted">' + esc(t.statsSub) + '</span></div>' +
             toggle(g.dnsstats, 'data-act="general" data-v="dnsstats"', t.statsLabel) + '</div>';
 
@@ -2044,6 +2074,15 @@
             case 'resp':
                 S.draft.filtering.response = v;
                 break;
+            case 'idwatch':
+                S.draft.general.idwatch = v;
+                break;
+            case 'idaccept':
+                api('POST', '/api/inversapanel/devices/idaccept', { mac: mac }).then(function () { return loadHosts(); }).then(function () {
+                    S.ui.notice = { type: 'ok', text: T().idwAccepted, list: [] };
+                    redraw('main');
+                }, function () { S.ui.notice = { type: 'err', text: T().applyFailed, list: [] }; renderPending(); });
+                return;
             case 'discard':
                 S.draft = clone(S.saved);
                 S.ui.notice = null;

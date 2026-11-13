@@ -314,6 +314,9 @@
             case 'device_wait':
                 host = h.hostByMac(e.mac);
                 return [o.evWait, h.esc(host ? h.devName(host) : e.mac) + sub(host ? host.network : ''), '<span class="mono">' + h.esc(e.mac) + '</span>'];
+            case 'id_change':
+                host = h.hostByMac(e.mac);
+                return [e.held ? o.evIdHeld : o.evId, h.esc(host ? h.devName(host) : e.mac) + sub(T.idwWhy[e.why] || ''), '<span class="mono">' + h.esc(e.mac) + '</span>'];
             case 'device_new':
                 host = h.hostByMac(e.mac);
                 return [o.evNew, h.esc(host ? h.devName(host) : e.mac) + sub(host ? host.network : ''), '<span class="mono">' + h.esc(e.mac) + '</span>'];

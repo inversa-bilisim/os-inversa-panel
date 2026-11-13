@@ -26,6 +26,8 @@ rm -rf /usr/local/opnsense/mvc/app/models/OPNsense/InversaPanel \
        /usr/local/opnsense/service/conf/actions.d/actions_inversapanel.conf \
        /usr/local/etc/inc/plugins.inc.d/inversapanel.inc \
        /var/db/inversapanel
+# the device identity watch's lease script for dnsmasq
+if [ -f /usr/local/etc/dnsmasq.conf.d/inversapanel.conf ]; then rm -f /usr/local/etc/dnsmasq.conf.d/inversapanel.conf; configctl dnsmasq restart > /dev/null; fi
 rm -f /tmp/opnsense_menu_cache.xml /tmp/opnsense_acl_cache.json /var/lib/php/tmp/opnsense_menu_cache.xml /var/lib/php/tmp/opnsense_acl_cache.json
 service configd restart > /dev/null
 configctl filter reload > /dev/null

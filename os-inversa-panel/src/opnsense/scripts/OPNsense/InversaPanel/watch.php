@@ -19,6 +19,7 @@ use OPNsense\Core\Backend;
 use OPNsense\Core\Config;
 use OPNsense\InversaPanel\Approval;
 use OPNsense\InversaPanel\Forgotten;
+use OPNsense\InversaPanel\Identity;
 use OPNsense\InversaPanel\InversaPanel;
 use OPNsense\InversaPanel\Overview;
 use OPNsense\InversaPanel\Vpn;
@@ -92,6 +93,17 @@ function drop_forgotten(array $waiting, $seen, $done)
         }
     }
     return [$waiting, $seen, $latest];
+}
+
+/* device identity watch (Identity.php): what dnsmasq noted since the last look; returns the number of changes told */
+function watch_identity(InversaPanel $mdl)
+{
+    try {
+        return Identity::process($mdl, Approval::hosts());
+    } catch (\Exception $e) {
+        syslog(LOG_ERR, 'inversapanel: identity watch: ' . $e->getMessage());
+        return 0;
+    }
 }
 
 /* a new device is told by Telegram right away, not with the next minute */
@@ -233,6 +245,7 @@ if (!is_dir(Overview::DIR)) {
 file_put_contents(Overview::WATCH . '.tmp', json_encode($new));
 rename(Overview::WATCH . '.tmp', Overview::WATCH);
 Overview::trimEvents();
+$told += watch_identity($mdl);
 tell_now($told);
 
 /*
@@ -254,5 +267,6 @@ while (!$first && time() - $now < 40) {
         file_put_contents(Overview::WATCH . '.tmp', json_encode($new));
         rename(Overview::WATCH . '.tmp', Overview::WATCH);
     }
+    $told += watch_identity($mdl);
     tell_now($told);
 }

@@ -13,6 +13,7 @@ use OPNsense\Core\Config;
 use OPNsense\InversaPanel\Approval;
 use OPNsense\InversaPanel\Dhcp;
 use OPNsense\InversaPanel\Forgotten;
+use OPNsense\InversaPanel\Identity;
 use OPNsense\InversaPanel\InversaPanel;
 use OPNsense\InversaPanel\Pause;
 use OPNsense\InversaPanel\Rollback;
@@ -93,9 +94,11 @@ class DevicesController extends ApiControllerBase
             }
         }
 
-        /* cut off for a while: until when (0: not) */
+        /* cut off for a while: until when (0: not); what the identity watch knows about it */
+        $ids = Identity::summary();
         foreach ($result as $mac => $row) {
             $result[$mac]['paused'] = (int)($paused[$mac] ?? 0);
+            $result[$mac]['identity'] = $ids[$mac] ?? null;
         }
 
         return ['source' => $source, 'devices' => array_values($result)];
@@ -220,6 +223,7 @@ class DevicesController extends ApiControllerBase
             }
         }
         Pause::clear($mac);
+        Identity::forget($mac);
         /* writes the devices and both MAC aliases, ends the open connections when it was let in before */
         Approval::store($mdl, $wasApproved ? [$mac] : []);
         /* after that: the device's addresses are looked up there, the list leaves it out from now on */
@@ -230,6 +234,22 @@ class DevicesController extends ApiControllerBase
         }
         $backend->configdRun('inversapanel schedule');
         return ['status' => 'ok'];
+    }
+
+    /**
+     * after an identity alert: "this is mine", the identity seen last becomes the known one
+     */
+    public function idacceptAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $this->throwReadOnly();
+        $mac = strtolower((string)$this->request->getPost('mac'));
+        if (!preg_match('/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/', $mac)) {
+            return ['status' => 'failed', 'message' => 'mac'];
+        }
+        return ['status' => Identity::accept($mac) ? 'ok' : 'failed'];
     }
 
     /**

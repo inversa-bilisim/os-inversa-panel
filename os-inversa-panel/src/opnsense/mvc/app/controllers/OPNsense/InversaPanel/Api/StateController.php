@@ -114,6 +114,12 @@ class StateController extends ApiControllerBase
                 'welcomed' => !$mdl->general->welcomed->isEmpty(),
                 /* the version whose "what is new" was seen */
                 'news' => (string)$mdl->general->news,
+                'idwatch' => (string)$mdl->general->idwatch,
+            ],
+            /* device identity watch: another lease script in dnsmasq (ours is then not set up), no dnsmasq drop-ins */
+            'idwatch' => [
+                'conflict' => \OPNsense\InversaPanel\Identity::conflict(),
+                'possible' => is_dir(\OPNsense\InversaPanel\Identity::CONF_DIR),
             ],
             'version' => Catalog::VERSION,
             'devices' => (object)$devices,
