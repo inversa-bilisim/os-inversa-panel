@@ -736,3 +736,18 @@ header.page-content-head { display: none; }
 /* the narrow side panel on a computer: the calendar on a line of its own; the phone keeps it beside the button */
 .inversapanel .k-side .k-pick input[type=datetime-local] { flex-basis: 100%; }
 .inversapanel .k-types .k-btn.on { border-color: var(--k-accent); background: var(--k-accent-soft); color: var(--k-accent); }
+
+/* ---- setup wizard (viewWizard) ---------------------------------------------- */
+.inversapanel .k-wiz { max-width: 860px; }
+.inversapanel .k-wiz-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.inversapanel .k-wiz-steps { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.inversapanel .k-wiz-steps .muted { margin-left: 6px; }
+.inversapanel .k-wiz-dot { width: 26px; height: 6px; border-radius: 3px; background: var(--k-line); }
+.inversapanel .k-wiz-dot.done { background: #9DB4EA; }
+.inversapanel .k-wiz-dot.on { background: var(--k-accent); }
+.inversapanel .k-wiz-foot { display: flex; justify-content: space-between; gap: 8px; }
+.inversapanel .k-wiz-foot .k-btn { min-width: 120px; }
+.inversapanel .k-wiz .k-chip .k-dot { margin-right: 6px; }
+/* the notifications page inside the wizard: its own heading would repeat the step's */
+.inversapanel .k-wiz-embed > .k-stack > div:first-child { display: none; }
+.inversapanel .k-wiz .k-setting-text b .k-badge { margin-left: 6px; }

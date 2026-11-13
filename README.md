@@ -79,7 +79,7 @@ Switch on **Settings › Open Inversa Panel after logging in** so that the phone
 
 ## How it treats your firewall
 
-- **Nothing is switched on unasked.** On first start the panel offers the recommended protections; until you accept, it only reads.
+- **Nothing is switched on unasked.** On first start a setup wizard asks for the networks to protect, the protections, approval of new devices and notifications; nothing reaches the firewall before its last step, and until then the panel only reads. The wizard can be closed and run again from Settings.
 - **It touches only what you change in it.** Existing firewall rules stay in force; the access table adds a rule only where you set a cell to allowed or blocked.
 - **What it cannot understand it shows read-only**: multi-WAN, networks on LAGG or bridge members, port forwards that use aliases, DNS forwarding or intrusion detection that was set up in OPNsense itself.
 - **Risky changes put themselves back.** Network changes, tightening "only these countries" and changing DNS servers take a backup first. If you do not confirm within 90 seconds, OPNsense restores the earlier configuration.

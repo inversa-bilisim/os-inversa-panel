@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Setup wizard** on first start, in six steps: language and the page after logging in, the networks to protect, the protections (recommended ones proposed), approval of new devices per network, Telegram notifications (the notifications page itself), and a summary. The choices are applied in one go at the end, with the usual "Apply"; nothing changes on the firewall before that. It can be closed at any time and run again from Settings › Setup wizard. The welcome card on the overview now starts it.
 - New tagline under the logo: "As simple as a modem, as powerful as OPNsense" (in all six languages).
 
 ## 1.5.0 (2026-11-13)

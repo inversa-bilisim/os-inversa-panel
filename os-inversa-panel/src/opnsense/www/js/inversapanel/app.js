@@ -758,7 +758,8 @@
         /* what stands beside the pages (devices waiting for approval) follows the draft */
         if (document.getElementById('k-subtabs')) { renderSubtabs(); }
         var html = '';
-        if (VIEWS[S.tab]) { html = VIEWS[S.tab].render(); }
+        if (S.ui.wiz) { html = viewWizard(); }
+        else if (VIEWS[S.tab]) { html = VIEWS[S.tab].render(); }
         else if (S.tab === 'devices') { html = viewDevices(); }
         else if (S.tab === 'filter') { html = viewFilter(); }
         else if (S.tab === 'lists') { html = viewLists(); }
@@ -928,9 +929,8 @@
                 '<div class="k-ibox big on">' + icon(ICONS.shield + ICONS.check, 24) + '</div>' +
                 '<div class="k-setting-text"><b style="font-size:16px">' + esc(t.welcomeTitle) + '</b>' +
                 '<span class="muted" style="font-size:14px">' + esc(t.welcomeText) + '</span></div>' +
-                '<div class="k-btns"><button type="button" class="k-btn" data-act="tab" data-v="scan">' + esc(t.welcomeScan) + '</button>' +
-                '<button type="button" class="k-btn" data-act="welcome-no">' + esc(t.welcomeNo) + '</button>' +
-                '<button type="button" class="k-btn primary" data-act="welcome-yes">' + esc(t.welcomeYes) + '</button></div>' +
+                '<div class="k-btns"><button type="button" class="k-btn" data-act="welcome-no">' + esc(t.welcomeNo) + '</button>' +
+                '<button type="button" class="k-btn primary" data-act="wiz-start">' + esc(t.wizStart) + '</button></div>' +
                 '</div></section>';
         }
 
@@ -1577,6 +1577,141 @@
 
     /* ------------------------------------------------------------------ view: settings */
 
+    /* ------------------------------------------------------------------ view: setup wizard */
+
+    /*
+     * A few steps after the first installation. Nothing reaches the firewall before the last step: the
+     * choices live in S.ui.wiz and go into the draft and one "Apply" at the end. Only the language, the
+     * page after logging in and the notifications (their own page, embedded) are stored right away, as
+     * they are everywhere else.
+     */
+    var WIZ_STEPS = ['start', 'nets', 'protect', 'devices', 'notify', 'done'];
+
+    function startWizard() {
+        var g = S.saved.general, f = S.saved.filtering, approval = {};
+        var cats = {};
+        CATS.forEach(function (k) {
+            /* the first time the recommended ones are proposed, later what is set */
+            cats[k] = g.welcomed ? !!f[k] : (!!f[k] || QUICK.indexOf(k) >= 0);
+        });
+        Object.keys(S.saved.approval || {}).forEach(function (k) { approval[k] = !!S.saved.approval[k]; });
+        S.ui.wiz = { step: 0, ifaces: (g.interfaces || []).slice(), cats: cats, approval: approval };
+        S.tab = 'dash';
+        S.ui.sel = null;
+    }
+
+    /* a protected network can be chosen only among what the settings offer */
+    function wizNetName(key) {
+        var i = (S.options.interfaces || []).filter(function (x) { return x.key === key; })[0];
+        return i ? i.name : key.toUpperCase();
+    }
+
+    /* "open the panel after logging in", for the user who is logged in, stored right away (Settings and the wizard) */
+    function landingRow() {
+        var t = T();
+        if (S.landing === undefined) {
+            S.landing = null;
+            api('GET', '/api/inversapanel/service/landing').then(function (r) { S.landing = r || {}; }, function () { S.landing = {}; })
+                .then(function () { if (S.tab === 'settings' || S.ui.wiz) { redraw('main'); } });
+        }
+        var land = S.landing || {};
+        return '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.landLabel) + '</b><span class="muted">' + esc(land.other ? t.landOther(land.other) : t.landSub) + '</span></div>' +
+            toggle(!!land.on, 'data-act="landing"' + (S.landing ? '' : ' disabled'), t.landLabel) + '</div>';
+    }
+
+    function viewWizard() {
+        var t = T(), w = S.ui.wiz, step = WIZ_STEPS[w.step], last = w.step === WIZ_STEPS.length - 1;
+        var dots = WIZ_STEPS.map(function (k, i) {
+            return '<span class="k-wiz-dot' + (i < w.step ? ' done' : (i === w.step ? ' on' : '')) + '" title="' + esc(t.wiz[k][0]) + '"></span>';
+        }).join('');
+        var head = '<div class="k-wiz-head"><div><div class="k-wiz-steps">' + dots + '<span class="muted small">' + esc(t.wizStep(w.step + 1, WIZ_STEPS.length)) + '</span></div>' +
+            '<h1>' + esc(t.wiz[step][0]) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + esc(t.wiz[step][1]) + '</div></div>' +
+            '<button type="button" class="k-btn small" data-act="wiz-close">' + esc(t.wizClose) + '</button></div>';
+        var body = '';
+        if (step === 'start') {
+            body = '<section class="k-card tight">' +
+                '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.langLabel) + '</b><span class="muted">' + esc(t.langSub) + '</span></div>' + langSelect() + '</div>' +
+                landingRow() + '</section>' +
+                '<div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.wizSafe) + '</span></div>';
+        } else if (step === 'nets') {
+            body = '<section class="k-card"><div class="k-chips">' + (S.options.interfaces || []).map(function (i) {
+                var on = w.ifaces.indexOf(i.key) >= 0;
+                return '<button type="button" class="k-chip' + (on ? ' on' : '') + '" data-act="wiz-iface" data-v="' + esc(i.key) + '" aria-pressed="' + on + '">' +
+                    '<span class="k-dot" style="background:' + esc(i.color || '#5B6573') + '"></span>' + esc(i.name) + '</button>';
+            }).join('') + '</div>' +
+                (w.ifaces.length ? '' : '<span class="k-note warn">' + esc(t.wizNoNet) + '</span>') +
+                '<div class="k-setting" style="padding:0;border:none"><div class="k-setting-text"><span class="muted">' + esc(t.wizScan) + '</span></div>' +
+                '<button type="button" class="k-btn small" data-act="tab" data-v="scan">' + esc(t.welcomeScan) + '</button></div></section>';
+        } else if (step === 'protect') {
+            body = '<section class="k-card tight">' + CATS.map(function (k) {
+                return '<div class="k-setting"><div class="k-setting-text"><b>' + esc(t.cats[k][0]) +
+                    (QUICK.indexOf(k) >= 0 ? ' <span class="k-badge">' + esc(t.wizRecommended) + '</span>' : '') + '</b>' +
+                    '<span class="muted">' + esc(t.cats[k][1]) + '</span></div>' +
+                    toggle(!!w.cats[k], 'data-act="wiz-cat" data-v="' + k + '"', t.cats[k][0]) + '</div>';
+            }).join('') + '</section>' +
+                '<div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.wizIps) + '</span></div>';
+        } else if (step === 'devices') {
+            body = '<section class="k-card tight">' + w.ifaces.map(function (k) {
+                return '<div class="k-setting"><div class="k-setting-text"><b>' + esc(wizNetName(k)) + '</b><span class="muted">' + esc(t.wizApprSub) + '</span></div>' +
+                    toggle(!!w.approval[k], 'data-act="wiz-appr" data-v="' + esc(k) + '"', wizNetName(k)) + '</div>';
+            }).join('') + '</section>' +
+                '<div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.wizApprNote) + '</span></div>';
+        } else if (step === 'notify') {
+            /* the notifications page itself: it has its own "Save", stored right away */
+            body = VIEWS.notify ? '<div class="k-wiz-embed">' + VIEWS.notify.render() + '</div>' : '';
+        } else {
+            var cats = CATS.filter(function (k) { return w.cats[k]; }).map(function (k) { return t.cats[k][0]; });
+            var appr = w.ifaces.filter(function (k) { return w.approval[k]; }).map(wizNetName);
+            var rows = [
+                [t.wiz.nets[0], w.ifaces.map(wizNetName).join(', ') || '—'],
+                [t.wiz.protect[0], cats.join(', ') || t.wizNone],
+                [t.wiz.devices[0], appr.join(', ') || t.wizNone]
+            ];
+            body = '<section class="k-card">' + rows.map(function (r) {
+                return '<div class="k-kv"><span class="muted">' + esc(r[0]) + '</span><span>' + esc(r[1]) + '</span></div>';
+            }).join('') + '</section>' +
+                '<div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.wizDoneNote) + '</span></div>';
+        }
+        var blocked = step === 'nets' && !w.ifaces.length;
+        var foot = '<div class="k-wiz-foot">' +
+            (w.step > 0 ? '<button type="button" class="k-btn" data-act="wiz-back">' + esc(t.wizBack) + '</button>' : '<span></span>') +
+            (last ? '<button type="button" class="k-btn primary" data-act="wiz-finish"' + (S.ui.applying ? ' disabled' : '') + '>' + esc(t.wizFinish) + '</button>' :
+                '<button type="button" class="k-btn primary" data-act="wiz-next"' + (blocked ? ' disabled' : '') + '>' +
+                esc(t.wizNext) + '</button>') + '</div>';
+        return '<div class="k-stack k-wiz">' + head + body + foot + '</div>';
+    }
+
+    function wizardAct(act, v) {
+        var w = S.ui.wiz;
+        if (!w) { return; }
+        if (act === 'wiz-next' && w.step < WIZ_STEPS.length - 1) {
+            w.step += 1;
+            if (WIZ_STEPS[w.step] === 'notify' && VIEWS.notify && VIEWS.notify.load) {
+                VIEWS.notify.load().then(function () { if (S.ui.wiz) { redraw('main'); } }, function () {});
+            }
+        } else if (act === 'wiz-back' && w.step > 0) {
+            w.step -= 1;
+        } else if (act === 'wiz-iface') {
+            w.ifaces = toggleInList(w.ifaces, v);
+        } else if (act === 'wiz-cat') {
+            w.cats[v] = !w.cats[v];
+        } else if (act === 'wiz-appr') {
+            w.approval[v] = !w.approval[v];
+        } else if (act === 'wiz-close') {
+            S.ui.wiz = null;
+        } else if (act === 'wiz-finish') {
+            S.draft.general.interfaces = w.ifaces.slice();
+            CATS.forEach(function (k) { S.draft.filtering[k] = !!w.cats[k]; });
+            S.draft.approval = Object.assign({}, S.draft.approval || {});
+            w.ifaces.forEach(function (k) { S.draft.approval[k] = !!w.approval[k]; });
+            S.ui.wiz = null;
+            if (!S.saved.general.welcomed) { saveWelcomed(); }
+            apply();
+            return;
+        }
+        window.scrollTo(0, 0);
+    }
+
     function viewSettings() {
         var t = T(), g = S.draft.general;
         var html = '<div class="k-stack"><h1>' + esc(t.setTitle) + '</h1><section class="k-card tight">';
@@ -1603,14 +1738,10 @@
             toggle(g.dnsstats, 'data-act="general" data-v="dnsstats"', t.statsLabel) + '</div>';
 
         /* for the user who is logged in, stored right away: OPNsense's own "Landing page" of that user */
-        if (S.landing === undefined) {
-            S.landing = null;
-            api('GET', '/api/inversapanel/service/landing').then(function (r) { S.landing = r || {}; }, function () { S.landing = {}; })
-                .then(function () { if (S.tab === 'settings') { redraw('main'); } });
-        }
-        var land = S.landing || {};
-        html += '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.landLabel) + '</b><span class="muted">' + esc(land.other ? t.landOther(land.other) : t.landSub) + '</span></div>' +
-            toggle(!!land.on, 'data-act="landing"' + (S.landing ? '' : ' disabled'), t.landLabel) + '</div>';
+        html += landingRow();
+
+        html += '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.wizAgain) + '</b><span class="muted">' + esc(t.wizAgainSub) + '</span></div>' +
+            '<button type="button" class="k-btn small" data-act="wiz-start">' + esc(t.wizAgainBtn) + '</button></div>';
 
         html += '</section><div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.infoNote) + '</span></div>';
         html += '<section class="k-card tight"><div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.cleanupTitle) + '</b>' +
@@ -1701,6 +1832,7 @@
 
     /* switch to a tab and fetch what it shows (the caller redraws) */
     function openTab(tab) {
+        S.ui.wiz = null;
         S.tab = pageFor(tab);
         S.ui.sel = null;
         if (S.tab === 'devices') { loadHosts().then(refreshView, function () {}); }
@@ -1924,6 +2056,23 @@
             case 'welcome-no':
                 saveWelcomed();
                 break;
+            case 'wiz-start':
+                startWizard();
+                if (history.replaceState) { history.replaceState(null, '', '#dash'); }
+                window.scrollTo(0, 0);
+                full = true;
+                break;
+            case 'wiz-next':
+            case 'wiz-back':
+            case 'wiz-iface':
+            case 'wiz-cat':
+            case 'wiz-appr':
+            case 'wiz-close':
+            case 'wiz-finish':
+                wizardAct(act, v);
+                if (act === 'wiz-finish') { return; }
+                full = act === 'wiz-close';
+                break;
             default:
                 /* "view:action" belongs to a registered view; it says what to redraw */
                 var parts = act.split(':');
@@ -2055,6 +2204,8 @@
             if (hashTab || !isPhone()) { return null; }
             return loadHosts().then(function () { S.ui.quick = quickList().length > 0; }, function () {});
         }).then(function () {
+            /* the first time: the setup wizard (not over the phone screen) */
+            if (!S.saved.general.welcomed && !S.ui.quick) { startWizard(); }
             render();
             root.addEventListener('click', onClick);
             root.addEventListener('input', onInput);
