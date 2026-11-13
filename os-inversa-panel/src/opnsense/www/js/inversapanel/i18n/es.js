@@ -461,3 +461,394 @@ window.InversaPanelI18n.es = {
     statsLabel: 'Estadísticas DNS', statsSub: 'Activa las estadísticas de Unbound para los contadores del resumen.',
     infoNote: 'Estos ajustes se escriben en la configuración propia de OPNsense: el alias «inversapanel_blocked» (Firewall › Aliases) y la política de lista de bloqueo «Inversa Panel (managed)» (Services › Unbound DNS › Blocklists). Puede ver allí los mismos ajustes.'
 };
+
+/* texts added after 1.1.0 */
+(function (t) {
+    t.ntSub = 'Le avisa por Telegram cuando pasa algo en la red. El cortafuegos solo envía mensajes; no acepta órdenes desde Telegram.';
+    t.ntEnable = 'Notificaciones de Telegram';
+    t.ntEnableSub = 'Los eventos se recogen cada minuto y se envían en un solo mensaje.';
+    t.ntToken = 'Token del bot';
+    t.ntTokenHint = 'El token que le dio BotFather. Una vez guardado, no vuelve a mostrarse en esta página; escriba uno nuevo para cambiarlo.';
+    t.ntTokenKept = function (end) { return 'Guardado (…' + end + ') · escriba uno nuevo para cambiarlo'; };
+    t.ntChat = 'Chat';
+    t.ntChatHint = 'El número del chat al que se envían los mensajes. Después de escribir un mensaje al bot en Telegram, «Buscar el chat» le permite elegirlo.';
+    t.ntFind = 'Buscar el chat';
+    t.ntNoChats = 'Nadie ha escrito al bot. Abra su bot en Telegram y escriba un mensaje (en un grupo, añada el bot al grupo) y vuelva a intentarlo.';
+    t.ntWhat = 'Qué avisar';
+    t.ntKinds = {
+        devices: [
+            'Dispositivos nuevos',
+            'Un dispositivo visto por primera vez, o que espera aprobación. Los teléfonos que cambian su dirección al azar cuentan como nuevos cada vez.'
+        ],
+        attacks: [
+            'Alertas de ataque',
+            'Alertas de la protección contra ataques, en un resumen una vez por minuto. No se avisa de los intentos desde internet que el cortafuegos rechaza de todos modos.'
+        ],
+        vpn: [
+            'Conexiones VPN',
+            'Dispositivos que se conectan a distancia, y una conexión entre sedes que se establece o se cae.'
+        ],
+        internet: [
+            'Conexión a internet',
+            'La conexión que se cae y vuelve, o el cortafuegos que se reinicia. El aviso de una caída llega cuando la conexión vuelve.'
+        ],
+        logins: [
+            'Accesos fallidos',
+            'Un intento de entrar en la interfaz del cortafuegos con una contraseña incorrecta.'
+        ],
+        health: [
+            'Estado del cortafuegos',
+            'Cuando el disco está casi lleno, el procesador se calienta mucho o hay una actualización de OPNsense pendiente.'
+        ],
+        updates: [
+            'Nueva versión',
+            'GitHub se consulta una vez al día; se le avisa cuando sale una nueva versión de Inversa Panel. Instalarla depende de usted, en Ajustes › Actualizaciones.'
+        ]
+    };
+    t.ntSave = 'Guardar';
+    t.ntTest = 'Guardar y enviar un mensaje de prueba';
+    t.ntSaved = 'Ajustes de notificaciones guardados.';
+    t.ntTestSent = 'Mensaje de prueba enviado; mírelo en Telegram.';
+    t.ntFailed = 'No ha funcionado';
+    t.ntLoadFailed = 'No se han podido leer los ajustes de notificaciones.';
+    t.ntError = function (n, text) { return n + (n === 1 ? ' notificación no se ha podido enviar y está en espera: ' : ' notificaciones no se han podido enviar y están en espera: ') + text; };
+    t.ntHowTitle = 'Cómo configurarlo';
+    t.ntHow = [
+        'En Telegram, abra un chat con @BotFather, envíe /newbot y dé un nombre a su bot.',
+        'Pegue el token que le da BotFather (tiene este aspecto: 123456789:AAH…) en «Token del bot».',
+        'Abra su nuevo bot en Telegram y pulse «Iniciar», o escríbale un mensaje. Para avisos en un grupo, añada el bot al grupo y escriba un mensaje allí.',
+        'Pulse «Buscar el chat» y elija el chat que aparece.',
+        'Pulse «Guardar y enviar un mensaje de prueba».'
+    ];
+    t.ntPrivacy = 'Mientras las notificaciones están activadas, el cortafuegos se conecta a api.telegram.org. Los mensajes incluyen nombres de dispositivos y direcciones MAC e IP, que pasan por los servidores de Telegram. El token del bot se guarda en la configuración de OPNsense, y por tanto también en sus copias de seguridad.';
+    t.scanSub = 'Lo que había configurado en OPNsense en este cortafuegos antes del panel, y cómo lo trata el panel. Esta página solo lee.';
+    t.scanOpenOpn = 'Abrir en OPNsense';
+    t.scanAdopted = function (n) { return n + (n === 1 ? ' nombre local pasa' : ' nombres locales pasan') + ' a gestionarse en la página DNS.'; };
+    t.scanNone = 'No había nada configurado antes del panel que afecte a sus funciones.';
+    t.scanFailed = 'No se han podido leer los ajustes existentes.';
+    t.scanFoot = 'Los ajustes de OPNsense que no se cuentan aquí (alias, certificados, usuarios, otros complementos) siguen igual; el panel no los toca.';
+    t.scanGroups = {
+        warn: [
+            'Pueden causar problemas',
+            'Ajustes que hacen la misma función que una función del panel o que le afectan. Léalos antes de activar esa función.'
+        ],
+        ok: [
+            'Los usa el panel tal como están',
+            'Se muestran en las páginas del panel y pueden cambiarse allí.'
+        ],
+        stays: [
+            'Siguen en las páginas de OPNsense',
+            'Siguen funcionando; el panel no los cambia.'
+        ]
+    };
+    t.scanFindings = {
+        networks: [
+            'Redes locales',
+            'Aparecen en Red e Internet › Redes locales; la protección, el aislamiento y el límite de velocidad se configuran allí.'
+        ],
+        networks_locked: [
+            'Redes que el panel no edita',
+            'Las redes en puertos agregados (LAGG) o puentes, y las redes sin dirección fija, se muestran en solo lectura. Cámbielas en las páginas de Interfaces de OPNsense.'
+        ],
+        multiwan: [
+            'Más de una conexión a internet',
+            'El panel gestiona una sola conexión (WAN). La página Conexión a internet es de solo lectura; las pasarelas y la conmutación por fallo siguen en System › Gateways. Las reglas del panel para conexiones entrantes (VPN, países, redirección de puertos) se aplican solo a la WAN; una segunda conexión no está cubierta.'
+        ],
+        wan_type: [
+            'Una conexión a internet de un tipo que el panel no configura',
+            'La página Conexión a internet es de solo lectura. Cámbiela en Interfaces › WAN.'
+        ],
+        reservations: [
+            'Direcciones fijas (Dnsmasq)',
+            'Se muestran en la página Dispositivos como la dirección fija del dispositivo.'
+        ],
+        dhcp_other: [
+            'Otro servidor DHCP asigna las direcciones',
+            'El panel escribe las direcciones fijas y los rangos DHCP en Dnsmasq. Mientras funcione ISC DHCP o Kea, estos ajustes no tienen efecto; con dos servidores DHCP en la misma red, los dispositivos pueden recibir direcciones contradictorias. Gestione las direcciones fijas en la página de ese servidor, o pase antes a Dnsmasq.'
+        ],
+        forwards: [
+            'Redirecciones de puertos',
+            'Las redirecciones de un puerto de la WAN a un dispositivo aparecen en la página Redirección de puertos, donde se pueden desactivar o eliminar.'
+        ],
+        forwards_complex: [
+            'Redirecciones que el panel no edita',
+            'Las redirecciones con alias, rangos de puertos, otras interfaces u origen restringido aparecen en solo lectura, para que nunca se simplifiquen por error. Cámbielas en Firewall › NAT.'
+        ],
+        dns_names: [
+            'Nombres locales',
+            'Aparecen en solo lectura en la página DNS. «Asumir» permite editarlos allí; siguen siendo reemplazos de Unbound y su descripción pasa a ser «Inversa Panel (managed)». Un segundo registro para el mismo nombre se queda donde está.'
+        ],
+        unbound_off: [
+            'El DNS Unbound está desactivado',
+            'El bloqueo por categoría y aplicación, la búsqueda segura, los nombres locales y el historial de internet funcionan a través de Unbound. Mientras otro servicio (Dnsmasq, AdGuard Home, Pi-hole) responde a las consultas DNS de las redes, estas funciones no hacen nada, aunque estén activadas.'
+        ],
+        blocklists: [
+            'Listas de bloqueo configuradas en OPNsense',
+            'Siguen funcionando junto a la lista del panel. Un nombre que ellas bloquean puede seguir bloqueado aunque el panel lo permita; los interruptores de categoría del panel no las desactivan. Services › Unbound DNS › Blocklists.'
+        ],
+        dns_servers: [
+            'Los servidores DNS se eligen en OPNsense',
+            'El reenvío de consultas o el DNS sobre TLS se configuran en Services › Unbound DNS. Dos ajustes romperían Unbound, así que la elección de servidores DNS del panel está desactivada; elimine antes ese ajuste allí para elegir en el panel.'
+        ],
+        rules: [
+            'Reglas de cortafuegos creadas en OPNsense',
+            'Siguen funcionando y no se muestran en el panel. Las reglas propias del panel se evalúan antes que las suyas: un dispositivo que el panel bloquea sigue bloqueado aunque una regla suya lo permita, y lo que abre el panel (un puerto de VPN, una celda permitida de la tabla de acceso) está abierto aunque una regla suya lo bloquee. Donde el panel no tiene regla, deciden las suyas.'
+        ],
+        nat: [
+            'Reglas NAT de salida y NAT 1:1',
+            'Se quedan como están y no se muestran en el panel. Con el NAT de salida en modo manual, una red añadida en el panel no puede llegar a internet hasta que usted añada para ella una regla NAT de salida.'
+        ],
+        wireguard: [
+            'Conexiones WireGuard creadas en OPNsense',
+            'Siguen funcionando; el panel no las cambia. Cada conexión añadida en el panel tiene su propia instancia y un puerto libre. Los dispositivos y las reglas de las existentes siguen en VPN › WireGuard.'
+        ],
+        ipsec: [
+            'Túneles IPsec creados en OPNsense',
+            'Aparecen por su nombre en la página VPN; no se pueden editar allí.'
+        ],
+        openvpn: [
+            'OpenVPN',
+            'El panel no tiene página de OpenVPN. Las conexiones siguen funcionando y sus reglas son suyas. Las redes detrás de ellas no forman parte de la tabla de acceso ni del aislamiento.'
+        ],
+        ids: [
+            'La detección de intrusiones ya está en marcha',
+            'Suricata estaba activado antes que el panel. La página Protección contra ataques muestra su estado y sus alertas, y no toca los conjuntos de reglas ni las interfaces. Para que lo gestione el panel, desactívelo en Services › Intrusion Detection y después actívelo en el panel; el panel elegirá entonces sus propios grupos de reglas.'
+        ],
+        zenarmor: [
+            'Zenarmor está instalado',
+            'Zenarmor y la protección contra ataques en modo de bloqueo usan la tarjeta de red de la misma forma (netmap); no los ejecute los dos en la misma interfaz. Use la protección contra ataques en modo «solo aviso», o elija uno de los dos. El bloqueo por aplicación y categoría también se aplica en ambos sitios, por separado.'
+        ],
+        shaper: [
+            'Reglas de control de tráfico creadas en OPNsense',
+            'Se quedan como están. Un límite de velocidad para una red añade las reglas del panel; de dos reglas que coinciden con el mismo tráfico gana la primera, así que un límite puede no actuar como se espera.'
+        ],
+        ha: [
+            'Alta disponibilidad (CARP / sincronización de configuración)',
+            'El panel no se probó en una configuración de alta disponibilidad. Sus reglas automáticas existen solo en un cortafuegos donde está instalado el paquete: instálelo en los dos. Los registros del panel (consumo de datos, eventos) no se sincronizan.'
+        ]
+    };
+    t.newsTitle = function (v) { return 'Novedades de Inversa Panel ' + v; };
+    t.newsSub = 'El panel se ha actualizado. Estas son las novedades, en breve:';
+    t.newsOk = 'Entendido';
+    t.newsGo = 'Ver';
+    t.newsHeading = 'Novedades';
+    t.news = {
+        '1.6.0': [
+            ['Asistente de configuración: configure redes, protecciones, aprobación de dispositivos nuevos y notificaciones paso a paso.', 'wizard'],
+            ['Página de actualizaciones: compruebe e instale Inversa Panel y OPNsense desde un solo sitio.', 'updates'],
+            ['Nuestro nuevo lema: tan sencillo como un módem, tan potente como OPNsense.', '']
+        ],
+        '1.5.0': [
+            ['Apruebe desde su teléfono: en un teléfono el panel se abre en una pantalla corta con solo los dispositivos que esperan aprobación.', 'devices'],
+            ['Permitir un tiempo: una hora, un día, una semana, hasta medianoche o hasta una hora que elija.', 'devices'],
+            ['Rechazar un dispositivo en espera, y eliminar dispositivos.', 'devices'],
+            ['Un dispositivo nuevo se avisa ahora en segundos.', 'notify']
+        ]
+    };
+    t.tabUpdates = 'Actualizaciones';
+    t.ugSub = 'Actualizaciones de Inversa Panel y de OPNsense. No se busca nada hasta que pulse un botón.';
+    t.ugPanelSub = 'Versiones publicadas en GitHub';
+    t.ugFwSub = 'El software propio del cortafuegos';
+    t.ugInstalled = 'Versión instalada';
+    t.ugLastCheck = 'Última comprobación';
+    t.ugWaitOther = 'Puede instalarla cuando termine la actualización de OPNsense.';
+    t.ugFwNotChecked = 'Aún no se ha comprobado.';
+    t.ugFwCurrent = 'OPNsense está al día.';
+    t.ugFwChecking = 'Buscando actualizaciones…';
+    t.ugFwRunning = 'Se está actualizando OPNsense. Puede tardar unos minutos; puede cerrar la página, la actualización sigue.';
+    t.ugFwRestarting = 'El cortafuegos se está reiniciando. Internet se corta unos minutos; esta página se vuelve a cargar sola cuando esté disponible de nuevo.';
+    t.ugFwUpdated = 'OPNsense se ha actualizado y está al día.';
+    t.ugFwFailed = 'No se ha podido comprobar ni iniciar la actualización de OPNsense.';
+    t.ugFwNoAccess = 'No se ha podido leer la información de actualización de OPNsense. Es posible que este usuario no tenga permiso para actualizar.';
+    t.ugFwNew = function (n) { return n === 1 ? '1 actualización disponible.' : n + ' actualizaciones disponibles.'; };
+    t.ugFwNewLong = function (v, n, size) { return (v ? 'OPNsense ' + v + ' está listo: ' : '') + n + (n === 1 ? ' paquete' : ' paquetes') + (size ? ', ' + size + ' para descargar' : '') + '.'; };
+    t.ugFwReboot = 'El cortafuegos se reinicia al terminar esta actualización; internet se corta unos minutos.';
+    t.ugShowList = function (n) { return 'Ver los ' + n + ' paquetes'; };
+    t.ugHideList = 'Ocultar la lista';
+    t.ugFwUpdate = 'Actualizar';
+    t.ugFwUpdateReboot = 'Actualizar y reiniciar';
+    t.ugFwConfirm = function (v, n, reboot) { return '¿Actualizar OPNsense' + (v ? ' a ' + v : '') + '? ' + n + (n === 1 ? ' paquete cambia.' : ' paquetes cambian.') + (reboot ? ' El cortafuegos se reinicia al terminar y internet se corta unos minutos.' : ''); };
+    t.ugFwMajor = function (v) { return 'Nueva versión principal: OPNsense ' + v + '. Haga la actualización de versión principal en la página de actualizaciones de OPNsense.'; };
+    t.ugFwPage = 'Página de actualizaciones de OPNsense';
+    t.upCheck = 'Buscar actualización';
+    t.upChecking = 'Buscando…';
+    t.upCurrent = function (v) { return 'Al día: ' + v + ' es la última versión.'; };
+    t.upNew = function (v) { return 'Hay una nueva versión disponible: ' + v; };
+    t.upInstall = function (v) { return 'Actualizar a ' + v; };
+    t.upBackupNote = 'Primero se hace una copia de seguridad de la configuración de OPNsense y de los registros del panel; tras la instalación se comprueban los ajustes, y lo que falte se restaura desde la copia.';
+    t.upConfirm = function (v) { return 'Inversa Panel ' + v + ' se descargará de GitHub y se instalará. ¿Continuar?'; };
+    t.upRunning = function (v) { return 'Actualizando a ' + v + '.'; };
+    t.upSteps = {
+        check: 'Buscando la versión…',
+        backup: 'Haciendo copia de los ajustes…',
+        download: 'Descargando el paquete…',
+        verify: 'Comprobando la suma de control…',
+        install: 'Instalando…',
+        aftercheck: 'Comprobando los ajustes…',
+        done: ''
+    };
+    t.upDone = function (a, b) { return 'Actualizado de ' + a + ' a ' + b + '.'; };
+    t.upAllThere = 'Se han comprobado los ajustes y los registros: está todo.';
+    t.upRestored = {
+        settings: 'Faltaban ajustes del panel; la configuración se restauró desde la copia.',
+        records: 'Se restauraron desde la copia los archivos de registros que faltaban.'
+    };
+    t.upProblems = {
+        version: 'La versión instalada no es la esperada.',
+        settings: 'Algunos ajustes del panel han cambiado; la copia no se restauró porque, mientras tanto, la configuración también se cambió en otro sitio. Copia: /var/db/inversapanel-update/backup/config.xml',
+        config_unreadable: 'No se ha podido leer la configuración; no se han comprobado los ajustes.',
+        code: 'El código de la nueva versión no se ha cargado.',
+        check: 'La comprobación posterior a la instalación no ha terminado.'
+    };
+    t.upFailed = 'La actualización no se ha hecho; la versión instalada sigue como estaba.';
+    t.upErrors = {
+        unreachable: 'No se ha podido conectar con GitHub.',
+        nopackage: 'El panel no se instaló como paquete; no se puede actualizar desde aquí.',
+        norelease: 'No se ha encontrado el paquete de la última versión.',
+        nonewer: 'No hay una versión más reciente.',
+        backup: 'No se ha podido hacer la copia de seguridad.',
+        download: 'No se ha podido descargar el paquete.',
+        checksum: 'La suma de control del paquete descargado no coincide; no se ha instalado.',
+        install: 'No se ha podido instalar el paquete.',
+        stale: 'La actualización se detuvo a medias.'
+    };
+    t.bkSub = 'Una copia de seguridad de la configuración de OPNsense; los ajustes del panel forman parte de ella.';
+    t.bkGetTitle = 'Hacer una copia de seguridad';
+    t.bkGetSub = 'Descarga la configuración tal como está ahora a su ordenador.';
+    t.bkDownload = 'Descargar la copia';
+    t.bkDownloadShort = 'Descargar';
+    t.bkSecret = 'El archivo contiene hashes de contraseñas y claves de VPN; guárdelo en un lugar de confianza.';
+    t.bkPutTitle = 'Restaurar desde una copia';
+    t.bkPutSub = 'Vuelve a poner un archivo de copia que descargó antes.';
+    t.bkUpload = 'Elegir un archivo y restaurar';
+    t.bkRestartNote = 'Restaurar reinicia el cortafuegos; internet se corta 1–2 minutos. Los cambios hechos después de la copia se pierden.';
+    t.bkCopies = 'Copias en el cortafuegos';
+    t.bkCopiesSub = 'Se hace una copia cada noche a las 03:15 cuando ha cambiado la configuración; se guardan las últimas 7 copias.';
+    t.bkNow = 'Hacer una copia ahora';
+    t.bkNone = 'Aún no hay copias; la primera se hará esta noche.';
+    t.bkRestore = 'Restaurar';
+    t.bkConfirmCopy = function (n) { return 'La copia de ' + n + ' se volverá a poner y el cortafuegos se reiniciará. Internet se corta 1–2 minutos; los cambios hechos después de esa hora se pierden. ¿Continuar?'; };
+    t.bkConfirmFile = function (n) { return 'El archivo ' + n + ' se volverá a poner y el cortafuegos se reiniciará. Internet se corta 1–2 minutos; los ajustes del archivo sustituyen a los actuales. ¿Continuar?'; };
+    t.bkRestarting = 'La configuración se ha vuelto a poner; el cortafuegos se está reiniciando. Esta página se vuelve a cargar sola cuando esté disponible (1–2 minutos).';
+    t.bkErrors = {
+        notconfig: 'Este archivo no es una configuración de OPNsense.',
+        incomplete: 'El archivo de configuración parece incompleto; no se ha restaurado.',
+        restore: 'No se ha podido restaurar la configuración; los ajustes actuales siguen como estaban.',
+        notfound: 'No se ha encontrado la copia.'
+    };
+    t.aboutNotInstalled = 'no instalado';
+    t.wakeTitle = 'Encender a distancia';
+    t.wakeSub = 'Pide a un dispositivo apagado que se encienda (Wake-on-LAN); el dispositivo debe tenerlo activado.';
+    t.wakeBtn = 'Encender';
+    t.wakeSent = 'La petición de encendido se ha enviado; el dispositivo se enciende en breve si lo admite.';
+    t.wakeFailed = 'No se ha podido enviar la petición de encendido.';
+    t.landLabel = 'Abrir Inversa Panel al iniciar sesión';
+    t.landSub = 'Solo para su usuario; si está desactivado, al iniciar sesión se abre la página propia de OPNsense.';
+    t.landOther = function (p) { return 'Hay otra página configurada para su usuario en OPNsense: ' + p + '. Al activar esto, se sustituye.'; };
+    t.pauseTitle = 'Pausar un rato';
+    t.pause30 = '30 minutos';
+    t.pause60 = '1 hora';
+    t.pause120 = '2 horas';
+    t.pauseMorning = 'Hasta las 07:00';
+    t.pauseResume = 'Reanudar';
+    t.pauseUntil = function (c) { return 'Pausado hasta ' + c; };
+    t.pauseUntilLong = function (c) { return 'El acceso a internet está pausado hasta ' + c + '.'; };
+    t.pauseSub = 'Se aplica al momento; internet vuelve solo cuando se cumple el tiempo.';
+    t.apprAllowed = 'Permitido';
+    t.apprRevoke = 'Quitar el permiso para estar en esta red';
+    t.apprToggleAria = function (n) { return 'Permiso de ' + n + ' para estar en la red'; };
+    t.apprRejected = 'Rechazado';
+    t.apprReject = 'Rechazar';
+    t.apprRejectedPanel = 'Ha rechazado este dispositivo: no puede llegar a internet ni a otras redes, y no se le volverá a avisar de él.';
+    t.apprFor = 'Permitir un tiempo';
+    t.allow1h = '1 hora';
+    t.allow1d = '1 día';
+    t.allow1w = '1 semana';
+    t.allowForever = 'Para siempre';
+    t.apprNow = 'Permitir un tiempo y rechazar se aplican al momento. «Aprobar» es para siempre y se guarda con «Aplicar».';
+    t.apprUntil = function (w) { return 'Permitido hasta ' + w; };
+    t.apprUntilLong = function (w) { return 'Permitido un tiempo, hasta ' + w + '. Después, el dispositivo vuelve a esperar aprobación.'; };
+    t.qTitle = function (n) { return n === 1 ? '1 dispositivo quiere entrar en la red' : n + ' dispositivos quieren entrar en la red'; };
+    t.qHint = 'Hasta que los permita, no llegan ni a internet ni a otras redes.';
+    t.qAllow = 'Permitir';
+    t.qNone = 'Ya no hay ningún dispositivo en espera.';
+    t.qFull = 'Abrir el panel completo';
+    t.qAllowed = function (n, w) { return w ? n + ' está permitido hasta ' + w + '.' : n + ' está permitido para siempre.'; };
+    t.qRejected = function (n) { return n + ' ha sido rechazado; no se le volverá a avisar de este dispositivo.'; };
+    t.qPending = 'Un cambio de red espera su confirmación. Confírmelo primero, o espere a que se deshaga.';
+    t.forgetTitle = 'Eliminar dispositivo';
+    t.forgetBtn = 'Eliminar';
+    t.forgetSub = 'Se eliminan su nombre, su aprobación, su IP fija y su lugar en los horarios. Si vuelve, es un dispositivo nuevo; en una red que lo pida, vuelve a esperar aprobación.';
+    t.forgetConfirm = function (n) { return '¿Eliminar ' + n + '? Se eliminan su nombre, su aprobación, su IP fija y su lugar en los horarios. Si el dispositivo está ahora en la red, vuelve a aparecer como dispositivo nuevo.'; };
+    t.forgetDone = function (n) { return n + ' se ha eliminado.'; };
+    t.allowMidnight = 'Hasta medianoche';
+    t.allowPick = 'Elija el fin…';
+    t.allowPickLabel = 'Permitido hasta';
+    t.allowPickCancel = 'Cancelar';
+    t.allowPickSub = '30 días como máximo. Para más tiempo, elija «Para siempre».';
+    t.allowPickBad = 'El fin debe ser posterior a ahora y estar como máximo a 30 días.';
+    t.allowMidnightShort = 'Medianoche';
+    t.allowPickShort = 'Elegir hora…';
+    t.qFullShort = 'Panel completo';
+    t.wiz = {
+        start: [
+            'Bienvenido a Inversa Panel',
+            'Vamos a configurar lo básico en unos pasos. Cada paso se puede cambiar más tarde en Ajustes.'
+        ],
+        nets: [
+            'Redes que proteger',
+            'Las reglas de bloqueo, el filtro DNS y la aprobación de dispositivos nuevos se aplican solo a las redes que elija.'
+        ],
+        protect: [
+            'Protecciones',
+            'Elija lo que el cortafuegos bloquea a través del DNS.'
+        ],
+        devices: [
+            'Dispositivos nuevos',
+            '¿En qué redes debe esperar un dispositivo nuevo hasta que usted lo deje entrar?'
+        ],
+        notify: [
+            'Notificaciones',
+            'Opcional: que Telegram le avise cuando aparece un dispositivo nuevo o se bloquea un ataque. Estos ajustes se guardan en el momento con «Guardar» de abajo; si no los quiere, pulse Siguiente.'
+        ],
+        done: [
+            'Resumen',
+            'Sus elecciones están abajo. «Aplicar y terminar» las aplica todas de una vez.'
+        ]
+    };
+    t.wizKicker = 'Asistente de configuración';
+    t.wizShort = {
+        start: 'Inicio',
+        nets: 'Redes',
+        protect: 'Protecciones',
+        devices: 'Dispositivos nuevos',
+        notify: 'Notificaciones',
+        done: 'Resumen'
+    };
+    t.wizNextTo = function (n) { return 'Siguiente: ' + n + ' →'; };
+    t.wizStep = function (n, m) { return 'Paso ' + n + ' de ' + m; };
+    t.wizClose = 'Cerrar el asistente';
+    t.wizBack = 'Atrás';
+    t.wizNext = 'Siguiente';
+    t.wizFinish = 'Aplicar y terminar';
+    t.wizSafe = 'Nada cambia en el cortafuegos antes del último paso. Solo el idioma, la página al iniciar sesión y las notificaciones se guardan en cuanto los cambia.';
+    t.wizNoNet = 'Elija al menos una red.';
+    t.wizScan = 'Si antes configuró cosas en OPNsense, puede ver cómo las entiende el panel.';
+    t.wizRecommended = 'Recomendado';
+    t.wizIps = 'La protección contra ataques (Suricata) necesita más memoria; puede activarla más tarde en Seguridad › Protección contra ataques.';
+    t.wizApprSub = 'Si está activado, un dispositivo nuevo no llega ni a internet ni a otras redes hasta que usted lo deje entrar.';
+    t.wizApprNote = 'Los dispositivos de estas redes ya cuentan como aprobados, así que nadie se queda sin conexión. Para dejar entrar dispositivos nuevos desde su teléfono, use las notificaciones de Telegram, la VPN y «Abrir Inversa Panel al iniciar sesión».';
+    t.wizNone = 'Ninguna';
+    t.wizDoneNote = 'Después de aplicar, puede cambiar todo en las páginas del menú. El asistente se puede volver a ejecutar desde Ajustes.';
+    t.wizStart = 'Iniciar el asistente de configuración';
+    t.wizAgain = 'Asistente de configuración';
+    t.wizAgainSub = 'Configure de nuevo redes, protecciones, aprobación de dispositivos nuevos y notificaciones, paso a paso.';
+    t.wizAgainBtn = 'Ejecutar el asistente';
+    t.wanSpeedBtn = 'Prueba de velocidad';
+    t.wanSpeeding = 'Midiendo… (15 s)';
+    t.wanUp = 'Subida';
+    t.wanPing = 'Latencia';
+    t.wanSpeedFailed = 'No se ha podido medir la velocidad.';
+    t.wanSpeedLimited = function (m) { return 'El servidor de medición no admite pruebas seguidas durante un rato. Inténtelo de nuevo dentro de unos ' + m + ' minutos.'; };
+    t.pfTargetHint = 'Elija de la lista o escriba una dirección IP.';
+})(window.InversaPanelI18n.es);

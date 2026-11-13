@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- German, French, Spanish and Italian: the 178 texts added since 1.1.0 (notifications, existing settings, backup, updates, the setup wizard, approval from the phone, what is new, ...) are translated, so nothing shows in English any more in these languages. They are machine translations like the rest of these four languages; corrections are welcome.
+
 ## 1.6.0 (2026-11-13)
 
 - **Settings › Updates**, a new page for both updates. Inversa Panel: check and install, as before on the About page (About now links there). OPNsense: check runs OPNsense's own check and shows the new version, the packages that change, the download size and whether a restart follows; **Update** starts OPNsense's own update, shows its log, and after a restart the page waits until the firewall answers again and loads itself. A major upgrade is only told; it stays on OPNsense's own page. The "update ready" spots on the overview open this page.
