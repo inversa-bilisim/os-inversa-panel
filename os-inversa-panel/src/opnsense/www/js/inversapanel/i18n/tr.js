@@ -272,6 +272,9 @@ window.InversaPanelI18n.tr = {
         notify: ['Bildirimler', 'İsteğe bağlı: yeni bir cihaz geldiğinde ya da bir saldırı engellendiğinde Telegram’dan haber alın. Bu ayarlar aşağıdaki “Kaydet” ile hemen kaydedilir; istemiyorsanız İleri’ye basın.'],
         done: ['Özet', 'Seçimleriniz aşağıda. “Uygula ve bitir” ile tek seferde uygulanır.']
     },
+    wizKicker: 'Kurulum sihirbazı',
+    wizShort: { start: 'Başlangıç', nets: 'Ağlar', protect: 'Korumalar', devices: 'Yeni cihazlar', notify: 'Bildirimler', done: 'Özet' },
+    wizNextTo: function (n) { return 'İleri: ' + n + ' →'; },
     wizStep: function (n, m) { return 'Adım ' + n + ' / ' + m; },
     wizClose: 'Sihirbazı kapat', wizBack: 'Geri', wizNext: 'İleri', wizFinish: 'Uygula ve bitir',
     wizSafe: 'Son adıma kadar güvenlik duvarında hiçbir şey değişmez. Yalnızca dil, girişten sonra açılan sayfa ve bildirimler, değiştirdiğiniz anda kaydedilir.',

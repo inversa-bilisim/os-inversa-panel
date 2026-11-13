@@ -274,6 +274,9 @@ window.InversaPanelI18n.en = {
         notify: ['Notifications', 'Optional: be told by Telegram when a new device shows up or an attack is blocked. These settings are stored at once with “Save” below; if you do not want them, press Next.'],
         done: ['Summary', 'Your choices are below. “Apply and finish” applies them in one go.']
     },
+    wizKicker: 'Setup wizard',
+    wizShort: { start: 'Start', nets: 'Networks', protect: 'Protections', devices: 'New devices', notify: 'Notifications', done: 'Summary' },
+    wizNextTo: function (n) { return 'Next: ' + n + ' →'; },
     wizStep: function (n, m) { return 'Step ' + n + ' of ' + m; },
     wizClose: 'Close the wizard', wizBack: 'Back', wizNext: 'Next', wizFinish: 'Apply and finish',
     wizSafe: 'Nothing changes on the firewall before the last step. Only the language, the page after logging in and the notifications are stored as soon as you change them.',

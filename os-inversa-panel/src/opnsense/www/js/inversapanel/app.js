@@ -659,7 +659,7 @@
             dash: [t.tabDash, ICONS.dash], devices: [t.tabDevices, ICONS.devices], net: [t.tabNet, ICONS.net],
             security: [t.tabSecurity, ICONS.shield], logs: [t.tabLogs, ICONS.list], vpn: [t.tabVpn, ICONS.lock], settings: [t.tabSettings, ICONS.sliders]
         };
-        var wait = waitingCount(), current = groupOf(S.tab);
+        var wait = waitingCount(), current = S.ui.wiz ? '' : groupOf(S.tab);
         S.ui.waitShown = wait;
         var html = MENU.filter(function (m) { return pagesOf(m[0]).length; }).map(function (m) {
             var key = m[0], on = current === key;
@@ -1586,6 +1586,7 @@
      * they are everywhere else.
      */
     var WIZ_STEPS = ['start', 'nets', 'protect', 'devices', 'notify', 'done'];
+    var WAND = 'M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M12.2 6.2l-1.4-1.4M3 21l9-9';
 
     function startWizard() {
         var g = S.saved.general, f = S.saved.filtering, approval = {};
@@ -1621,12 +1622,17 @@
 
     function viewWizard() {
         var t = T(), w = S.ui.wiz, step = WIZ_STEPS[w.step], last = w.step === WIZ_STEPS.length - 1;
-        var dots = WIZ_STEPS.map(function (k, i) {
-            return '<span class="k-wiz-dot' + (i < w.step ? ' done' : (i === w.step ? ' on' : '')) + '" title="' + esc(t.wiz[k][0]) + '"></span>';
-        }).join('');
-        var head = '<div class="k-wiz-head"><div><div class="k-wiz-steps">' + dots + '<span class="muted small">' + esc(t.wizStep(w.step + 1, WIZ_STEPS.length)) + '</span></div>' +
-            '<h1>' + esc(t.wiz[step][0]) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + esc(t.wiz[step][1]) + '</div></div>' +
-            '<button type="button" class="k-btn small" data-act="wiz-close">' + esc(t.wizClose) + '</button></div>';
+        /* numbered, named steps: it must be plain that this is a setup in steps, not an ordinary page */
+        var stepper = '<ol class="k-wiz-steps" aria-label="' + esc(t.wizStep(w.step + 1, WIZ_STEPS.length)) + '">' + WIZ_STEPS.map(function (k, i) {
+            var state = i < w.step ? 'done' : (i === w.step ? 'on' : '');
+            return '<li class="' + state + '"' + (i === w.step ? ' aria-current="step"' : '') + '><span class="k-wiz-num">' +
+                (i < w.step ? icon(ICONS.ok, 14) : String(i + 1)) + '</span><span class="k-wiz-name">' + esc(t.wizShort[k]) + '</span></li>';
+        }).join('') + '</ol>' +
+            /* a phone has no room for the names: where one is, in words */
+            '<div class="k-wiz-where">' + esc(t.wizStep(w.step + 1, WIZ_STEPS.length) + ' · ' + t.wizShort[step]) + '</div>';
+        var head = '<div class="k-wiz-head"><div class="k-wiz-kicker">' + icon(WAND, 16) + esc(t.wizKicker) + '</div>' +
+            '<button type="button" class="k-btn small" data-act="wiz-close">' + esc(t.wizClose) + '</button></div>' + stepper +
+            '<div><h1>' + esc(t.wiz[step][0]) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + esc(t.wiz[step][1]) + '</div></div>';
         var body = '';
         if (step === 'start') {
             body = '<section class="k-card tight">' +
@@ -1677,7 +1683,7 @@
             (w.step > 0 ? '<button type="button" class="k-btn" data-act="wiz-back">' + esc(t.wizBack) + '</button>' : '<span></span>') +
             (last ? '<button type="button" class="k-btn primary" data-act="wiz-finish"' + (S.ui.applying ? ' disabled' : '') + '>' + esc(t.wizFinish) + '</button>' :
                 '<button type="button" class="k-btn primary" data-act="wiz-next"' + (blocked ? ' disabled' : '') + '>' +
-                esc(t.wizNext) + '</button>') + '</div>';
+                esc(t.wizNextTo(t.wizShort[WIZ_STEPS[w.step + 1]])) + '</button>') + '</div>';
         return '<div class="k-stack k-wiz">' + head + body + foot + '</div>';
     }
 

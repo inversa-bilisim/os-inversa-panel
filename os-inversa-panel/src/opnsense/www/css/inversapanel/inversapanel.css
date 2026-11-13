@@ -737,17 +737,30 @@ header.page-content-head { display: none; }
 .inversapanel .k-side .k-pick input[type=datetime-local] { flex-basis: 100%; }
 .inversapanel .k-types .k-btn.on { border-color: var(--k-accent); background: var(--k-accent-soft); color: var(--k-accent); }
 
-/* ---- setup wizard (viewWizard) ---------------------------------------------- */
-.inversapanel .k-wiz { max-width: 860px; }
-.inversapanel .k-wiz-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.inversapanel .k-wiz-steps { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
-.inversapanel .k-wiz-steps .muted { margin-left: 6px; }
-.inversapanel .k-wiz-dot { width: 26px; height: 6px; border-radius: 3px; background: var(--k-line); }
-.inversapanel .k-wiz-dot.done { background: #9DB4EA; }
-.inversapanel .k-wiz-dot.on { background: var(--k-accent); }
+/* ---- setup wizard (viewWizard): a framed setup in named steps, so it does not pass for an ordinary page */
+.inversapanel .k-wiz { max-width: 900px; background: var(--k-card); border: 1px solid #C5D5F5; border-top: 4px solid var(--k-accent); border-radius: 16px; padding: 20px 24px 24px; gap: 18px; }
+.inversapanel .k-wiz-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.inversapanel .k-wiz-kicker { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--k-accent-soft); color: var(--k-accent); font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.inversapanel .k-wiz-steps { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; counter-reset: none; }
+.inversapanel .k-wiz-steps li { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; color: var(--k-muted); font-size: 12px; font-weight: 600; text-align: center; }
+/* the line between two steps */
+.inversapanel .k-wiz-steps li + li::before { content: ''; position: absolute; top: 14px; right: calc(50% + 18px); left: calc(-50% + 18px); height: 2px; background: var(--k-line); }
+.inversapanel .k-wiz-steps li.done + li::before, .inversapanel .k-wiz-steps li.on::before { background: var(--k-accent); }
+.inversapanel .k-wiz-num { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--k-line); background: var(--k-card); font-size: 13px; font-weight: 700; color: var(--k-muted); }
+.inversapanel .k-wiz-steps li.on .k-wiz-num { background: var(--k-accent); border-color: var(--k-accent); color: #fff; }
+.inversapanel .k-wiz-steps li.done .k-wiz-num { border-color: var(--k-accent); color: var(--k-accent); }
+.inversapanel .k-wiz-steps li.on { color: var(--k-text); }
+.inversapanel .k-wiz-where { display: none; margin-top: -8px; text-align: center; font-size: 13px; font-weight: 600; color: var(--k-text); }
+.inversapanel .k-wiz-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+@media (max-width: 640px) {
+    .inversapanel .k-wiz { padding: 16px; }
+    .inversapanel .k-wiz-steps .k-wiz-name { display: none; }
+    .inversapanel .k-wiz-where { display: block; }
+}
 .inversapanel .k-wiz-foot { display: flex; justify-content: space-between; gap: 8px; }
 .inversapanel .k-wiz-foot .k-btn { min-width: 120px; }
 .inversapanel .k-wiz .k-chip .k-dot { margin-right: 6px; }
+.inversapanel .k-wiz .k-card { background: var(--k-bg); }
 /* the notifications page inside the wizard: its own heading would repeat the step's */
 .inversapanel .k-wiz-embed > .k-stack > div:first-child { display: none; }
 .inversapanel .k-wiz .k-setting-text b .k-badge { margin-left: 6px; }
