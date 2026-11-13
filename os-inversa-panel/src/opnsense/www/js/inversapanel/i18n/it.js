@@ -759,5 +759,7 @@ window.InversaPanelI18n.it = {
     t.idwWhen = function (a) { return '(' + a + ')'; };
     t.idwAccept = 'È mio, accetta';
     t.idwAccepted = 'La nuova identità è stata accettata per questo dispositivo.';
+    t.qIdTitle = function (n) { return n === 1 ? 'L’identità di 1 dispositivo è cambiata' : 'L’identità di ' + n + ' dispositivi è cambiata'; };
+    t.qIdHint = 'Il suo indirizzo MAC potrebbe essere stato copiato. Accettalo se è tuo, altrimenti respingilo.';
     t.news['1.7.0'] = [['Controllo dell’identità dei dispositivi: un dispositivo con indirizzo MAC copiato viene notato; ricevi un avviso o la sua approvazione viene revocata (Impostazioni, disattivato per impostazione predefinita).', 'settings']];
 })(window.InversaPanelI18n.it);

@@ -160,6 +160,8 @@ window.InversaPanelI18n.en = {
     idwSeen: function (k, n) { return 'Seen last: ' + k + (n ? ' · ' + n : '') + '.'; },
     idwWhen: function (a) { return '(' + a + ')'; },
     idwAccept: 'This is mine, accept it', idwAccepted: 'The new identity is accepted as this device’s.',
+    qIdTitle: function (n) { return n === 1 ? 'The identity of 1 device changed' : 'The identity of ' + n + ' devices changed'; },
+    qIdHint: 'Its MAC address may have been copied. Accept it if it is yours; otherwise turn it away.',
     tabUpdates: 'Updates', ugSub: 'Updates of Inversa Panel and of OPNsense. Nothing is looked up until you press a button.',
     ugPanelSub: 'Releases on GitHub', ugFwSub: 'The firewall’s own software', ugInstalled: 'Installed version', ugLastCheck: 'Last checked',
     ugWaitOther: 'You can install it once the OPNsense update is done.',

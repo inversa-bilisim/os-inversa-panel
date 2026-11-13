@@ -786,3 +786,5 @@ header.page-content-head { display: none; }
 .inversapanel .k-news-list li .k-link { min-height: 0; margin-left: 8px; display: inline; }
 .inversapanel .k-news-old { border-top: 1px solid var(--k-line); padding-top: 12px; }
 .inversapanel .k-badge.warn { color: #9A3B0A; background: var(--k-warn-soft); margin-left: 6px; font-weight: 600; }
+.inversapanel .k-qgrid.k-qid { grid-template-columns: 1fr 1fr; }
+.inversapanel .k-qcard .k-note { margin: 0; font-size: 13px; }

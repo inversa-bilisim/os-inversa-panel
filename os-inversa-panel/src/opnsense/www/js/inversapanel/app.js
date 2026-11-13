@@ -1350,31 +1350,52 @@
             .sort(function (a, b) { return (b.online - a.online) || String(b.first_seen).localeCompare(String(a.first_seen)); });
     }
 
+    /* approved devices the identity watch saw differently: decided on the phone screen too */
+    function quickIdList() {
+        return S.hosts.filter(function (h) { return idAlert(h) && !held(h, S.saved); })
+            .sort(function (a, b) { return b.identity.alert - a.identity.alert; });
+    }
+
+    /* the identity alert of a device in words: why, and what was seen */
+    function idText(h) {
+        var t = T(), i = h.identity;
+        return (t.idwWhy[i.why] || '') + (i.other_kind ? ' ' + t.idwSeen(t.idwKinds[i.other_kind], i.other_name) : '');
+    }
+
     /*
      * The phone screen: opened from a phone while devices wait for approval, it shows only those,
      * each with "allow for 1 hour / 1 day / 1 week / for good" and "turn away". The full panel is one tap away.
      */
     function renderQuick() {
-        var t = T(), list = quickList(), nt = S.ui.notice, busy = S.ui.deciding ? ' disabled' : '';
-        var cards = list.map(function (h) {
+        var t = T(), list = quickList(), ids = quickIdList(), nt = S.ui.notice, busy = S.ui.deciding ? ' disabled' : '';
+        var head = function (h) {
             var cfg = devCfg(h.mac, S.saved), name = devName(h), first = ago(h.first_seen);
             var sub = [h.vendor || t.unknownVendor, h.network].filter(Boolean).join(' · ');
-            return '<div class="k-card k-qcard">' +
-                '<div class="k-qdev"><div class="k-ibox cut">' + icon(ICONS[cfg.type] || ICONS.unknown, 18) + '</div>' +
+            return '<div class="k-qdev"><div class="k-ibox cut">' + icon(ICONS[cfg.type] || ICONS.unknown, 18) + '</div>' +
                 '<div class="k-qdev-text"><b><span class="k-dot' + (h.online ? ' ok' : '') + '" title="' + esc(h.online ? t.online : t.offline) + '"></span>' + esc(name) + '</b>' +
                 '<span class="muted">' + esc(sub) + '</span>' +
                 '<span class="muted"><span class="mono">' + esc(h.mac) + '</span>' + (first ? ' · ' + esc(first) : '') + '</span></div></div>' +
-                allowChoices(h.mac, true) +
+                /* waiting because the identity watch took the approval back, or approved and seen differently */
+                (idAlert(h) ? '<div class="k-note warn"><b>' + esc(t.idwBadge) + '</b> · ' + esc(idText(h)) + '</div>' : '');
+        };
+        var cards = list.map(function (h) {
+            return '<div class="k-card k-qcard">' + head(h) + allowChoices(h.mac, true) +
                 '<button type="button" class="k-btn k-qreject" data-act="decide" data-mac="' + esc(h.mac) + '" data-v="reject"' + busy + '>' + esc(t.apprReject) + '</button>' +
+                '</div>';
+        }).join('');
+        var idCards = ids.map(function (h) {
+            return '<div class="k-card k-qcard">' + head(h) +
+                '<div class="k-qgrid k-qid"><button type="button" class="k-btn primary" data-act="idaccept" data-mac="' + esc(h.mac) + '"' + busy + '>' + esc(t.idwAccept) + '</button>' +
+                '<button type="button" class="k-btn k-qreject" data-act="decide" data-mac="' + esc(h.mac) + '" data-v="reject"' + busy + '>' + esc(t.apprReject) + '</button></div>' +
                 '</div>';
         }).join('');
         root.innerHTML = '<div class="k-quick">' +
             '<div class="k-qhead"><div class="k-logo" aria-hidden="true"></div><b>Inversa Panel</b>' +
             '<button type="button" class="k-btn small" data-act="quick-close">' + esc(t.qFullShort) + '</button></div>' +
             (nt ? '<div class="k-banner ' + (nt.type === 'ok' ? 'ok' : 'err') + '" role="status">' + icon(nt.type === 'ok' ? ICONS.ok : ICONS.warn, 16) + '<span>' + esc(nt.text) + '</span></div>' : '') +
-            (list.length ?
-                '<div class="k-qtitle"><b>' + esc(t.qTitle(list.length)) + '</b><span class="muted">' + esc(t.qHint) + '</span></div>' + cards :
-                '<div class="k-card k-qempty">' + icon(ICONS.ok, 24) + '<b>' + esc(t.qNone) + '</b></div>') +
+            (list.length ? '<div class="k-qtitle"><b>' + esc(t.qTitle(list.length)) + '</b><span class="muted">' + esc(t.qHint) + '</span></div>' + cards : '') +
+            (ids.length ? '<div class="k-qtitle"><b>' + esc(t.qIdTitle(ids.length)) + '</b><span class="muted">' + esc(t.qIdHint) + '</span></div>' + idCards : '') +
+            (list.length || ids.length ? '' : '<div class="k-card k-qempty">' + icon(ICONS.ok, 24) + '<b>' + esc(t.qNone) + '</b></div>') +
             '</div>';
     }
 
@@ -2080,8 +2101,8 @@
             case 'idaccept':
                 api('POST', '/api/inversapanel/devices/idaccept', { mac: mac }).then(function () { return loadHosts(); }).then(function () {
                     S.ui.notice = { type: 'ok', text: T().idwAccepted, list: [] };
-                    redraw('main');
-                }, function () { S.ui.notice = { type: 'err', text: T().applyFailed, list: [] }; renderPending(); });
+                    refreshDecided();
+                }, function () { S.ui.notice = { type: 'err', text: T().applyFailed, list: [] }; refreshDecided(); });
                 return;
             case 'discard':
                 S.draft = clone(S.saved);
@@ -2281,7 +2302,7 @@
         loadState().then(function () {
             /* on a phone, with devices waiting, the panel opens on the short screen that lets them in or not */
             if (hashTab || !isPhone()) { return null; }
-            return loadHosts().then(function () { S.ui.quick = quickList().length > 0; }, function () {});
+            return loadHosts().then(function () { S.ui.quick = quickList().length + quickIdList().length > 0; }, function () {});
         }).then(function () {
             /* the first time: the setup wizard (not over the phone screen) */
             if (!S.saved.general.welcomed && !S.ui.quick) { startWizard(); }

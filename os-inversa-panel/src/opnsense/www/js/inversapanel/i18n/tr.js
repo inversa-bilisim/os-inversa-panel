@@ -160,6 +160,8 @@ window.InversaPanelI18n.tr = {
     idwSeen: function (k, n) { return 'Son görünen: ' + k + (n ? ' · ' + n : '') + '.'; },
     idwWhen: function (a) { return '(' + a + ')'; },
     idwAccept: 'Bu benim, kabul et', idwAccepted: 'Yeni kimlik bu cihazınki olarak kabul edildi.',
+    qIdTitle: function (n) { return n + ' cihazın kimliği değişti'; },
+    qIdHint: 'MAC adresi kopyalanmış olabilir. Sizin cihazınızsa kabul edin; değilse reddedin.',
     tabUpdates: 'Güncellemeler', ugSub: 'Inversa Panel’in ve OPNsense’in güncellemeleri. Siz bir düğmeye basmadıkça hiçbir yere bakılmaz.',
     ugPanelSub: 'GitHub’daki sürümler', ugFwSub: 'Güvenlik duvarının kendi yazılımı', ugInstalled: 'Kurulu sürüm', ugLastCheck: 'Son denetim',
     ugWaitOther: 'OPNsense güncellemesi bitince kurabilirsiniz.',

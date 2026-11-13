@@ -867,5 +867,7 @@ window.InversaPanelI18n.fr = {
     t.idwWhen = function (a) { return '(' + a + ')'; };
     t.idwAccept = 'C’est le mien, accepter';
     t.idwAccepted = 'La nouvelle identité est acceptée pour cet appareil.';
+    t.qIdTitle = function (n) { return n === 1 ? 'L’identité d’1 appareil a changé' : 'L’identité de ' + n + ' appareils a changé'; };
+    t.qIdHint = 'Son adresse MAC a peut-être été copiée. Acceptez-le s’il est à vous, sinon refusez-le.';
     t.news['1.7.0'] = [['Surveillance de l’identité des appareils : un appareil à l’adresse MAC copiée est repéré ; vous êtes prévenu ou son autorisation est retirée (Paramètres, désactivée par défaut).', 'settings']];
 })(window.InversaPanelI18n.fr);

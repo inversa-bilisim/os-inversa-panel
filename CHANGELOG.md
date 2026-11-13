@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Phone screen: devices whose identity changed are shown too, like waiting devices, with "This is mine, accept it" and "Turn away"; a device waiting because its approval was taken back shows why.
+
 ## 1.7.0 (2026-11-13)
 
 - **Device identity watch** (Settings, off by default: Off / Tell me / Take approval back). A MAC address can be copied; the way a device asks for its address mostly cannot. When a device takes or renews a DHCP lease, dnsmasq hands its name and DHCP fingerprint to the panel (a lease script in dnsmasq's drop-in folder `/usr/local/etc/dnsmasq.conf.d/inversapanel.conf`, written only while the watch is on and removed with the package). An approved device that asks like another kind of device, two different devices behind one MAC within an hour, a new name, or an approved device that suddenly sets its IP itself is told (overview, logs, Telegram); with "Take approval back" the device waits for approval again. The device panel shows the known identity and "This is mine, accept it"; letting a device in again accepts its new identity. It makes a copy noticed, it does not prevent it: a copy of the same kind of device can look the same. Works with dnsmasq only; if another lease script is set up in dnsmasq, the panel leaves it alone and says so.

@@ -888,5 +888,7 @@ window.InversaPanelI18n.de = {
     t.idwWhen = function (a) { return '(' + a + ')'; };
     t.idwAccept = 'Das ist meins, übernehmen';
     t.idwAccepted = 'Die neue Identität wurde für dieses Gerät übernommen.';
+    t.qIdTitle = function (n) { return n === 1 ? 'Die Identität von 1 Gerät hat sich geändert' : 'Die Identität von ' + n + ' Geräten hat sich geändert'; };
+    t.qIdHint = 'Die MAC-Adresse wurde vielleicht kopiert. Übernehmen Sie es, wenn es Ihres ist, sonst weisen Sie es ab.';
     t.news['1.7.0'] = [['Überwachung der Geräteidentität: Ein Gerät mit kopierter MAC-Adresse fällt auf; Sie werden benachrichtigt oder die Freigabe wird zurückgenommen (Einstellungen, standardmäßig aus).', 'settings']];
 })(window.InversaPanelI18n.de);
