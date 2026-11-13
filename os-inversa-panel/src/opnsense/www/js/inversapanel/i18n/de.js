@@ -888,4 +888,5 @@ window.InversaPanelI18n.de = {
     t.idwWhen = function (a) { return '(' + a + ')'; };
     t.idwAccept = 'Das ist meins, übernehmen';
     t.idwAccepted = 'Die neue Identität wurde für dieses Gerät übernommen.';
+    t.news['1.7.0'] = [['Überwachung der Geräteidentität: Ein Gerät mit kopierter MAC-Adresse fällt auf; Sie werden benachrichtigt oder die Freigabe wird zurückgenommen (Einstellungen, standardmäßig aus).', 'settings']];
 })(window.InversaPanelI18n.de);

@@ -867,4 +867,5 @@ window.InversaPanelI18n.fr = {
     t.idwWhen = function (a) { return '(' + a + ')'; };
     t.idwAccept = 'C’est le mien, accepter';
     t.idwAccepted = 'La nouvelle identité est acceptée pour cet appareil.';
+    t.news['1.7.0'] = [['Surveillance de l’identité des appareils : un appareil à l’adresse MAC copiée est repéré ; vous êtes prévenu ou son autorisation est retirée (Paramètres, désactivée par défaut).', 'settings']];
 })(window.InversaPanelI18n.fr);

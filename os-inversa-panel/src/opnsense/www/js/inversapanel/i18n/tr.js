@@ -133,6 +133,9 @@ window.InversaPanelI18n.tr = {
     newsTitle: function (v) { return 'Inversa Panel ' + v + ' sürümünde neler yeni'; }, newsSub: 'Panel güncellendi. Kısaca yenilikler:',
     newsOk: 'Tamam', newsGo: 'Göster', newsHeading: 'Neler yeni',
     news: {
+        '1.7.0': [
+            ['Cihaz kimliği takibi: MAC adresi kopyalanmış bir cihaz fark edilir; haber verilir ya da onayı geri alınır (Ayarlar, varsayılan kapalı).', 'settings']
+        ],
         '1.6.0': [
             ['Kurulum sihirbazı: ağları, korumaları, yeni cihaz onayını ve bildirimleri adım adım ayarlayın.', 'wizard'],
             ['Güncellemeler sayfası: Inversa Panel’i ve OPNsense’i tek yerden denetleyip güncelleyin.', 'updates'],

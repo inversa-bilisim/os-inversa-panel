@@ -133,6 +133,9 @@ window.InversaPanelI18n.en = {
     newsTitle: function (v) { return 'What is new in Inversa Panel ' + v; }, newsSub: 'The panel was updated. The news in short:',
     newsOk: 'Got it', newsGo: 'Show', newsHeading: 'What is new',
     news: {
+        '1.7.0': [
+            ['Device identity watch: a device with a copied MAC address is noticed; you are told or its approval is taken back (Settings, off by default).', 'settings']
+        ],
         '1.6.0': [
             ['Setup wizard: set up networks, protections, approval of new devices and notifications step by step.', 'wizard'],
             ['Updates page: check and update Inversa Panel and OPNsense in one place.', 'updates'],
