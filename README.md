@@ -132,7 +132,7 @@ Turkish, English, German, French, Spanish and Italian. "Automatic" follows OPNse
 
 ## Status
 
-Version 1.6.0. Developed and tested on a virtual OPNsense 26.7.8. Not yet tested on real hardware or lines:
+Version 1.6.1. Developed and tested on a virtual OPNsense 26.7.8. Not yet tested on real hardware or lines:
 
 - PPPoE (the test environment has no PPPoE server).
 - A WireGuard connection from a real phone or laptop; the generated configuration and the firewall rules were checked.

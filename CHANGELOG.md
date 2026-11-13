@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.6.1 (2026-11-13)
 
 - German, French, Spanish and Italian: the 178 texts added since 1.1.0 (notifications, existing settings, backup, updates, the setup wizard, approval from the phone, what is new, ...) are translated, so nothing shows in English any more in these languages. They are machine translations like the rest of these four languages; corrections are welcome.
 
