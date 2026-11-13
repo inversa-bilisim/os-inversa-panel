@@ -5,6 +5,7 @@
 <h1 align="center">Inversa Panel</h1>
 
 <p align="center">
+  <b>As simple as a modem, as powerful as OPNsense.</b><br>
   The most used OPNsense settings on one plain screen.<br>
   <b>English</b> · <a href="README.tr.md">Türkçe</a>
 </p>

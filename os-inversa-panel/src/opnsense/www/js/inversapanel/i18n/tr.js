@@ -43,7 +43,7 @@ window.InversaPanelI18n.tr = {
         sysTitle: 'Sistem', upFor: function (s) { return s + ' önce açıldı'; }, cpu: 'İşlemci', memory: 'Bellek', disk: 'Disk', temp: 'Sıcaklık',
         version: 'Sürüm', cfgChanged: 'Son yapılandırma değişikliği'
     },
-    appSub: 'OPNsense için kolay yönetim',
+    appSub: 'Modem kadar basit, OPNsense kadar güçlü',
     tabLogs: 'Kayıtlar',
     lgCount: function (n) { return n + ' kayıt'; }, lgCsv: 'CSV indir', lgFailed: 'Kayıtlar okunamadı.', lgMore: 'Daha eski kayıtlar',
     lgShown: function (n, all) { return all + ' kayıttan ' + n + ' tanesi'; },

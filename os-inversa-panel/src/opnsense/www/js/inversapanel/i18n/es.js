@@ -42,7 +42,7 @@ window.InversaPanelI18n.es = {
         sysTitle: 'Sistema', upFor: function (s) { return 'en marcha desde hace ' + s; }, cpu: 'Procesador', memory: 'Memoria', disk: 'Disco', temp: 'Temperatura',
         version: 'Versión', cfgChanged: 'Último cambio de configuración'
     },
-    appSub: 'Gestión sencilla para OPNsense',
+    appSub: 'Tan sencillo como un módem, tan potente como OPNsense',
     tabLogs: 'Registros',
     lgCount: function (n) { return n === 1 ? '1 registro' : n + ' registros'; }, lgCsv: 'Descargar CSV', lgFailed: 'No se han podido leer los registros.', lgMore: 'Registros anteriores',
     lgShown: function (n, all) { return n + ' de ' + all + ' registros'; },

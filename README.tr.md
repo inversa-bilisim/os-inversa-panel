@@ -5,6 +5,7 @@
 <h1 align="center">Inversa Panel</h1>
 
 <p align="center">
+  <b>Modem kadar basit, OPNsense kadar güçlü.</b><br>
   OPNsense’in en çok kullanılan ayarları tek, sade bir ekranda.<br>
   <a href="README.md">English</a> · <b>Türkçe</b>
 </p>

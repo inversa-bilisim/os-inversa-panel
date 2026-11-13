@@ -42,7 +42,7 @@ window.InversaPanelI18n.fr = {
         sysTitle: 'Système', upFor: function (s) { return 'démarré il y a ' + s; }, cpu: 'Processeur', memory: 'Mémoire', disk: 'Disque', temp: 'Température',
         version: 'Version', cfgChanged: 'Dernière modification de la configuration'
     },
-    appSub: 'Gestion simplifiée pour OPNsense',
+    appSub: 'Aussi simple qu’un modem, aussi puissant qu’OPNsense',
     tabLogs: 'Journaux',
     lgCount: function (n) { return n + (n > 1 ? ' entrées' : ' entrée'); }, lgCsv: 'Télécharger en CSV', lgFailed: 'Impossible de lire les entrées.', lgMore: 'Entrées plus anciennes',
     lgShown: function (n, all) { return n + ' sur ' + all + (all > 1 ? ' entrées' : ' entrée'); },

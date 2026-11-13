@@ -43,7 +43,7 @@ window.InversaPanelI18n.en = {
         sysTitle: 'System', upFor: function (s) { return 'up for ' + s; }, cpu: 'Processor', memory: 'Memory', disk: 'Disk', temp: 'Temperature',
         version: 'Version', cfgChanged: 'Last configuration change'
     },
-    appSub: 'Easy management for OPNsense',
+    appSub: 'As simple as a modem, as powerful as OPNsense',
     tabLogs: 'Logs',
     lgCount: function (n) { return n + ' records'; }, lgCsv: 'Download CSV', lgFailed: 'The records could not be read.', lgMore: 'Older records',
     lgShown: function (n, all) { return n + ' of ' + all + ' records'; },

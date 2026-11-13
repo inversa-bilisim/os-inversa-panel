@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- New tagline under the logo: "As simple as a modem, as powerful as OPNsense" (in all six languages).
+
 ## 1.5.0 (2026-11-13)
 
 - Devices: a device waiting for approval can be **allowed for 1 hour, 1 day, 1 week, until midnight or until a time chosen on a calendar** (at most 30 days ahead). It takes effect right away (no "Apply"); when the time is up the device waits again, and the notification about a waiting device is sent again. The list shows until when a device is allowed.
