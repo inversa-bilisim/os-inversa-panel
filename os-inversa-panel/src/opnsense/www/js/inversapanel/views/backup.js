@@ -22,18 +22,11 @@
         return two(d.getDate()) + '.' + two(d.getMonth() + 1) + '.' + d.getFullYear() + ' ' + two(d.getHours()) + ':' + two(d.getMinutes());
     }
 
-    /* the firewall restarts: ask now and then whether it is back, then load the page again */
+    /* the firewall restarts: wait until it is back, then load the page again (app.js) */
     function waitForRestart() {
         B.restarting = true;
         h.redraw('main');
-        var gone = false, asked = 0;
-        var timer = setInterval(function () {
-            asked++;
-            h.api('GET', '/api/inversapanel/backup/list').then(function () {
-                /* it still answers in the first seconds, before it goes down */
-                if (gone || asked > 40) { clearInterval(timer); window.location.reload(); }
-            }, function () { gone = true; });
-        }, 5000);
+        h.waitForRestart();
     }
 
     function restore(url, payload) {

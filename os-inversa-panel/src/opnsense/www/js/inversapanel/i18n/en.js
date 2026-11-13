@@ -82,7 +82,7 @@ window.InversaPanelI18n.en = {
         internet: ['Internet connection', 'The connection going down and coming back, the firewall restarting. News of an outage arrives when the connection is back.'],
         logins: ['Failed logins', 'An attempt to log in to the firewall\'s interface with a wrong password.'],
         health: ['Health of the firewall', 'When the disk is nearly full, the processor runs hot or an OPNsense update is waiting.'],
-        updates: ['New version', 'GitHub is asked once a day; you are told when a new version of Inversa Panel is out. Installing it stays with you, on the About page.']
+        updates: ['New version', 'GitHub is asked once a day; you are told when a new version of Inversa Panel is out. Installing it stays with you, on Settings › Updates.']
     },
     ntSave: 'Save', ntTest: 'Save and send a test message', ntSaved: 'Notification settings saved.', ntTestSent: 'Test message sent; look at Telegram.',
     ntFailed: 'That did not work', ntLoadFailed: 'The notification settings could not be read.',
@@ -130,6 +130,37 @@ window.InversaPanelI18n.en = {
         shaper: ['Traffic shaper rules made in OPNsense', 'They stay as they are. A speed limit for a network adds the panel\'s own rules; of two rules matching the same traffic the first match wins, so a limit may not act as expected.'],
         ha: ['High availability (CARP / configuration sync)', 'The panel was not tested in a high availability setup. Its automatic rules exist only on a firewall where the package is installed: install it on both. The panel\'s records (data usage, events) are not synchronised.']
     },
+    newsTitle: function (v) { return 'What is new in Inversa Panel ' + v; }, newsSub: 'The panel was updated. The news in short:',
+    newsOk: 'Got it', newsGo: 'Show', newsHeading: 'What is new',
+    news: {
+        '1.6.0': [
+            ['Setup wizard: set up networks, protections, approval of new devices and notifications step by step.', 'wizard'],
+            ['Updates page: check and update Inversa Panel and OPNsense in one place.', 'updates'],
+            ['Our new tagline: as simple as a modem, as powerful as OPNsense.', '']
+        ],
+        '1.5.0': [
+            ['Approve from your phone: on a phone the panel opens on a short screen with only the devices waiting for approval.', 'devices'],
+            ['Allow for a while: an hour, a day, a week, until midnight or until a time you pick.', 'devices'],
+            ['Turn away a waiting device, and delete devices.', 'devices'],
+            ['A new device is now told within seconds.', 'notify']
+        ]
+    },
+    tabUpdates: 'Updates', ugSub: 'Updates of Inversa Panel and of OPNsense. Nothing is looked up until you press a button.',
+    ugPanelSub: 'Releases on GitHub', ugFwSub: 'The firewall’s own software', ugInstalled: 'Installed version', ugLastCheck: 'Last checked',
+    ugWaitOther: 'You can install it once the OPNsense update is done.',
+    ugFwNotChecked: 'Not checked yet.', ugFwCurrent: 'OPNsense is up to date.', ugFwChecking: 'Looking for updates…',
+    ugFwRunning: 'OPNsense is being updated. This can take a few minutes; you may close the page, the update goes on.',
+    ugFwRestarting: 'The firewall is restarting. The internet is down for a few minutes; this page loads again by itself when it is back.',
+    ugFwUpdated: 'OPNsense was updated and is up to date.', ugFwFailed: 'The OPNsense update could not be checked or started.',
+    ugFwNoAccess: 'OPNsense’s update information could not be read. This user may not be allowed to update.',
+    ugFwNew: function (n) { return n === 1 ? '1 update is available.' : n + ' updates are available.'; },
+    ugFwNewLong: function (v, n, size) { return (v ? 'OPNsense ' + v + ' is ready: ' : '') + n + (n === 1 ? ' package' : ' packages') + (size ? ', ' + size + ' to download' : '') + '.'; },
+    ugFwReboot: 'The firewall restarts when this update is done; the internet is down for a few minutes.',
+    ugShowList: function (n) { return 'Show the ' + n + ' packages'; }, ugHideList: 'Hide the list',
+    ugFwUpdate: 'Update', ugFwUpdateReboot: 'Update and restart',
+    ugFwConfirm: function (v, n, reboot) { return 'Update OPNsense' + (v ? ' to ' + v : '') + '? ' + n + (n === 1 ? ' package changes.' : ' packages change.') + (reboot ? ' The firewall restarts when it is done and the internet is down for a few minutes.' : ''); },
+    ugFwMajor: function (v) { return 'New major release: OPNsense ' + v + '. Do a major upgrade on OPNsense’s own update page.'; },
+    ugFwPage: 'OPNsense’s update page',
     tabAbout: 'About', aboutSub: 'The installed version, who makes it, where to turn to and the software the panel is built on.',
     upCheck: 'Check for an update', upChecking: 'Looking…', upCurrent: function (v) { return 'Up to date: ' + v + ' is the latest version.'; },
     upNew: function (v) { return 'A new version is available: ' + v; }, upInstall: function (v) { return 'Update to ' + v; },

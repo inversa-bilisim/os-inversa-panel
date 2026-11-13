@@ -112,7 +112,10 @@ class StateController extends ApiControllerBase
                 'interfaces' => $mdl->getProtectedInterfaces(),
                 'dnsstats' => !$mdl->general->dnsstats->isEmpty(),
                 'welcomed' => !$mdl->general->welcomed->isEmpty(),
+                /* the version whose "what is new" was seen */
+                'news' => (string)$mdl->general->news,
             ],
+            'version' => Catalog::VERSION,
             'devices' => (object)$devices,
             /* fixed addresses (Dnsmasq hosts) and the networks they can be in */
             'reservations' => (object)$reservations,

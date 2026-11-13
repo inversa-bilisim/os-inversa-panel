@@ -63,7 +63,7 @@
         ['devices', ['devices', 'sched']],
         ['security', ['filter', 'ips', 'geo', 'lists']],
         ['logs', ['attacks', 'history', 'events']],
-        ['settings', ['settings', 'notify', 'backup', 'scan', 'about']]
+        ['settings', ['settings', 'notify', 'backup', 'updates', 'scan', 'about']]
     ];
     /* addresses of menu entries that no longer exist */
     var MOVED = { remote: 'vpn', guest: 'nets' };
@@ -437,6 +437,7 @@
             };
             S.draft = clone(S.saved);
             S.options = data.options;
+            S.version = data.version || '';
             /* a change is waiting for its confirmation (this page was reloaded, or somebody else made it) */
             if (data.rollback && !S.ui.countdown) {
                 startCountdown(data.rollback.remaining);
@@ -934,6 +935,9 @@
                 '</div></section>';
         }
 
+        /* after an update of the panel: what is new, once */
+        html += newsCard();
+
         /* ---- status: what it is like, what waits for somebody, every protection in a word, the quick switches */
         var wanUp = !!(ov.wan && ov.wan.address), ips = ov.ips || null, geo = S.saved.geo || {};
         var vpns = (ov.vpn || []).filter(function (c) { return c.enabled; });
@@ -966,7 +970,7 @@
                 return '<button type="button" class="k-info k-ov-chk" data-act="tab" data-v="' + c[3] + '"><span class="k-dot ' + c[2] + '"></span>' +
                     '<span>' + esc(c[0]) + '</span><b>' + esc(c[1]) + '</b></button>';
             }).join('') +
-            '<a class="k-info k-ov-chk" href="/ui/core/firmware#status"><span class="k-dot ' + (sys && sys.update ? 'warn' : (sys ? 'ok' : '')) + '"></span>' +
+            '<a class="k-info k-ov-chk" href="#updates"><span class="k-dot ' + (sys && sys.update ? 'warn' : (sys ? 'ok' : '')) + '"></span>' +
             '<span>' + esc(o.chkUpdate) + '</span><b>' + esc(!sys ? '…' : (sys.update ? (sys.latest ? o.updReady(sys.latest) : o.updPending) : o.upToDate)) + '</b></a></div>' +
             '<div class="k-ov-quick"><span class="k-ov-quick-t">' + esc(t.quickTitle) + '</span>' + QUICK.map(function (k) {
                 return '<span class="k-ov-q">' + toggle(!!S.draft.filtering[k], 'data-act="cat" data-v="' + k + '"', t.cats[k][0]) + esc(t.cats[k][0]) + '</span>';
@@ -1104,7 +1108,7 @@
                 (sys.disk ? meter(o.disk, sys.disk.used / sys.disk.total * 100, part(sys.disk)) : '') +
                 (sys.temperature !== null ? meter(o.temp, sys.temperature, fmt(sys.temperature) + ' °C') : '') +
                 '<div>' + kv(o.version, esc(sys.product + ' ' + sys.version)) +
-                kv(o.chkUpdate, sys.update ? '<a class="k-pill warn k-ov-pill" href="/ui/core/firmware#status">' + esc(sys.latest ? o.updReady(sys.latest) : o.updPending) + '</a>' : esc(o.upToDate)) +
+                kv(o.chkUpdate, sys.update ? '<a class="k-pill warn k-ov-pill" href="#updates">' + esc(sys.latest ? o.updReady(sys.latest) : o.updPending) + '</a>' : esc(o.upToDate)) +
                 (sys.config_changed ? kv(o.cfgChanged, esc(when(sys.config_changed))) : '') + '</div>' :
                 '<div class="muted">…</div>') + '</section></div>';
 
@@ -1576,6 +1580,31 @@
     }
 
     /* ------------------------------------------------------------------ view: settings */
+
+    /* ------------------------------------------------------------------ what is new */
+
+    /*
+     * t.news: version => [[text, where], ...]; where is a page ('devices', 'updates', ...), 'wizard',
+     * or nothing. Shown once on the overview after the panel was updated, and on the Updates page.
+     */
+    function newsItems(version) {
+        var t = T();
+        return ((t.news || {})[version] || []).map(function (item) {
+            var go = !item[1] ? '' : (item[1] === 'wizard' ?
+                '<button type="button" class="k-link small" data-act="wiz-start">' + esc(t.newsGo) + ' →</button>' :
+                '<button type="button" class="k-link small" data-act="tab" data-v="' + esc(item[1]) + '">' + esc(t.newsGo) + ' →</button>');
+            return '<li><span>' + esc(item[0]) + '</span>' + go + '</li>';
+        }).join('');
+    }
+
+    function newsCard() {
+        var t = T(), v = S.version;
+        if (!v || !S.saved.general.welcomed || S.saved.general.news === v || !((t.news || {})[v] || []).length) { return ''; }
+        return '<section class="k-card k-news"><div class="k-news-head"><div class="k-ibox big on">' + icon(ICONS.info, 22) + '</div>' +
+            '<div style="flex:1 1 auto"><b>' + esc(t.newsTitle(v)) + '</b><div class="muted">' + esc(t.newsSub) + '</div></div>' +
+            '<button type="button" class="k-btn small" data-act="news-ok">' + esc(t.newsOk) + '</button></div>' +
+            '<ul class="k-news-list">' + newsItems(v) + '</ul></section>';
+    }
 
     /* ------------------------------------------------------------------ view: setup wizard */
 
@@ -2062,6 +2091,11 @@
             case 'welcome-no':
                 saveWelcomed();
                 break;
+            case 'news-ok':
+                /* stored right away, like the welcome card */
+                S.saved.general.news = S.draft.general.news = S.version;
+                api('POST', '/api/inversapanel/service/news', {}).then(function () {}, function () {});
+                break;
             case 'wiz-start':
                 startWizard();
                 if (history.replaceState) { history.replaceState(null, '', '#dash'); }
@@ -2259,12 +2293,30 @@
     function saveWelcomed() {
         S.draft.general.welcomed = true;
         S.saved.general.welcomed = true;
+        /* a fresh installation has nothing "new" to show (the firewall stores the same) */
+        if (!S.saved.general.news) { S.saved.general.news = S.draft.general.news = S.version; }
         api('POST', '/api/inversapanel/service/welcomed', {}).then(function (res) {
             if (!res || res.status !== 'ok') { throw res; }
         }).catch(function (err) {
             S.ui.notice = { type: 'err', text: T().applyFailed, list: [err && err.errorMessage ? err.errorMessage : ''] };
             renderPending();
         });
+    }
+
+    /*
+     * The firewall restarts (restore, OPNsense update): every five seconds, does its web server answer?
+     * Any answer counts, a login page too: after a restart the session is gone and the API refuses.
+     * Once it was down and answers again, the page loads again (and OPNsense asks for the login if needed).
+     */
+    function waitForRestart() {
+        var gone = false, asked = 0;
+        var timer = setInterval(function () {
+            asked++;
+            fetch('/index.php?inversapanel-alive=' + Date.now(), { method: 'HEAD', cache: 'no-store', credentials: 'same-origin' }).then(function () {
+                /* it still answers in the first seconds, before it goes down */
+                if (gone || asked > 120) { clearInterval(timer); window.location.reload(); }
+            }, function () { gone = true; });
+        }, 5000);
     }
 
     function register(view) {
@@ -2279,10 +2331,12 @@
         redraw: redraw,
         notice: function (type, text, list, ms) { S.ui.notice = { type: type, text: text, list: list || [], ms: ms || 0 }; renderPending(); },
         hosts: function () { return S.hosts; },
+        newsItems: newsItems,
         /* confirm-or-put-back countdown: the running one (or null), start one */
         countdown: function () { return S.ui.countdown; },
         startCountdown: startCountdown,
         loadHosts: loadHosts,
+        waitForRestart: waitForRestart,
         reloadState: function () { return loadState().then(render); }
     };
 

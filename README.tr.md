@@ -58,8 +58,9 @@ Ekran görüntülerindeki veriler örnektir.
 - İnternet geçmişi: hangi cihaz hangi alan adını sordu, hangisi engellendi. Açılmadıkça kapalıdır; ağ bazında seçilir.
 - Erişim ve değişiklikler: VPN bağlantıları, panele girişler, yeni cihazlar, yapılandırmayı kimin değiştirdiği. 90 gün saklanır.
 
-**Yedek**
+**Yedek ve güncellemeler**
 - Yapılandırmayı indirme, dosyadan geri yükleme ve her gece alınan kopya (son 7 kopya güvenlik duvarında saklanır).
+- Panelin ve OPNsense'in güncellemeleri tek sayfada: ne yeni, hangi paketler değişecek, yeniden başlatma gerekiyor mu; güncellemenin kaydı ve güvenlik duvarı geri gelene kadar bekleyen sayfa.
 
 **Bildirimler**
 - Bir Telegram botu; ağa yeni bir cihaz girdiğinde ya da onay beklediğinde, saldırı önleme uyarı verdiğinde, bir VPN cihazı bağlandığında, internet bağlantısı koptuğunda ve hatalı giriş denemesinde haber verir. Güvenlik duvarı yalnızca gönderir; Telegram'dan komut almaz.
@@ -118,7 +119,7 @@ Ardından OPNsense menüsünde **Inversa**'yı ya da `https://<güvenlik duvarı
 
 **Yeni kurulmuş bir OPNsense öneririz.** Panel, yapılandırılmış bir güvenlik duvarına da kurulabilir ve mevcut ayarlara dokunmaz; bir kısmını olduğu gibi kullanır (ağlar, sabit adresler, basit port yönlendirmeleri, yerel adlar); OPNsense'te yapılmış güvenlik duvarı kuralları, NAT, VPN bağlantıları ve servisler panelin yanında çalışmaya devam eder ve yine OPNsense'in kendi sayfalarından yönetilir. *Ayarlar › Mevcut ayarlar* sayfası panelin ne bulduğunu, neyin OPNsense'te kaldığını ve neyin bir özelliği etkileyebileceğini (başka bir DHCP sunucusu, engel listeleri, zaten çalışan saldırı tespiti, elle giden NAT) listeler. Panel yeni kurulumlarda geliştirildi ve denendi; çalışan bir güvenlik duvarına kuracaksanız önce yapılandırma yedeği indirin (*Sistem › Yapılandırma › Yedekler*).
 
-- **Güncelleme:** 1.3.0'dan itibaren Ayarlar › Hakkımızda › **Güncellemeyi denetle** (GitHub'a yalnızca basılınca bakar; önce yedek alır, sonra ayarları denetler). Ya da aynı komutu yeniden çalıştırın. Ayarlar ve kayıtlar korunur.
+- **Güncelleme:** Ayarlar › Güncellemeler › **Güncellemeyi denetle** (1.3.0'dan itibaren; 1.5.0'a kadar Ayarlar › Hakkımızda'daydı) (GitHub'a yalnızca basılınca bakar; önce yedek alır, sonra ayarları denetler). Ya da aynı komutu yeniden çalıştırın. Ayarlar ve kayıtlar korunur.
 - **Kaldırma:** `pkg delete os-inversa-panel`. Paneli, güvenlik duvarı kurallarını ve kayıtlarını (veri kullanımı, olaylar, günlükler) kaldırır. OPNsense yapılandırmasına yazdıkları (takma adlar, engelleme listesi ilkesi, VPN bağlantıları, ağlar) kalır; onların da gitmesini istiyorsanız paketi kaldırmadan önce *Ayarlar › Inversa Panel'in eklediklerini kaldır*'ı çalıştırın.
 
 Paket OPNsense 26.7 için derlenir. Bütün sürümler ve dosyaları [sürümler sayfasında](https://github.com/inversa-bilisim/os-inversa-panel/releases), değişiklikler [değişiklik günlüğünde](CHANGELOG.md) yer alır.
@@ -131,7 +132,7 @@ Türkçe, İngilizce, Almanca, Fransızca, İspanyolca ve İtalyanca. "Otomatik"
 
 ## Durum
 
-Sürüm 1.5.0. Sanal bir OPNsense 26.7.8 üzerinde geliştirildi ve denendi. Gerçek donanım ya da hat üzerinde henüz denenmeyenler:
+Sürüm 1.6.0. Sanal bir OPNsense 26.7.8 üzerinde geliştirildi ve denendi. Gerçek donanım ya da hat üzerinde henüz denenmeyenler:
 
 - PPPoE (test ortamında PPPoE sunucusu yok).
 - Gerçek bir telefon ya da bilgisayardan WireGuard bağlantısı; üretilen yapılandırma ve güvenlik duvarı kuralları doğrulandı.

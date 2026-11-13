@@ -40,6 +40,10 @@
                 <Default>0</Default>
                 <Required>Y</Required>
             </welcomed>
+            <!-- the version whose "what is new" card was closed (or that was installed fresh) -->
+            <news type="TextField">
+                <Mask>/^[0-9]+(\.[0-9]+){0,3}$/</Mask>
+            </news>
         </general>
         <devices>
             <device type="ArrayField">

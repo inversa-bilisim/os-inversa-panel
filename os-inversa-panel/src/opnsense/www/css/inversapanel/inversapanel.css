@@ -764,3 +764,24 @@ header.page-content-head { display: none; }
 /* the notifications page inside the wizard: its own heading would repeat the step's */
 .inversapanel .k-wiz-embed > .k-stack > div:first-child { display: none; }
 .inversapanel .k-wiz .k-setting-text b .k-badge { margin-left: 6px; }
+
+/* ---- updates page (views/updates.js) ------------------------------------------ */
+.inversapanel .k-ug { flex: 1 1 420px; }
+.inversapanel .k-ug-head { display: flex; align-items: center; gap: 12px; }
+.inversapanel .k-ug-head h2 { margin: 0; }
+.inversapanel .k-ug-logo { width: 40px; height: 40px; }
+.inversapanel .k-ug-opn { width: 40px; height: 40px; border-radius: 10px; flex: none; display: flex; align-items: center; justify-content: center; background: #D94F00; color: #fff; font-size: 12px; font-weight: 800; letter-spacing: .02em; }
+.inversapanel .k-ug .k-up-new { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.inversapanel .k-ug-list { width: 100%; max-height: 260px; overflow: auto; }
+.inversapanel .k-ug-list .k-list-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; }
+.inversapanel .k-ug-log { max-height: 220px; overflow: auto; font-size: 12px; }
+.inversapanel a.k-link { display: inline-flex; align-items: center; min-height: 32px; font-size: 13px; text-decoration: none; }
+
+/* ---- what is new (overview card once after an update, Updates page) ------------- */
+.inversapanel .k-news { border-color: #C5D5F5; }
+.inversapanel .k-news-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.inversapanel .k-news-head b { font-size: 16px; }
+.inversapanel .k-news-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.inversapanel .k-news-list li { font-size: 14px; }
+.inversapanel .k-news-list li .k-link { min-height: 0; margin-left: 8px; display: inline; }
+.inversapanel .k-news-old { border-top: 1px solid var(--k-line); padding-top: 12px; }

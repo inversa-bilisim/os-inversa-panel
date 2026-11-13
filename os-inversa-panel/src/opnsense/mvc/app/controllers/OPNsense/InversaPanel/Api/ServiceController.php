@@ -77,7 +77,27 @@ class ServiceController extends ApiControllerBase
         $this->throwReadOnly();
         $mdl = new InversaPanel();
         $mdl->general->welcomed->setValue('1');
+        /* a fresh installation has nothing "new" to show */
+        if ($mdl->general->news->isEmpty()) {
+            $mdl->general->news->setValue(Catalog::VERSION);
+        }
         /* only this flag changes: don't let an unrelated validation problem block it */
+        $mdl->serializeToConfig(false, true);
+        \OPNsense\Core\Config::getInstance()->save();
+        return ['status' => 'ok'];
+    }
+
+    /**
+     * the "what is new" card of this version was closed: it does not come back until the next version
+     */
+    public function newsAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $this->throwReadOnly();
+        $mdl = new InversaPanel();
+        $mdl->general->news->setValue(Catalog::VERSION);
         $mdl->serializeToConfig(false, true);
         \OPNsense\Core\Config::getInstance()->save();
         return ['status' => 'ok'];

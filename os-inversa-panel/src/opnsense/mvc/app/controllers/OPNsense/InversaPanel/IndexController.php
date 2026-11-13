@@ -30,6 +30,7 @@ class IndexController extends \OPNsense\Base\IndexController
         '/js/inversapanel/views/notify.js',
         '/js/inversapanel/views/backup.js',
         '/js/inversapanel/views/scan.js',
+        '/js/inversapanel/views/updates.js',
         '/js/inversapanel/views/about.js',
     ];
 

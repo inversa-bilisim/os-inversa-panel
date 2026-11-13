@@ -82,7 +82,7 @@ window.InversaPanelI18n.tr = {
         internet: ['İnternet bağlantısı', 'Bağlantının kopması ve geri gelmesi, güvenlik duvarının yeniden başlaması. Kopma haberi bağlantı geri gelince ulaşır.'],
         logins: ['Hatalı giriş denemeleri', 'Güvenlik duvarının arayüzüne yanlış parolayla giriş denemesi.'],
         health: ['Güvenlik duvarının sağlığı', 'Disk dolmak üzereyse, işlemci çok ısındıysa ya da bekleyen bir OPNsense güncellemesi varsa.'],
-        updates: ['Yeni sürüm', 'Günde bir kez GitHub’a bakılır; Inversa Panel’in yeni sürümü çıktıysa haber verilir. Kurulum yine Hakkımızda sayfasından, siz isteyince yapılır.']
+        updates: ['Yeni sürüm', 'Günde bir kez GitHub’a bakılır; Inversa Panel’in yeni sürümü çıktıysa haber verilir. Kurulum yine Ayarlar › Güncellemeler sayfasından, siz isteyince yapılır.']
     },
     ntSave: 'Kaydet', ntTest: 'Kaydet ve deneme mesajı gönder', ntSaved: 'Bildirim ayarları kaydedildi.', ntTestSent: 'Deneme mesajı gönderildi; Telegram’a bakın.',
     ntFailed: 'Olmadı', ntLoadFailed: 'Bildirim ayarları okunamadı.',
@@ -130,6 +130,37 @@ window.InversaPanelI18n.tr = {
         shaper: ['OPNsense’te kurulmuş trafik şekillendirme kuralları', 'Olduğu gibi kalır. Panelden bir ağa hız sınırı verildiğinde panel kendi kurallarını ekler; aynı trafiğe uyan iki kuraldan önce eşleşen geçerli olur, bu yüzden sınır beklediğiniz gibi çalışmayabilir.'],
         ha: ['Yüksek erişilebilirlik (CARP / yapılandırma eşitleme)', 'Panel yedekli (HA) kurulumda denenmedi. Panelin otomatik kuralları yalnızca paketin kurulu olduğu güvenlik duvarında oluşur: paketi iki cihaza da kurun. Panelin kayıtları (veri kullanımı, olaylar) eşitlenmez.']
     },
+    newsTitle: function (v) { return 'Inversa Panel ' + v + ' sürümünde neler yeni'; }, newsSub: 'Panel güncellendi. Kısaca yenilikler:',
+    newsOk: 'Tamam', newsGo: 'Göster', newsHeading: 'Neler yeni',
+    news: {
+        '1.6.0': [
+            ['Kurulum sihirbazı: ağları, korumaları, yeni cihaz onayını ve bildirimleri adım adım ayarlayın.', 'wizard'],
+            ['Güncellemeler sayfası: Inversa Panel’i ve OPNsense’i tek yerden denetleyip güncelleyin.', 'updates'],
+            ['Yeni sloganımız: Modem kadar basit, OPNsense kadar güçlü.', '']
+        ],
+        '1.5.0': [
+            ['Telefondan onay: telefonda panel yalnızca onay bekleyen cihazları gösteren kısa bir ekranla açılır.', 'devices'],
+            ['Süreli izin: 1 saat, 1 gün, 1 hafta, gece yarısına ya da seçtiğiniz saate kadar.', 'devices'],
+            ['Bekleyen cihazı reddetme ve cihaz silme.', 'devices'],
+            ['Yeni cihaz bildirimi artık saniyeler içinde gelir.', 'notify']
+        ]
+    },
+    tabUpdates: 'Güncellemeler', ugSub: 'Inversa Panel’in ve OPNsense’in güncellemeleri. Siz bir düğmeye basmadıkça hiçbir yere bakılmaz.',
+    ugPanelSub: 'GitHub’daki sürümler', ugFwSub: 'Güvenlik duvarının kendi yazılımı', ugInstalled: 'Kurulu sürüm', ugLastCheck: 'Son denetim',
+    ugWaitOther: 'OPNsense güncellemesi bitince kurabilirsiniz.',
+    ugFwNotChecked: 'Henüz denetlenmedi.', ugFwCurrent: 'OPNsense güncel.', ugFwChecking: 'Güncellemeler denetleniyor…',
+    ugFwRunning: 'OPNsense güncelleniyor. Bu birkaç dakika sürebilir; sayfayı kapatabilirsiniz, güncelleme sürer.',
+    ugFwRestarting: 'Güvenlik duvarı yeniden başlıyor. İnternet birkaç dakika kesilir; geri gelince bu sayfa kendiliğinden yenilenir.',
+    ugFwUpdated: 'OPNsense güncellendi, güncel.', ugFwFailed: 'OPNsense güncellemesi denetlenemedi ya da başlatılamadı.',
+    ugFwNoAccess: 'OPNsense’in güncelleme bilgisi okunamadı. Bu kullanıcının güncelleme yetkisi olmayabilir.',
+    ugFwNew: function (n) { return n + ' güncelleme var.'; },
+    ugFwNewLong: function (v, n, size) { return (v ? 'OPNsense ' + v + ' hazır: ' : '') + n + ' paket' + (size ? ', ' + size + ' indirilecek' : '') + '.'; },
+    ugFwReboot: 'Bu güncelleme bitince güvenlik duvarı yeniden başlar; internet birkaç dakika kesilir.',
+    ugShowList: function (n) { return n + ' paketi göster'; }, ugHideList: 'Listeyi gizle',
+    ugFwUpdate: 'Güncelle', ugFwUpdateReboot: 'Güncelle ve yeniden başlat',
+    ugFwConfirm: function (v, n, reboot) { return 'OPNsense' + (v ? ' ' + v + ' sürümüne' : '') + ' güncellensin mi? ' + n + ' paket değişecek.' + (reboot ? ' Güncelleme bitince güvenlik duvarı yeniden başlar ve internet birkaç dakika kesilir.' : ''); },
+    ugFwMajor: function (v) { return 'Yeni büyük sürüm: OPNsense ' + v + '. Büyük sürüm yükseltmesini OPNsense’in kendi güncelleme sayfasından yapın.'; },
+    ugFwPage: 'OPNsense’in güncelleme sayfası',
     tabAbout: 'Hakkımızda', aboutSub: 'Kurulu sürüm, kimin geliştirdiği, nereye başvuracağınız ve panelin üzerine kurulduğu yazılımlar.',
     upCheck: 'Güncellemeyi denetle', upChecking: 'Bakılıyor…', upCurrent: function (v) { return 'Güncelsiniz: ' + v + ' son sürüm.'; },
     upNew: function (v) { return 'Yeni sürüm var: ' + v; }, upInstall: function (v) { return v + ' sürümüne güncelle'; },

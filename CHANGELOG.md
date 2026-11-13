@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.6.0 (2026-11-13)
 
+- **Settings › Updates**, a new page for both updates. Inversa Panel: check and install, as before on the About page (About now links there). OPNsense: check runs OPNsense's own check and shows the new version, the packages that change, the download size and whether a restart follows; **Update** starts OPNsense's own update, shows its log, and after a restart the page waits until the firewall answers again and loads itself. A major upgrade is only told; it stays on OPNsense's own page. The "update ready" spots on the overview open this page.
+- **What is new**: after the panel was updated, the overview shows the news of the new version once ("Got it" closes it for every browser); Settings › Updates lists the news of the last versions. Fresh installations do not get the card.
 - **Setup wizard** on first start, in six steps: language and the page after logging in, the networks to protect, the protections (recommended ones proposed), approval of new devices per network, Telegram notifications (the notifications page itself), and a summary. The choices are applied in one go at the end, with the usual "Apply"; nothing changes on the firewall before that. It can be closed at any time and run again from Settings › Setup wizard. The welcome card on the overview now starts it.
 - New tagline under the logo: "As simple as a modem, as powerful as OPNsense" (in all six languages).
 
