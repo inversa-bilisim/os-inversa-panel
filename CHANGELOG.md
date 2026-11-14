@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.7.1 (2026-11-14)
 
 - Phone screen: devices whose identity changed are shown too, like waiting devices, with "This is mine, accept it" and "Turn away"; a device waiting because its approval was taken back shows why.
 
