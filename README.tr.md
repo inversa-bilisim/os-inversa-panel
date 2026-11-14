@@ -133,7 +133,7 @@ Türkçe, İngilizce, Almanca, Fransızca, İspanyolca ve İtalyanca. "Otomatik"
 
 ## Durum
 
-Sürüm 1.7.1. Sanal bir OPNsense 26.7.8 üzerinde geliştirildi ve denendi. Gerçek donanım ya da hat üzerinde henüz denenmeyenler:
+Sürüm 1.7.2. Sanal bir OPNsense 26.7.8 üzerinde geliştirildi ve denendi. Gerçek donanım ya da hat üzerinde henüz denenmeyenler:
 
 - PPPoE (test ortamında PPPoE sunucusu yok).
 - Gerçek bir telefon ya da bilgisayardan WireGuard bağlantısı; üretilen yapılandırma ve güvenlik duvarı kuralları doğrulandı.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.2 (2026-11-14)
+
+- Overview: the country blocking tile now says what the number means ("2 countries allowed" or "2 countries blocked"); "Only 2 countries" read as if two were blocked.
+- Existing settings: the note on WireGuard connections made in OPNsense explains how to move them to the panel by hand.
+
 ## 1.7.1 (2026-11-14)
 
 - Phone screen: devices whose identity changed are shown too, like waiting devices, with "This is mine, accept it" and "Turn away"; a device waiting because its approval was taken back shows why.

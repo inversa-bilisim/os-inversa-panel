@@ -22,7 +22,7 @@ window.InversaPanelI18n.fr = {
         wanUpShort: 'Internet connecté', lastAlert: function (w) { return 'dernière alerte d’attaque ' + w; },
         chkInternet: 'Internet', chkGeo: 'Blocage par pays', chkUpdate: 'Mise à jour',
         notRunning: 'À l’arrêt', ipsBlocking: 'Blocage', ipsWatching: 'Alerte',
-        geoAllow: function (n) { return 'Seulement ' + n + ' pays'; }, geoBlock: function (n) { return n + ' pays'; },
+        geoAllow: function (n) { return n === 1 ? '1 pays autorisé' : n + ' pays autorisés'; }, geoBlock: function (n) { return n === 1 ? '1 pays bloqué' : n + ' pays bloqués'; },
         vpnUp: function (a, b) { return a + ' / ' + b + ' en ligne'; },
         updReady: function (v) { return v + ' disponible'; }, updPending: 'Mise à jour disponible', upToDate: 'À jour',
         waiting: function (n) { return n + ' en attente d’approbation'; },
