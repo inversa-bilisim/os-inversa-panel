@@ -14,6 +14,8 @@
     A configured source (MaxMind, ipinfo, Deciso mirror) always wins: nothing is written then.
 
     usage: geoip_dbip.py [--force]
+    --force: fetch now, also while country blocking is still off and whatever the age of the data
+             (the "Download now" button). A failed run leaves its reason in FAILED for the page.
 """
 
 import csv
@@ -34,6 +36,7 @@ from configparser import ConfigParser
 
 TARGET = '/usr/local/share/GeoIP/alias'
 STATS = '/usr/local/share/GeoIP/inversapanel-dbip.json'
+FAILED = '/usr/local/share/GeoIP/inversapanel-dbip.failed.json'
 UPDATER_CONF = '/usr/local/etc/filter_geoip.conf'
 LOCK = '/tmp/inversapanel_geoip.lock'
 URL = 'https://download.db-ip.com/free/dbip-country-lite-%s.csv.gz'
@@ -59,8 +62,23 @@ def inversapanel_geo_enabled():
         return False
 
 
+def failed(reason, detail=''):
+    """ why there is no (new) data, for the countries page """
+    try:
+        os.makedirs(os.path.dirname(FAILED), exist_ok=True)
+        with open(FAILED, 'w') as f:
+            f.write(ujson.dumps({
+                'reason': reason, 'detail': str(detail)[:200],
+                'timestamp': datetime.datetime.now().isoformat(timespec='seconds')
+            }))
+    except OSError:
+        pass
+    sys.exit(1)
+
+
 def download(tmpdir):
-    """ this month's file, or last month's early in the month """
+    """ this month's file, or last month's early in the month: (file, month, last error) """
+    error = ''
     today = datetime.date.today()
     last_month = (today.replace(day=1) - datetime.timedelta(days=1))
     for month in (today.strftime('%Y-%m'), last_month.strftime('%Y-%m')):
@@ -69,10 +87,11 @@ def download(tmpdir):
             req = urllib.request.Request(URL % month, headers={'User-Agent': 'OPNsense-InversaPanel'})
             with urllib.request.urlopen(req, timeout=120) as resp, open(target, 'wb') as out:
                 shutil.copyfileobj(resp, out)
-            return target, month
+            return target, month, ''
         except Exception as e:
+            error = e
             syslog.syslog(syslog.LOG_NOTICE, 'inversapanel: db-ip %s not available (%s)' % (month, e))
-    return None, None
+    return None, None, error
 
 
 def convert(src, outdir):
@@ -105,22 +124,22 @@ if __name__ == '__main__':
     except OSError:
         sys.exit(0)  # another update is running
 
-    if opnsense_source_configured() or not inversapanel_geo_enabled():
+    if opnsense_source_configured() or not (force or inversapanel_geo_enabled()):
         sys.exit(0)
     if not force and os.path.exists(STATS) and time.time() - os.path.getmtime(STATS) < MAX_AGE:
         sys.exit(0)
 
     os.makedirs(TARGET, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=os.path.dirname(TARGET)) as tmpdir:
-        src, month = download(tmpdir)
+        src, month, error = download(tmpdir)
         if src is None:
-            sys.exit(1)
+            failed('download', error)
         outdir = os.path.join(tmpdir, 'alias')
         os.makedirs(outdir)
         count, files = convert(src, outdir)
         if count < 10000:
             syslog.syslog(syslog.LOG_ERR, 'inversapanel: db-ip data looks incomplete (%d networks), kept old data' % count)
-            sys.exit(1)
+            failed('incomplete', count)
         # replace country files one by one (same filesystem: rename is atomic)
         for name in os.listdir(outdir):
             os.replace(os.path.join(outdir, name), os.path.join(TARGET, name))
@@ -130,6 +149,8 @@ if __name__ == '__main__':
             'source': 'db-ip', 'month': month, 'address_count': count, 'file_count': files,
             'timestamp': datetime.datetime.now().isoformat(timespec='seconds')
         }))
+    if os.path.exists(FAILED):
+        os.remove(FAILED)
     syslog.syslog(syslog.LOG_NOTICE, 'inversapanel: db-ip country data %s installed (%d networks)' % (month, count))
     # new data: fill the alias tables from it and (re)load the rules; "allow only these countries" is
     # not enforced before there is data for a country it lets in

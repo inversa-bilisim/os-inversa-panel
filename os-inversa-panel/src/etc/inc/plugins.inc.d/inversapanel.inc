@@ -493,7 +493,10 @@ function inversapanel_cron()
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel notify run', '*']],
         /* a copy of the configuration for the Backup page, when it changed since the last one */
         ['autocron' => ['/usr/local/sbin/configctl -d inversapanel backup nightly', '15', '3']],
-        /* free country database refresh (only acts when country blocking is on and no other source is set) */
-        ['autocron' => ['/usr/local/sbin/configctl -d inversapanel geoip normal', '40', '4']],
+        /*
+         * free country database (only acts when country blocking is on and no other source is set): looked
+         * at every hour, so a download that failed is tried again soon; fresh data is left alone for a week
+         */
+        ['autocron' => ['/usr/local/sbin/configctl -d inversapanel geoip normal', '40']],
     ];
 }

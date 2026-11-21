@@ -385,7 +385,10 @@ window.InversaPanelI18n.fr = {
     geoKeyReplace: 'Saisissez une nouvelle clé pour la remplacer', geoGetKey: 'Comment obtenir une clé gratuite ?',
     geoWaitDb: 'La base de données est en cours de téléchargement ; le blocage commence d’ici quelques minutes. Si cela dure, vérifiez la clé.',
     geoDbipFree: 'gratuit, sans inscription', geoDbipLoaded: function (m, n) { return 'Données ' + m + ' · ' + n + (n > 1 ? ' plages d’adresses' : ' plage d’adresses'); },
-    geoDbipLater: 'téléchargées lorsque la restriction est activée et appliquée, actualisées chaque mois',
+    geoFetch: 'Télécharger maintenant', geoRetry: 'Réessayer', geoFetching: 'Téléchargement des données de pays…',
+    geoNoData: 'Les données de pays n’ont pas encore été téléchargées. Vous pouvez les récupérer avant d’activer la restriction ; cela prend environ une minute.',
+    geoFail: { download: 'Les données de pays n’ont pas pu être téléchargées : le pare-feu n’a pas joint download.db-ip.com. Vérifiez la connexion Internet et le réglage DNS, puis réessayez ; une nouvelle tentative a lieu automatiquement chaque heure.', incomplete: 'Les données de pays téléchargées semblaient incomplètes et n’ont pas été utilisées. Réessayez ; une nouvelle tentative a lieu automatiquement chaque heure.' },
+    geoDbipLater: 'pas encore téléchargées ; mises à jour chaque mois',
     geoUseMaxmind: 'Je veux utiliser ma propre clé MaxMind', geoDownloading: 'Téléchargement des données par pays ; la restriction commence d’ici 1 à 2 minutes…',
     geoAfterApply: 'Lorsque vous appuyez sur Appliquer, les données gratuites par pays (DB-IP Lite) sont téléchargées et la restriction commence d’ici 1 à 2 minutes.',
     /* DNS */
@@ -873,7 +876,7 @@ window.InversaPanelI18n.fr = {
     t.qIdHint = 'Son adresse MAC a peut-être été copiée. Acceptez-le s’il est à vous, sinon refusez-le.';
     t.news['1.7.0'] = [['Surveillance de l’identité des appareils : un appareil à l’adresse MAC copiée est repéré ; vous êtes prévenu ou son autorisation est retirée (Paramètres, désactivée par défaut).', 'settings']];
     t.news['1.8.0'] = [['Formulaire de réseau simplifié : accès à Internet activé ou non, et les réseaux avec lesquels il communique. Le tableau des autorisations à sens unique est sous « Avancé ».', 'nets'], ['Les règles réseau couvrent désormais IPv6 : un réseau en IPv6 ne peut plus contourner les blocages ni l’Internet coupé par IPv6.', 'nets'], ['Cliquez sur les chiffres de la vue d’ensemble : ils listent les appareils en ligne, les requêtes DNS bloquées et les alertes d’attaque.', '']];
-    t.news['1.9.0'] = [['L’assistant de configuration a une nouvelle étape « Internet » : le type de connexion et ses paramètres (PPPoE, IP fixe, derrière un modem) sont demandés à la première configuration.', 'wizard'], ['Les redirections de port se modifient désormais dans leur propre ligne (le crayon).', 'pf'], ['Une seconde redirection sur le même port externe est refusée, en indiquant laquelle l’occupe.', 'pf']];
+    t.news['1.9.0'] = [['L’assistant de configuration a une nouvelle étape « Internet » : le type de connexion et ses paramètres (PPPoE, IP fixe, derrière un modem) sont demandés à la première configuration.', 'wizard'], ['Les redirections de port se modifient désormais dans leur propre ligne (le crayon).', 'pf'], ['Une seconde redirection sur le même port externe est refusée, en indiquant laquelle l’occupe.', 'pf'], ['Pays : les données de pays se téléchargent sur la page avec « Télécharger maintenant » ; un échec indique sa cause et une nouvelle tentative a lieu chaque heure.', 'geo']];
     t.wiz.wan = ['Connexion Internet', 'Si votre Internet fonctionne, continuez sans rien changer. Sinon, choisissez le type de connexion et saisissez ses paramètres ; ils sont appliqués aussitôt avec le bouton ci-dessous et annulés si vous ne confirmez pas dans les 90 secondes.'];
     t.wizShort.wan = 'Internet';
 })(window.InversaPanelI18n.fr);

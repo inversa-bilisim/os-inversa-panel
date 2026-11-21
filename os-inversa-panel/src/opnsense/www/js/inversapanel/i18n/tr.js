@@ -136,7 +136,8 @@ window.InversaPanelI18n.tr = {
         '1.9.0': [
             ['Kurulum sihirbazında yeni İnternet adımı: bağlantı türü ve ayarları (PPPoE, sabit IP, modem arkası) ilk kurulumda sorulur.', 'wizard'],
             ['Port yönlendirmeleri artık kendi satırında düzenlenir (kalem düğmesi).', 'pf'],
-            ['Aynı dış portu kullanan ikinci yönlendirme reddedilir ve hangisiyle çakıştığı söylenir.', 'pf']
+            ['Aynı dış portu kullanan ikinci yönlendirme reddedilir ve hangisiyle çakıştığı söylenir.', 'pf'],
+            ['Ülkeler: ülke verisi sayfadan “Şimdi indir” ile indirilebilir; indirme başarısız olursa nedeni söylenir ve saatte bir yeniden denenir.', 'geo']
         ],
         '1.8.0': [
             ['Yeni ağ formu sadeleşti: internet erişimi açık/kapalı ve haberleşebileceği ağlar. Tek yönlü izinler için tablo “Gelişmiş” altında.', 'nets'],
@@ -581,7 +582,10 @@ window.InversaPanelI18n.tr = {
     geoKeyReplace: 'Yeni anahtar yazarak değiştirin', geoGetKey: 'Ücretsiz anahtar nasıl alınır?',
     geoWaitDb: 'Veritabanı indiriliyor; birkaç dakika içinde engelleme başlar. Uzun sürerse anahtarı kontrol edin.',
     geoDbipFree: 'ücretsiz, kayıt gerekmez', geoDbipLoaded: function (m, n) { return m + ' verisi · ' + n + ' adres aralığı'; },
-    geoDbipLater: 'kısıtlama açılıp Uygula’ya basılınca indirilir, ayda bir güncellenir',
+    geoFetch: 'Şimdi indir', geoRetry: 'Yeniden dene', geoFetching: 'Ülke verisi indiriliyor…',
+    geoNoData: 'Ülke verisi henüz indirilmedi. Kısıtlamayı açmadan önce de indirebilirsiniz; yaklaşık bir dakika sürer.',
+    geoFail: { download: 'Ülke verisi indirilemedi: güvenlik duvarı download.db-ip.com adresine ulaşamadı. İnternet bağlantısını ve DNS ayarını kontrol edip yeniden deneyin; kendiliğinden saatte bir yeniden denenir.', incomplete: 'İndirilen ülke verisi eksik göründüğü için kullanılmadı. Yeniden deneyin; kendiliğinden saatte bir yeniden denenir.' },
+    geoDbipLater: 'henüz indirilmedi; ayda bir güncellenir',
     geoUseMaxmind: 'Kendi MaxMind anahtarımı kullanmak istiyorum', geoDownloading: 'Ülke verisi indiriliyor; 1-2 dakika içinde kısıtlama başlar…',
     geoAfterApply: 'Uygula’ya bastığınızda ücretsiz ülke verisi (DB-IP Lite) indirilir ve kısıtlama 1-2 dakika içinde başlar.',
     /* DNS */

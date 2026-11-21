@@ -385,7 +385,10 @@ window.InversaPanelI18n.de = {
     geoKeyReplace: 'Neuen Schlüssel eingeben, um ihn zu ersetzen', geoGetKey: 'Wie bekomme ich einen kostenlosen Schlüssel?',
     geoWaitDb: 'Die Datenbank wird heruntergeladen; die Sperre beginnt in wenigen Minuten. Wenn es lange dauert, prüfen Sie den Schlüssel.',
     geoDbipFree: 'kostenlos, ohne Anmeldung', geoDbipLoaded: function (m, n) { return 'Daten ' + m + ' · ' + n + ' Adressbereiche'; },
-    geoDbipLater: 'wird heruntergeladen, sobald die Einschränkung eingeschaltet und übernommen wird; monatlich aktualisiert',
+    geoFetch: 'Jetzt herunterladen', geoRetry: 'Erneut versuchen', geoFetching: 'Länderdaten werden heruntergeladen…',
+    geoNoData: 'Die Länderdaten wurden noch nicht heruntergeladen. Sie können sie schon vor dem Einschalten der Beschränkung abrufen; das dauert etwa eine Minute.',
+    geoFail: { download: 'Die Länderdaten konnten nicht heruntergeladen werden: Die Firewall hat download.db-ip.com nicht erreicht. Prüfen Sie Internetverbindung und DNS-Einstellung und versuchen Sie es erneut; stündlich wird es automatisch erneut versucht.', incomplete: 'Die heruntergeladenen Länderdaten wirkten unvollständig und wurden nicht verwendet. Versuchen Sie es erneut; stündlich wird es automatisch erneut versucht.' },
+    geoDbipLater: 'noch nicht heruntergeladen; monatlich aktualisiert',
     geoUseMaxmind: 'Ich möchte meinen eigenen MaxMind-Schlüssel verwenden', geoDownloading: 'Länderdaten werden heruntergeladen; die Einschränkung beginnt innerhalb von 1-2 Minuten…',
     geoAfterApply: 'Wenn Sie Übernehmen drücken, werden die kostenlosen Länderdaten (DB-IP Lite) heruntergeladen, und die Einschränkung beginnt innerhalb von 1-2 Minuten.',
     /* DNS */
@@ -894,7 +897,7 @@ window.InversaPanelI18n.de = {
     t.qIdHint = 'Die MAC-Adresse wurde vielleicht kopiert. Übernehmen Sie es, wenn es Ihres ist, sonst weisen Sie es ab.';
     t.news['1.7.0'] = [['Überwachung der Geräteidentität: Ein Gerät mit kopierter MAC-Adresse fällt auf; Sie werden benachrichtigt oder die Freigabe wird zurückgenommen (Einstellungen, standardmäßig aus).', 'settings']];
     t.news['1.8.0'] = [['Einfacheres Netzwerkformular: Internetzugang an oder aus und die Netzwerke, mit denen es kommuniziert. Die Tabelle für Freigaben in eine Richtung liegt unter „Erweitert“.', 'nets'], ['Netzwerkregeln gelten jetzt auch für IPv6: Ein Netzwerk mit IPv6 kann Sperren oder abgeschaltetes Internet nicht mehr über IPv6 umgehen.', 'nets'], ['Klicken Sie auf die Zahlen der Übersicht: Sie listen Online-Geräte, blockierte DNS-Anfragen und Angriffswarnungen auf.', '']];
-    t.news['1.9.0'] = [['Der Einrichtungsassistent hat einen neuen Schritt „Internet“: Verbindungsart und Einstellungen (PPPoE, feste IP, hinter einem Modem) werden bei der Ersteinrichtung abgefragt.', 'wizard'], ['Portweiterleitungen werden jetzt in ihrer eigenen Zeile geändert (Stift).', 'pf'], ['Eine zweite Weiterleitung auf demselben externen Port wird abgelehnt, mit Hinweis, welche ihn belegt.', 'pf']];
+    t.news['1.9.0'] = [['Der Einrichtungsassistent hat einen neuen Schritt „Internet“: Verbindungsart und Einstellungen (PPPoE, feste IP, hinter einem Modem) werden bei der Ersteinrichtung abgefragt.', 'wizard'], ['Portweiterleitungen werden jetzt in ihrer eigenen Zeile geändert (Stift).', 'pf'], ['Eine zweite Weiterleitung auf demselben externen Port wird abgelehnt, mit Hinweis, welche ihn belegt.', 'pf'], ['Länder: Die Länderdaten lassen sich auf der Seite mit „Jetzt herunterladen“ abrufen; ein fehlgeschlagener Download nennt den Grund und wird stündlich erneut versucht.', 'geo']];
     t.wiz.wan = ['Internetverbindung', 'Wenn Ihr Internet funktioniert, gehen Sie weiter, ohne etwas zu ändern. Wenn nicht, wählen Sie die Verbindungsart und geben Sie die Daten ein; diese Einstellungen werden mit der Schaltfläche unten sofort übernommen und zurückgenommen, wenn Sie nicht innerhalb von 90 Sekunden bestätigen.'];
     t.wizShort.wan = 'Internet';
 })(window.InversaPanelI18n.de);

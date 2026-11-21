@@ -16,7 +16,7 @@
         'OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ ' +
         'UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW').split(' ');
 
-    var Q = { status: null, search: '', key: '' };
+    var Q = { status: null, search: '', key: '', fetch: null };
 
     function load() {
         return h.api('GET', '/api/inversapanel/geo/status').then(function (data) { Q.status = data; });
@@ -49,17 +49,20 @@
         render: function () {
             var T = h.T(), g = h.S().draft.geo, sv = h.S().saved.geo, st = Q.status || {};
             var allow = g.mode === 'allow', key = listKey(g), list = g[key] || [];
+            /* "Download now" was pressed: over once the data is there, a new failure is told, or after four minutes */
+            if (Q.fetch && (st.ready || ((st.failed || {}).timestamp || '') !== Q.fetch.before || Date.now() - Q.fetch.at > 240000)) { Q.fetch = null; }
+            var failed = st.source === 'dbip' && !st.ready && !Q.fetch && st.failed ? (T.geoFail[st.failed.reason] || T.geoFail.download) : '';
             var html = '<div class="k-stack"><div><h1>' + h.esc(T.geoTitle) + '</h1><div class="muted" style="font-size:14px;margin-top:4px">' + h.esc(T.geoSub) + '</div></div>';
             /* honest state: "on" only means something once there are countries and the country database is loaded */
             var stateText, stateCls = 'muted', working = false;
             if (!g.enabled) { stateText = T.off; }
             else if (!list.length) { stateText = allow ? T.geoAllowEmpty : T.geoBlockEmpty; stateCls = 'k-warn-text'; }
-            else if (!st.ready) { stateText = sv.enabled ? T.geoDownloading : T.geoNotWorking; stateCls = 'k-warn-text'; }
+            else if (!st.ready) { stateText = failed ? T.geoNotWorking : (sv.enabled || Q.fetch ? T.geoDownloading : T.geoNotWorking); stateCls = 'k-warn-text'; }
             else if (allow && sv.enabled && sv.mode === 'allow' && (sv.allowed || []).length && !st.allow_data) { stateText = T.geoAllowNoData; stateCls = 'k-warn-text'; }
             else { working = true; stateText = (allow ? T.geoOnAllow(list.length) : T.geoOn(list.length)) + ' · ' + T.geoAddresses(h.fmt(st.addresses)); }
-            if (g.enabled && !st.ready && sv.enabled && !Q.poll) {
+            if (((g.enabled && sv.enabled && !st.ready) || Q.fetch) && !Q.poll) {
                 /* data is being fetched in the background: look again shortly */
-                Q.poll = setTimeout(function () { Q.poll = null; load().then(function () { h.redraw('main'); }); }, 15000);
+                Q.poll = setTimeout(function () { Q.poll = null; load().then(function () { if (h.S().tab === 'geo') { h.redraw('main'); } }); }, Q.fetch ? 5000 : 15000);
             }
 
             var dbText, dbControl = '';
@@ -69,7 +72,7 @@
             } else if (st.source === 'other') {
                 dbText = T.geoDbOther;
             } else {
-                dbText = 'DB-IP Lite · ' + T.geoDbipFree + ' · ' + (st.ready ? T.geoDbipLoaded(st.month || '', h.fmt(st.addresses)) : T.geoDbipLater);
+                dbText = 'DB-IP Lite · ' + T.geoDbipFree + ' · ' + (st.ready ? T.geoDbipLoaded(st.month || '', h.fmt(st.addresses)) : (Q.fetch ? T.geoFetching : T.geoDbipLater));
                 dbControl = Q.showKey ? keyInput(T.geoKeyPh) + '<span class="muted small"><a href="https://www.maxmind.com/en/geolite2/signup" target="_blank" rel="noopener">' + h.esc(T.geoGetKey) + '</a></span>'
                     : '<button type="button" class="k-link small" style="min-height:32px" data-act="geo:showkey">' + h.esc(T.geoUseMaxmind) + '</button>';
             }
@@ -97,6 +100,12 @@
                     ' · <a href="https://db-ip.com" target="_blank" rel="noopener">IP Geolocation by DB-IP</a>') + '</span>' +
                 (dbControl ? '<span class="k-geo-key">' + dbControl + '</span>' : '') + '</div>' +
                 '</section>' + counter + '</div>';
+            if (st.source === 'dbip' && !st.ready && Q.status) {
+                /* no data yet: fetched right here, without waiting for Apply; a failure says why */
+                html += '<div class="k-banner ' + (failed ? 'warn' : 'info') + '" style="margin:0">' + h.icon(failed ? h.ICONS.warn : h.ICONS.info, 20) +
+                    '<span style="flex:1 1 auto">' + h.esc(failed || (Q.fetch ? T.geoFetching : T.geoNoData)) + '</span>' +
+                    '<button type="button" class="k-btn small" data-act="geo:fetch"' + (Q.fetch ? ' disabled' : '') + '>' + h.esc(Q.fetch ? T.geoFetching : (failed ? T.geoRetry : T.geoFetch)) + '</button></div>';
+            }
             if (g.enabled && allow) {
                 html += '<div class="muted small">' + h.esc(T.geoAllowSafety) + '</div>';
             }
@@ -125,6 +134,10 @@
             switch (name) {
                 case 'enabled': g.enabled = !g.enabled; return 'main';
                 case 'showkey': Q.showKey = true; return 'main';
+                case 'fetch':
+                    Q.fetch = { at: Date.now(), before: ((Q.status || {}).failed || {}).timestamp || '' };
+                    h.api('POST', '/api/inversapanel/geo/download', {}).then(function () {}, function () { Q.fetch = null; h.redraw('main'); });
+                    return 'main';
                 case 'mode': g.mode = v === 'allow' ? 'allow' : 'block'; Q.search = ''; return 'main';
                 case 'vpnexempt': g.vpnexempt = !g.vpnexempt; return 'main';
                 case 'dir': g.direction = v; return 'main';

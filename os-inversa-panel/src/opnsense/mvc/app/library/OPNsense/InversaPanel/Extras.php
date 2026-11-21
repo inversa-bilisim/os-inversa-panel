@@ -97,6 +97,11 @@ class Extras
         if ($url === '' && is_file('/usr/local/share/GeoIP/inversapanel-dbip.json')) {
             $dbip = json_decode(file_get_contents('/usr/local/share/GeoIP/inversapanel-dbip.json'), true);
         }
+        /* the last try to fetch it did not work: why and when */
+        $failed = null;
+        if ($url === '' && is_file('/usr/local/share/GeoIP/inversapanel-dbip.failed.json')) {
+            $failed = json_decode(file_get_contents('/usr/local/share/GeoIP/inversapanel-dbip.failed.json'), true);
+        }
         $count = $url === '' ? (int)($dbip['address_count'] ?? 0) : (is_array($stats) ? (int)($stats['address_count'] ?? 0) : 0);
         return [
             'source' => $url === '' ? 'dbip' : (strpos($url, 'download.maxmind.com') !== false ? 'maxmind' : 'other'),
@@ -107,6 +112,7 @@ class Extras
             'addresses' => $count,
             'updated' => $url === '' ? ($dbip['timestamp'] ?? null) : (is_array($stats) ? ($stats['timestamp'] ?? null) : null),
             'month' => $dbip['month'] ?? null,
+            'failed' => is_array($failed) ? ['reason' => (string)($failed['reason'] ?? ''), 'timestamp' => (string)($failed['timestamp'] ?? '')] : null,
             'blocked_packets' => $blocked,
             /* "allow only" is not enforced before there is data for a country it lets in */
             'allow_data' => self::geoDataFor($allowed),

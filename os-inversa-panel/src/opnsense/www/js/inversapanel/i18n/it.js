@@ -388,7 +388,10 @@ window.InversaPanelI18n.it = {
     geoKeyReplace: 'Digitare una nuova chiave per sostituirla', geoGetKey: 'Come ottenere una chiave gratuita?',
     geoWaitDb: 'Il database è in download; il blocco inizia entro pochi minuti. Se richiede molto tempo, controllare la chiave.',
     geoDbipFree: 'gratuito, senza registrazione', geoDbipLoaded: function (m, n) { return 'dati ' + m + ' · ' + n + ' intervalli di indirizzi'; },
-    geoDbipLater: 'scaricati quando la limitazione viene attivata e applicata, aggiornati ogni mese',
+    geoFetch: 'Scarica ora', geoRetry: 'Riprova', geoFetching: 'Download dei dati dei paesi…',
+    geoNoData: 'I dati dei paesi non sono ancora stati scaricati. Si possono scaricare prima di attivare la restrizione; richiede circa un minuto.',
+    geoFail: { download: 'Impossibile scaricare i dati dei paesi: il firewall non ha raggiunto download.db-ip.com. Controllare la connessione a Internet e l’impostazione DNS e riprovare; viene ritentato automaticamente ogni ora.', incomplete: 'I dati dei paesi scaricati sembravano incompleti e non sono stati usati. Riprovare; viene ritentato automaticamente ogni ora.' },
+    geoDbipLater: 'non ancora scaricati; aggiornati ogni mese',
     geoUseMaxmind: 'Voglio usare la mia chiave MaxMind', geoDownloading: 'Download dei dati sui paesi; la limitazione inizia entro 1-2 minuti…',
     geoAfterApply: 'Premendo Applica, i dati gratuiti sui paesi (DB-IP Lite) vengono scaricati e la limitazione inizia entro 1-2 minuti.',
     /* DNS */
@@ -765,7 +768,7 @@ window.InversaPanelI18n.it = {
     t.qIdHint = 'Il suo indirizzo MAC potrebbe essere stato copiato. Accettalo se è tuo, altrimenti respingilo.';
     t.news['1.7.0'] = [['Controllo dell’identità dei dispositivi: un dispositivo con indirizzo MAC copiato viene notato; ricevi un avviso o la sua approvazione viene revocata (Impostazioni, disattivato per impostazione predefinita).', 'settings']];
     t.news['1.8.0'] = [['Modulo di rete più semplice: accesso a Internet sì o no e le reti con cui comunica. La tabella dei permessi in una sola direzione è in «Avanzate».', 'nets'], ['Le regole di rete ora valgono anche per IPv6: una rete con IPv6 non può più aggirare i blocchi o Internet disattivato tramite IPv6.', 'nets'], ['Fare clic sui numeri della panoramica: elencano i dispositivi online, le richieste DNS bloccate e gli avvisi di attacco.', '']];
-    t.news['1.9.0'] = [['La procedura guidata ha un nuovo passaggio «Internet»: il tipo di connessione e le sue impostazioni (PPPoE, IP fisso, dietro un modem) vengono chiesti alla prima configurazione.', 'wizard'], ['Gli inoltri porta ora si modificano nella propria riga (la matita).', 'pf'], ['Un secondo inoltro sulla stessa porta esterna viene rifiutato, indicando quale la occupa.', 'pf']];
+    t.news['1.9.0'] = [['La procedura guidata ha un nuovo passaggio «Internet»: il tipo di connessione e le sue impostazioni (PPPoE, IP fisso, dietro un modem) vengono chiesti alla prima configurazione.', 'wizard'], ['Gli inoltri porta ora si modificano nella propria riga (la matita).', 'pf'], ['Un secondo inoltro sulla stessa porta esterna viene rifiutato, indicando quale la occupa.', 'pf'], ['Paesi: i dati dei paesi si scaricano dalla pagina con «Scarica ora»; un download non riuscito ne indica il motivo e viene ritentato ogni ora.', 'geo']];
     t.wiz.wan = ['Connessione a Internet', 'Se Internet funziona, proseguire senza cambiare nulla. Altrimenti scegliere il tipo di connessione e inserirne i dati; queste impostazioni vengono applicate subito con il pulsante qui sotto e annullate se non si conferma entro 90 secondi.'];
     t.wizShort.wan = 'Internet';
 })(window.InversaPanelI18n.it);

@@ -136,7 +136,8 @@ window.InversaPanelI18n.en = {
         '1.9.0': [
             ['The setup wizard has a new Internet step: the kind of connection and its settings (PPPoE, static IP, behind a modem) are asked on first setup.', 'wizard'],
             ['Port forwards are now changed in their own row (the pencil).', 'pf'],
-            ['A second forward on the same outer port is refused, and you are told which one has it.', 'pf']
+            ['A second forward on the same outer port is refused, and you are told which one has it.', 'pf'],
+            ['Countries: the country data can be fetched with “Download now” on the page; a failed download says why and is tried again every hour.', 'geo']
         ],
         '1.8.0': [
             ['A simpler network form: internet access on or off, and the networks it talks to. The table for one-way permissions is under “Advanced”.', 'nets'],
@@ -583,7 +584,10 @@ window.InversaPanelI18n.en = {
     geoKeyReplace: 'Type a new key to replace it', geoGetKey: 'How to get a free key?',
     geoWaitDb: 'The database is downloading; blocking starts within a few minutes. If it takes long, check the key.',
     geoDbipFree: 'free, no sign-up', geoDbipLoaded: function (m, n) { return m + ' data · ' + n + ' address ranges'; },
-    geoDbipLater: 'downloaded when the restriction is switched on and applied, refreshed monthly',
+    geoFetch: 'Download now', geoRetry: 'Try again', geoFetching: 'Downloading the country data…',
+    geoNoData: 'The country data has not been downloaded yet. You can fetch it before switching the restriction on; it takes about a minute.',
+    geoFail: { download: 'The country data could not be downloaded: the firewall did not reach download.db-ip.com. Check the internet connection and the DNS setting and try again; it is tried again by itself every hour.', incomplete: 'The downloaded country data looked incomplete and was not used. Try again; it is tried again by itself every hour.' },
+    geoDbipLater: 'not downloaded yet; updated monthly',
     geoUseMaxmind: 'I want to use my own MaxMind key', geoDownloading: 'Downloading country data; the restriction starts within 1-2 minutes…',
     geoAfterApply: 'When you press Apply, the free country data (DB-IP Lite) is downloaded and the restriction starts within 1-2 minutes.',
     /* DNS */

@@ -388,7 +388,10 @@ window.InversaPanelI18n.es = {
     geoKeyReplace: 'Escriba una clave nueva para sustituirla', geoGetKey: '¿Cómo conseguir una clave gratuita?',
     geoWaitDb: 'La base de datos se está descargando; el bloqueo empezará en unos minutos. Si tarda mucho, compruebe la clave.',
     geoDbipFree: 'gratuito, sin registro', geoDbipLoaded: function (m, n) { return 'datos de ' + m + ' · ' + n + ' rangos de direcciones'; },
-    geoDbipLater: 'se descarga al activar y aplicar la restricción; se renueva cada mes',
+    geoFetch: 'Descargar ahora', geoRetry: 'Reintentar', geoFetching: 'Descargando los datos de países…',
+    geoNoData: 'Los datos de países aún no se han descargado. Puede obtenerlos antes de activar la restricción; tarda alrededor de un minuto.',
+    geoFail: { download: 'No se pudieron descargar los datos de países: el cortafuegos no alcanzó download.db-ip.com. Compruebe la conexión a internet y el ajuste de DNS y vuelva a intentarlo; se reintenta automáticamente cada hora.', incomplete: 'Los datos de países descargados parecían incompletos y no se usaron. Vuelva a intentarlo; se reintenta automáticamente cada hora.' },
+    geoDbipLater: 'aún no descargados; se actualizan cada mes',
     geoUseMaxmind: 'Quiero usar mi propia clave de MaxMind', geoDownloading: 'Descargando los datos de países; la restricción empezará en 1-2 minutos…',
     geoAfterApply: 'Al pulsar Aplicar se descargan los datos gratuitos de países (DB-IP Lite) y la restricción empieza en 1-2 minutos.',
     /* DNS */
@@ -876,7 +879,7 @@ window.InversaPanelI18n.es = {
     t.qIdHint = 'Puede que su dirección MAC se haya copiado. Acéptelo si es suyo; si no, recházelo.';
     t.news['1.7.0'] = [['Vigilancia de la identidad de los dispositivos: se detecta un dispositivo con una dirección MAC copiada; se le avisa o se retira su permiso (Ajustes, desactivada por defecto).', 'settings']];
     t.news['1.8.0'] = [['Formulario de red más sencillo: acceso a internet activado o desactivado y las redes con las que se comunica. La tabla de permisos en un solo sentido está en «Avanzado».', 'nets'], ['Las reglas de red ahora cubren IPv6: una red con IPv6 ya no puede saltarse los bloqueos ni el internet desactivado por IPv6.', 'nets'], ['Haga clic en las cifras del resumen: muestran los dispositivos en línea, las consultas DNS bloqueadas y las alertas de ataque.', '']];
-    t.news['1.9.0'] = [['El asistente de configuración tiene un nuevo paso «Internet»: el tipo de conexión y sus ajustes (PPPoE, IP fija, detrás de un módem) se piden en la primera configuración.', 'wizard'], ['Las redirecciones de puertos ahora se editan en su propia fila (el lápiz).', 'pf'], ['Una segunda redirección en el mismo puerto externo se rechaza y se indica cuál lo ocupa.', 'pf']];
+    t.news['1.9.0'] = [['El asistente de configuración tiene un nuevo paso «Internet»: el tipo de conexión y sus ajustes (PPPoE, IP fija, detrás de un módem) se piden en la primera configuración.', 'wizard'], ['Las redirecciones de puertos ahora se editan en su propia fila (el lápiz).', 'pf'], ['Una segunda redirección en el mismo puerto externo se rechaza y se indica cuál lo ocupa.', 'pf'], ['Países: los datos de países se pueden descargar en la página con «Descargar ahora»; una descarga fallida indica el motivo y se reintenta cada hora.', 'geo']];
     t.wiz.wan = ['Conexión a internet', 'Si su internet funciona, continúe sin cambiar nada. Si no, elija el tipo de conexión e introduzca sus datos; estos ajustes se aplican de inmediato con el botón de abajo y se deshacen si no los confirma en 90 segundos.'];
     t.wizShort.wan = 'Internet';
 })(window.InversaPanelI18n.es);
