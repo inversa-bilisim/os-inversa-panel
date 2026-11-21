@@ -57,6 +57,8 @@ class Overview
         $traffic = json_decode((string)$backend->configdRun('interface show traffic'), true) ?? [];
         $time = $traffic['time'] ?? microtime(true);
         $interfaces = [];
+        $devices = [];
+        $silent = false;
         /* the one-shot variant returns raw counters ("bytes received"), the stream variant inbytes/outbytes */
         foreach ($traffic['interfaces'] ?? $traffic as $key => $row) {
             if (is_array($row)) {
@@ -64,9 +66,44 @@ class Overview
                     'inbytes' => $row['inbytes'] ?? $row['bytes received'] ?? 0,
                     'outbytes' => $row['outbytes'] ?? $row['bytes transmitted'] ?? 0,
                 ];
+                $devices[$key] = (string)($row['device'] ?? '');
+                $silent = $silent || (float)$interfaces[$key]['inbytes'] == 0;
+            }
+        }
+        /*
+         * A network card that attack protection took over to block (Suricata on netmap) no longer
+         * counts in the system's own counters: they stay at nothing while traffic flows. The packet
+         * filter still counts what it sees on that interface, so its numbers are taken wherever
+         * they are the larger ones. Only asked for when a counter stands at nothing.
+         */
+        if ($silent) {
+            $pf = self::pfCounters((string)$backend->configdRun('inversapanel pfcounters'));
+            foreach ($interfaces as $key => $row) {
+                $seen = $pf[$devices[$key]] ?? null;
+                if ($seen !== null && $seen['in'] + $seen['out'] > (float)$row['inbytes'] + (float)$row['outbytes']) {
+                    $interfaces[$key] = ['inbytes' => $seen['in'], 'outbytes' => $seen['out']];
+                }
             }
         }
         return $interfaces;
+    }
+
+    /**
+     * "pfctl -vvsI" as [device => [in, out]] in bytes, passed and blocked, IPv4 and IPv6
+     */
+    public static function pfCounters($text)
+    {
+        $result = [];
+        $device = null;
+        foreach (explode("\n", (string)$text) as $line) {
+            if (preg_match('/^(\S+)\s*$/', $line, $m)) {
+                $device = $m[1];
+                $result[$device] = ['in' => 0, 'out' => 0];
+            } elseif ($device !== null && preg_match('/^\s+(In|Out)[46]\/(?:Pass|Block):\s+\[\s*Packets:\s*\d+\s+Bytes:\s*(\d+)/', $line, $m)) {
+                $result[$device][$m[1] === 'In' ? 'in' : 'out'] += (int)$m[2];
+            }
+        }
+        return $result;
     }
 
     /* ------------------------------------------------------------------ events */
