@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.3 (2026-11-21)
+
+- The top of the panel no longer moves when a page starts to scroll, and nothing of the page shows through above it: the panel now starts right below OPNsense's bar (the space OPNsense leaves above its pages is taken away while the top sticks).
+- The pages of a menu entry (Internet connection, Local networks, ...) are a second, quieter menu row with the open page underlined, instead of a row of buttons; the sticky top is lower by it.
+
 ## 1.9.2 (2026-11-21)
 
 - **The top of the panel stays in sight.** The name, the menu and the pages of the open menu entry (and with them the bar of pending changes with "Apply") stick below OPNsense's own bar while a page scrolls. On a phone or a low window they scroll away as before, the page needs the room there.

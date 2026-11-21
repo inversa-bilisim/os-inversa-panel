@@ -602,12 +602,22 @@
         stickTop();
     }
 
-    /* the top of the panel sticks right below OPNsense's own bar, when that one stays in place */
+    /*
+     * The top of the panel sticks right below OPNsense's own bar, when that one stays in place. The space
+     * OPNsense leaves above its pages is taken away then: the panel starts at the bar, so nothing of the
+     * page shows through above the top and the top does not move when the page starts to scroll.
+     */
     function stickTop() {
         var top = document.getElementById('k-top'), bar = document.querySelector('header.page-head, .page-head, header.navbar');
-        if (!top || !window.getComputedStyle) { return; }
+        if (!top || !root || !window.getComputedStyle) { return; }
         var fixed = bar && ['fixed', 'sticky'].indexOf(window.getComputedStyle(bar).position) >= 0;
-        top.style.setProperty('--k-stick', (fixed ? bar.offsetHeight : 0) + 'px');
+        var below = fixed ? bar.offsetHeight : 0;
+        top.style.setProperty('--k-stick', below + 'px');
+        root.style.marginTop = '';
+        var gap = window.getComputedStyle(top).position === 'sticky' ?
+            Math.round(root.getBoundingClientRect().top + (window.pageYOffset || 0) - below) : 0;
+        root.style.marginTop = gap > 0 && gap < 80 ? -gap + 'px' : '';
+        root.classList.toggle('k-flush', gap > 0 && gap < 80);
     }
 
     /* language dropdown, shared by header and settings; a UI preference that is saved at once */
@@ -2376,6 +2386,7 @@
                     }
                 });
             }
+            if (window.addEventListener) { window.addEventListener('resize', stickTop); }
             if (document.addEventListener) {
                 document.addEventListener('visibilitychange', function () {
                     if (!document.hidden) { loadHosts().then(refreshView, function () {}); }
