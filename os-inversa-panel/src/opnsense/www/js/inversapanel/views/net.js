@@ -253,7 +253,8 @@
             kv(T.netLink, n.mode === 'vlan' ? 'VLAN ' + n.vlan + ' · ' + n.port : n.port + ' · ' + T.untagged, true) +
             kv(T.netAddr, n.ip ? n.ip + '/' + n.subnet : '—', true) +
             kv('DHCP', range + (n.dhcp && n.dhcp.lease != null ? ' · ' + T.leaseShort(n.dhcp.lease) : ''), true) +
-            (n.isolated ? kv(T.isoRow, n.reach.length ? T.isoWith(n.reach.map(netName).join(', ')) : T.isoAlone) : '') +
+            kv(T.netInternet, n.internet === false ? T.off : T.on) +
+            kv(T.netTalks, n.reach.length ? n.reach.map(netName).join(', ') : (n.isolated ? T.talksNone : T.talksDefault)) +
             (n.limit ? kv(T.limTitle, n.down + ' / ' + n.up + ' Mbit/s', true) : '') +
             (n.approval ? kv(T.apprCard, T.on) : '') +
             '</div></section>';
@@ -304,11 +305,20 @@
             dhcp += '<span class="muted small">' + h.esc(T.edDhcpOff) + '</span>';
         }
 
+        /* the networks it talks to: picked ones both ways, the others cut off */
+        var orig = JSON.parse(N.formOrig), untouched = !isNew && !n.isolated && sameList(f.reach, orig.reach);
+        var talk = '<div class="k-nopt"><div class="k-nopt-text" style="padding-top:0"><b>' + h.esc(T.talkTitle) + '</b><span class="muted small">' + h.esc(T.talkSub) + '</span></div>' +
+            '<div class="k-ninline k-ntalk">' + (others.length ? others.map(function (x) {
+                var on = f.reach.indexOf(x.key) >= 0;
+                return '<button type="button" class="k-chip' + (on ? ' on' : '') + '" data-act="net:f-reach" data-v="' + x.key + '" aria-pressed="' + on + '">' + dot(x.color) + h.esc(x.name) + '</button>';
+            }).join('') : '<span class="muted small">' + h.esc(T.talkNoOthers) + '</span>') + '</div>' +
+            (untouched ? '<div class="muted small k-ntalk">' + h.esc(T.talkDefault) + '</div>' : '') + '</div>';
+
         var ok = f.name && parts(f.ip) && (!isNew || f.port) && (!f.limit || (Number(f.down) >= 1 && Number(f.up) >= 1)) && !N.busy && !h.countdown();
         var changed = isNew || JSON.stringify(f) !== N.formOrig;
         return '<section class="k-card k-edit k-nform"><div class="k-card-head"><h2>' + h.esc(isNew ? T.netAdd : T.edTitle(n.name)) + '</h2><span class="muted small">' + h.esc(T.netSafety) + '</span></div>' +
             '<div class="k-ngrid">' +
-            '<label class="k-nf"><span class="k-nl">' + h.esc(T.edName) + '</span><input type="text" maxlength="16" style="width:150px" autocomplete="off" data-input="net:f-name" value="' + h.esc(f.name) + '"></label>' +
+            '<label class="k-nf"><span class="k-nl">' + h.esc(T.edName) + '</span><input type="text" maxlength="16" style="width:300px;max-width:100%" autocomplete="off" data-input="net:f-name" value="' + h.esc(f.name) + '"></label>' +
             '<div class="k-nf"><span class="k-nl">' + h.esc(T.edColor) + '</span><div class="k-ncolors">' + (N.data.colors || []).map(function (c, i) {
                 return '<button type="button" class="k-ncolor' + (f.color.toLowerCase() === c.toLowerCase() ? ' on' : '') + '" style="background:' + h.esc(c) + '" data-act="net:f-color" data-v="' + h.esc(c) + '" aria-pressed="' + (f.color === c) + '" aria-label="' + h.esc(T.edColorN(i + 1)) + '"></button>';
             }).join('') + '</div></div>' +
@@ -316,11 +326,8 @@
             '<label class="k-nf"><span class="k-nl">' + h.esc(T.edGw) + '</span><input type="text" class="mono" style="width:150px" inputmode="decimal" autocomplete="off" data-input="net:f-ip" value="' + h.esc(f.ip) + '"></label>' +
             '<div class="k-nf"><span class="k-nl">DHCP</span><div class="k-ninline">' + dhcp + '</div></div>' +
             '</div>' +
+            '<div class="k-nopts">' + opt(f.internet, 'f-inet', T.inetTitle, T.inetSub) + talk + '</div>' +
             '<div class="k-nopts">' +
-            opt(f.isolated, 'f-iso', T.isoTitle, T.isoSub, f.isolated && others.length ? '<div class="k-ninline k-nsub"><span class="muted small">' + h.esc(T.isoReach) + '</span>' + others.map(function (x) {
-                var on = f.reach.indexOf(x.key) >= 0;
-                return '<button type="button" class="k-chip' + (on ? ' on' : '') + '" data-act="net:f-reach" data-v="' + x.key + '" aria-pressed="' + on + '">' + dot(x.color) + h.esc(x.name) + '</button>';
-            }).join('') + '</div>' : '') +
             opt(f.limit, 'f-limit', T.limTitle, T.limSub, f.limit ? '<div class="k-ninline k-nsub">' + mini(T.limDown, 'down', f.down, 64) + mini(T.limUp, 'up', f.up, 64) + '<span class="muted small">Mbit/s</span></div>' : '') +
             opt(f.approval, 'f-appr', T.edApproval, prot || f.approval ? T.edApprovalShort : T.edApprovalNotProtected, '', !(prot || f.approval)) +
             '</div>' +
@@ -338,7 +345,7 @@
             var d = n.dhcp || {};
             N.form = { key: n.key, name: n.name, color: n.color, mode: n.mode, port: n.port, vlan: String(n.vlan || ''), ip: n.ip, subnet: n.subnet, dhcp: !!n.dhcp,
                 from: d.from || '', to: d.to || '', lease: d.lease != null ? String(d.lease) : '',
-                isolated: !!n.isolated, reach: (n.reach || []).slice(), limit: !!n.limit, down: String(n.down), up: String(n.up), approval: !!n.approval };
+                isolated: !!n.isolated, reach: (n.reach || []).slice(), internet: n.internet !== false, limit: !!n.limit, down: String(n.down), up: String(n.up), approval: !!n.approval };
         } else {
             var used = [], taken = N.data.networks.map(function (x) { return x.color.toLowerCase(); });
             N.data.ports.forEach(function (x) { x.vlans.forEach(function (v) { used.push(Number(v.tag)); }); });
@@ -347,16 +354,23 @@
             var lanPort = (netByKey('lan') || {}).port || (N.data.ports[0] || {}).device;
             var free = (N.data.colors || []).filter(function (c) { return taken.indexOf(c.toLowerCase()) < 0; });
             N.form = { key: '', name: '', color: free[0] || (N.data.colors || ['#475569'])[0], mode: 'vlan', port: lanPort, vlan: String(tag), ip: '192.168.' + tag + '.1', subnet: 24, dhcp: true,
-                from: '', to: '', lease: '', isolated: true, reach: [], limit: false, down: '20', up: '5', approval: false };
+                from: '', to: '', lease: '', isolated: true, reach: [], internet: true, limit: false, down: '20', up: '5', approval: false };
             fillRange(N.form);
         }
         N.formOrig = JSON.stringify(N.form);
     }
 
+    function sameList(a, b) {
+        return a.slice().sort().join(',') === b.slice().sort().join(',');
+    }
+
     function saveForm() {
-        var f = N.form;
+        var f = N.form, orig = JSON.parse(N.formOrig);
         var item = { name: f.name, color: f.color, ip: f.ip, dhcp: f.dhcp, dhcp_from: f.dhcp ? f.from : '', dhcp_to: f.dhcp ? f.to : '', lease: f.dhcp ? f.lease : '',
-            isolated: f.isolated, reach: f.isolated ? f.reach : [], limit: f.limit, down: f.down, up: f.up, approval: f.approval };
+            limit: f.limit, down: f.down, up: f.up, approval: f.approval };
+        /* only what was changed: opening a network to rename it leaves its access decisions as they are */
+        if (!f.key || !sameList(f.reach, orig.reach)) { item.isolated = true; item.reach = f.reach; }
+        if (!f.key || f.internet !== orig.internet) { item.internet = f.internet; }
         if (!f.key) {
             item.mode = f.mode; item.port = f.port; item.vlan = f.vlan;
             netApply({ add: [item] });
@@ -372,7 +386,14 @@
         if (nets.length < 1) { return ''; }
         var cols = nets.map(function (n) { return n.key; }).concat(['wan']);
         var acc = draft().access;
-        return '<section class="k-card"><div><h2>' + h.esc(T.accTitle) + '</h2><div class="muted">' + h.esc(T.accSub) + '</div></div>' +
+        /* one-way decisions; the network form covers the usual both-ways case */
+        if (!N.accOpen) {
+            return '<div><button type="button" class="k-link small k-wan-advlink" data-act="net:accopen" aria-expanded="false">' +
+                '<span class="k-vchev">' + h.icon('M6 9l6 6 6-6', 14) + '</span>' + h.esc(T.accAdv) + '</button>' +
+                '<div class="muted small">' + h.esc(T.accAdvSub) + '</div></div>';
+        }
+        return '<section class="k-card"><div><h2><button type="button" class="k-wan-advhead" data-act="net:accopen" aria-expanded="true">' +
+            '<span class="k-vchev open">' + h.icon('M6 9l6 6 6-6', 16) + '</span>' + h.esc(T.accAdv) + '</button></h2><div class="muted">' + h.esc(T.accSub) + '</div></div>' +
             '<div style="overflow-x:auto"><table class="k-matrix"><thead><tr><th class="muted small">' + h.esc(T.accFrom) + '</th>' +
             cols.map(function (c) { return '<th>' + dot(colorOf(c)) + h.esc(netName(c)) + '</th>'; }).join('') + '</tr></thead><tbody>' +
             nets.map(function (r) {
@@ -464,7 +485,7 @@
                 case 'f-mode': N.form.mode = v; return 'main';
                 case 'f-port': N.form.port = v; return 'main';
                 case 'f-dhcp': N.form.dhcp = !N.form.dhcp; fillRange(N.form); return 'main';
-                case 'f-iso': N.form.isolated = !N.form.isolated; return 'main';
+                case 'f-inet': N.form.internet = !N.form.internet; return 'main';
                 case 'f-reach': N.form.reach = h.toggleInList(N.form.reach, v); return 'main';
                 case 'f-limit': N.form.limit = !N.form.limit; return 'main';
                 case 'f-appr': N.form.approval = !N.form.approval; return 'main';
@@ -472,6 +493,7 @@
                 case 'delete':
                     if (window.confirm(t().edDeleteConfirm(netName(v)))) { netApply({ 'delete': [v] }); }
                     return null;
+                case 'accopen': N.accOpen = !N.accOpen; return 'main';
                 case 'cell':
                     /* default (OPNsense rules) -> allowed -> blocked -> default */
                     var acc = draft().access, cur = acc[v];

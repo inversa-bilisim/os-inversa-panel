@@ -92,8 +92,9 @@ class InversaPanel extends BaseModel
     }
 
     /**
-     * Isolate a network, or end its isolation.
-     *  - isolated: it talks to the networks in $reach (both directions) and to no other; internet stays open
+     * Isolate a network, or end its isolation. The internet is a decision of its own (setAccess "wan").
+     *  - isolated: it talks to the networks in $reach (both directions) and to no other; a one-way
+     *    decision made in the access table for a network not in $reach stays as it is
      *  - isolation ended: its decisions go back to OPNsense's own rules, except towards networks that
      *    are isolated themselves and did not choose it
      *  - was not isolated and is not: nothing is touched
@@ -108,9 +109,7 @@ class InversaPanel extends BaseModel
             /* nothing to end: decisions made by hand in the access table stay as they are */
             return;
         }
-        if (!$isolated) {
-            $this->setAccess($key, 'wan', null);
-        }
+        $map = $this->accessMap();
         foreach ($others as $other) {
             if ($other === $key) {
                 continue;
@@ -118,6 +117,16 @@ class InversaPanel extends BaseModel
             $node = $this->networkNode($other);
             $otherIsolated = $node !== null && !$node->isolated->isEmpty();
             if ($isolated) {
+                $out = !empty($map["$key>$other"]);
+                $in = !empty($map["$other>$key"]);
+                if (!in_array($other, $reach) && $out !== $in) {
+                    /*
+                     * allowed one way only ("the home network may reach the cameras"): kept, and the
+                     * other way shut, as the internet rule after it would let it through otherwise
+                     */
+                    $this->setAccess($out ? $other : $key, $out ? $key : $other, false);
+                    continue;
+                }
                 $allow = in_array($other, $reach);
             } elseif ($otherIsolated) {
                 $allow = in_array($key, $this->reachOf($other, $others));
@@ -126,9 +135,6 @@ class InversaPanel extends BaseModel
             }
             $this->setAccess($key, $other, $allow);
             $this->setAccess($other, $key, $allow);
-        }
-        if ($isolated) {
-            $this->setAccess($key, 'wan', true);
         }
     }
 

@@ -226,9 +226,10 @@ window.InversaPanelI18n.de = {
     edApprovalNote: 'Wenn Sie dies einschalten, gelten die bisher gesehenen Geräte als freigegeben; nur Geräte, die sich später verbinden, müssen warten. Die Freigabe richtet sich nach der MAC-Adresse. Verkehr zwischen Geräten am selben Switch oder WLAN läuft nicht über die Firewall; um auch das zu unterbinden, aktivieren Sie an Ihrem Access Point die „Client-Isolation“.',
     edApprovalNotProtected: 'Dieses Netzwerk gehört nicht zu den Netzwerken, die Inversa Panel schützt. Fügen Sie es zuerst unter Einstellungen › Geschützte Netzwerke hinzu.',
     netMain: 'Hauptnetzwerk', netDevCount: function (n) { return n === 1 ? '1 Gerät verbunden' : n + ' Geräte verbunden'; },
-    isoRow: 'Andere Netzwerke', isoAlone: 'Isoliert', isoWith: function (l) { return 'Isoliert · erreicht ' + l; },
-    isoTitle: 'Von anderen Netzwerken isolieren', isoSub: 'Dieses Netzwerk kann nicht mit den anderen Netzwerken kommunizieren; das Internet bleibt offen.',
-    isoReach: 'Netzwerke, die es weiterhin erreicht, in beide Richtungen:',
+    inetTitle: 'Internetzugang', inetSub: 'Wenn aus, arbeiten die Geräte in diesem Netzwerk nur im lokalen Netz (geeignet für Kameras, Drucker, Smart Home).',
+    talkTitle: 'Netzwerke, mit denen es kommuniziert', talkSub: 'Mit den gewählten Netzwerken sind Verbindungen in beide Richtungen möglich. Zu nicht gewählten Netzwerken ist die Verbindung gesperrt.',
+    talkNoOthers: 'Es gibt noch keine anderen Netzwerke.',
+    talkDefault: 'Derzeit gelten für dieses Netzwerk die eigenen Regeln von OPNsense. Sobald Sie eine Auswahl treffen, verwaltet Inversa Panel seine Verbindungen zu den anderen Netzwerken.', netInternet: 'Internet', netTalks: 'Kommuniziert mit', talksNone: 'Keinem', talksDefault: 'OPNsense-Regeln',
     limTitle: 'Geschwindigkeitslimit', limSub: 'Gesamte Internetgeschwindigkeit dieses Netzwerks.', limDown: 'Download', limUp: 'Upload',
     edColor: 'Farbe', edColorN: function (n) { return 'Farbe ' + n; },
     edPort: 'Anschluss:', edConnFixed: 'Wie ein Netzwerk angeschlossen ist, lässt sich nach dem Erstellen nicht mehr ändern.', edRange: 'Adressbereich',
@@ -248,6 +249,7 @@ window.InversaPanelI18n.de = {
     accTitle: 'Zugriff zwischen Netzwerken', accSub: 'Darf das Netzwerk in der Zeile eine Verbindung zum Netzwerk in der Spalte aufbauen? Klicken Sie auf eine Zelle, um das zu ändern.',
     accFrom: 'Von ↓  Nach →', accState: { allow: 'Zugelassen', deny: 'Blockiert', 'default': 'OPNsense' },
     accLegend: '„OPNsense“: Inversa Panel greift nicht ein, es gelten Ihre bestehenden Firewall-Regeln.',
+    accAdv: 'Erweitert: Zugriffstabelle zwischen Netzwerken', accAdvSub: 'Für Freigaben in nur eine Richtung, z. B. das Heimnetz darf die IoT-Geräte erreichen, die IoT-Geräte aber nicht das Heimnetz.',
     portsSubRo: 'Die Netzwerkanschlüsse der Firewall und wofür jeder verwendet wird. Den Internet-Anschluss wählen Sie unter „Internetverbindung“, den Anschluss eines Netzwerks beim Hinzufügen.',
     portWan: 'Internet (WAN)', portTrunkOnly: 'Nur VLANs', portUnused: 'Unbenutzt',
     pfTitle: 'Portweiterleitung', pfSub: 'Öffnen Sie den Zugriff aus dem Internet auf ein Gerät in Ihrem Netzwerk. Die nötige Firewall-Regel wird automatisch hinzugefügt und wirkt sofort.',
@@ -891,4 +893,5 @@ window.InversaPanelI18n.de = {
     t.qIdTitle = function (n) { return n === 1 ? 'Die Identität von 1 Gerät hat sich geändert' : 'Die Identität von ' + n + ' Geräten hat sich geändert'; };
     t.qIdHint = 'Die MAC-Adresse wurde vielleicht kopiert. Übernehmen Sie es, wenn es Ihres ist, sonst weisen Sie es ab.';
     t.news['1.7.0'] = [['Überwachung der Geräteidentität: Ein Gerät mit kopierter MAC-Adresse fällt auf; Sie werden benachrichtigt oder die Freigabe wird zurückgenommen (Einstellungen, standardmäßig aus).', 'settings']];
+    t.news['1.8.0'] = [['Einfacheres Netzwerkformular: Internetzugang an oder aus und die Netzwerke, mit denen es kommuniziert. Die Tabelle für Freigaben in eine Richtung liegt unter „Erweitert“.', 'nets'], ['Netzwerkregeln gelten jetzt auch für IPv6: Ein Netzwerk mit IPv6 kann Sperren oder abgeschaltetes Internet nicht mehr über IPv6 umgehen.', 'nets'], ['Klicken Sie auf die Zahlen der Übersicht: Sie listen Online-Geräte, blockierte DNS-Anfragen und Angriffswarnungen auf.', '']];
 })(window.InversaPanelI18n.de);

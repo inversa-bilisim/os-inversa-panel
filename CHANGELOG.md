@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0 (2026-11-21)
+
+- **Network form, access part redone.** "Isolate from other networks" and its exceptions are replaced by two plain settings: **Internet access** (on/off) and **Networks it talks to** (the picked networks reach each other in both directions; the others are cut off). Internet off leaves the firewall itself (DHCP, DNS) and the picked networks. Access decisions are only written when that part of the form was changed, so renaming a network keeps its rules; a one-way permission made in the access table stays when the picked networks change. Network cards show "Internet" and "Talks to". The access table moved under **Advanced** (folded) and is meant for one-way permissions. The name field is twice as wide.
+- **Network rules cover IPv6.** The access rules between networks and the internet rule were written for IPv4 only, so on a network with an IPv6 prefix a blocked network, or one with internet off, could still get through over IPv6 (OPNsense's own rules let the LAN out over IPv6). They are now written for IPv4 and IPv6, like the device rules already were.
+- **Overview: the numbers open their lists.** Online devices opens Devices filtered on online; blocked DNS requests opens Logs › Internet history filtered on blocked (last 24 hours); attack alerts opens Logs › Attacks for today (or Attack protection when it is off).
+
 ## 1.7.2 (2026-11-14)
 
 - Overview: the country blocking tile now says what the number means ("2 countries allowed" or "2 countries blocked"); "Only 2 countries" read as if two were blocked.

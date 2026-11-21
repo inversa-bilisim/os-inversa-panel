@@ -31,7 +31,7 @@ Screenshots show sample data.
 
 **Network & Internet**
 - Internet connection: PPPoE, static address or behind a modem; VLAN tag, IPv6, MAC address, MTU; a connection test that runs by itself.
-- Local networks: add a network on a VLAN or its own port, with DHCP, a colour, isolation from other networks, a speed limit and approval of new devices. An access table decides which network may start connections to which.
+- Local networks: add a network on a VLAN or its own port, with DHCP, a colour, internet access on or off, the networks it talks to, a speed limit and approval of new devices. For one-way permissions, an access table decides which network may start connections to which.
 - DNS: local names for devices at home, and the servers the firewall asks (automatic, Cloudflare, Google, Quad9, AdGuard DNS or your own), optionally over TLS. Servers are tried before they are used.
 - Port forwarding in one line, with suggestions for common services.
 
@@ -133,13 +133,14 @@ Turkish, English, German, French, Spanish and Italian. "Automatic" follows OPNse
 
 ## Status
 
-Version 1.7.2. Developed and tested on a virtual OPNsense 26.7.8. Not yet tested on real hardware or lines:
+Version 1.8.0. Developed and tested on a virtual OPNsense 26.7.9. Not yet tested on real hardware or lines:
 
 - PPPoE (the test environment has no PPPoE server).
 - A WireGuard connection from a real phone or laptop; the generated configuration and the firewall rules were checked.
 - IPsec with other vendors' firewalls; it was tested between two OPNsense installations.
 - Blocking mode of attack protection on VLANs and physical network cards.
 - UPnP.
+- IPv6 from a real internet line: the network rules were checked with local IPv6 (ULA) addresses.
 
 The complete list of limits, and what each page writes where, is in the [reference](docs/reference.md).
 

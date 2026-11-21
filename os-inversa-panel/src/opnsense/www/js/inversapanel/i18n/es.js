@@ -226,9 +226,10 @@ window.InversaPanelI18n.es = {
     edApprovalNote: 'Al activarlo, los dispositivos vistos hasta ahora cuentan como aprobados; solo tienen que esperar los que se conecten después. La aprobación se hace por dirección MAC. El tráfico entre dispositivos del mismo switch o Wi-Fi no pasa por el cortafuegos; para impedirlo también, active el «aislamiento de clientes» en su punto de acceso.',
     edApprovalNotProtected: 'Esta red no es una de las redes que protege Inversa Panel. Añádala primero en Ajustes › Redes protegidas.',
     netMain: 'Red principal', netDevCount: function (n) { return n === 1 ? '1 dispositivo conectado' : n + ' dispositivos conectados'; },
-    isoRow: 'Otras redes', isoAlone: 'Aislada', isoWith: function (l) { return 'Aislada · se comunica con ' + l; },
-    isoTitle: 'Aislar de las demás redes', isoSub: 'Esta red no puede comunicarse con las demás redes; internet sigue abierto.',
-    isoReach: 'Redes con las que sigue comunicándose, en ambos sentidos:',
+    inetTitle: 'Acceso a internet', inetSub: 'Si está desactivado, los dispositivos de esta red solo funcionan en la red local (adecuado para cámaras, impresoras y hogar inteligente).',
+    talkTitle: 'Redes con las que se comunica', talkSub: 'Las redes que elija pueden conectarse con ella en ambos sentidos. Con las que no elija, la conexión queda cortada.',
+    talkNoOthers: 'Todavía no hay otras redes.',
+    talkDefault: 'Ahora mismo se aplican a esta red las reglas propias de OPNsense. En cuanto haga una elección, Inversa Panel gestionará su conexión con las demás redes.', netInternet: 'Internet', netTalks: 'Se comunica con', talksNone: 'Ninguna', talksDefault: 'Reglas de OPNsense',
     limTitle: 'Límite de velocidad', limSub: 'Velocidad total de internet de esta red.', limDown: 'Descarga', limUp: 'Subida',
     edColor: 'Color', edColorN: function (n) { return 'Color ' + n; },
     edPort: 'Puerto:', edConnFixed: 'La forma de conexión de una red no puede cambiarse después de crearla.', edRange: 'Rango de direcciones',
@@ -248,6 +249,7 @@ window.InversaPanelI18n.es = {
     accTitle: 'Acceso entre redes', accSub: '¿Puede la red de la fila iniciar una conexión hacia la de la columna? Haga clic en una celda para cambiarlo.',
     accFrom: 'Desde ↓  Hacia →', accState: { allow: 'Permitido', deny: 'Bloqueado', 'default': 'OPNsense' },
     accLegend: '«OPNsense»: Inversa Panel no interviene; se aplican sus reglas de cortafuegos existentes.',
+    accAdv: 'Avanzado: tabla de acceso entre redes', accAdvSub: 'Para permisos en un solo sentido; por ejemplo, la red de casa puede llegar a los dispositivos IoT, pero estos no a la red de casa.',
     portsSubRo: 'Los puertos de red del cortafuegos y para qué se usa cada uno. Elija el puerto de internet en «Conexión a internet» y el puerto de una red al añadirla.',
     portWan: 'Internet (WAN)', portTrunkOnly: 'Solo VLAN', portUnused: 'Sin usar',
     pfTitle: 'Redirección de puertos', pfSub: 'Abra el acceso desde internet a un dispositivo de su red. La regla de cortafuegos necesaria se añade automáticamente y funciona al instante.',
@@ -873,4 +875,5 @@ window.InversaPanelI18n.es = {
     t.qIdTitle = function (n) { return n === 1 ? 'Cambió la identidad de 1 dispositivo' : 'Cambió la identidad de ' + n + ' dispositivos'; };
     t.qIdHint = 'Puede que su dirección MAC se haya copiado. Acéptelo si es suyo; si no, recházelo.';
     t.news['1.7.0'] = [['Vigilancia de la identidad de los dispositivos: se detecta un dispositivo con una dirección MAC copiada; se le avisa o se retira su permiso (Ajustes, desactivada por defecto).', 'settings']];
+    t.news['1.8.0'] = [['Formulario de red más sencillo: acceso a internet activado o desactivado y las redes con las que se comunica. La tabla de permisos en un solo sentido está en «Avanzado».', 'nets'], ['Las reglas de red ahora cubren IPv6: una red con IPv6 ya no puede saltarse los bloqueos ni el internet desactivado por IPv6.', 'nets'], ['Haga clic en las cifras del resumen: muestran los dispositivos en línea, las consultas DNS bloqueadas y las alertas de ataque.', '']];
 })(window.InversaPanelI18n.es);

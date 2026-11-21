@@ -226,9 +226,10 @@ window.InversaPanelI18n.fr = {
     edApprovalNote: 'Lorsque vous activez cette option, les appareils vus jusqu’ici sont considérés comme approuvés ; seuls les appareils qui se connectent ensuite doivent attendre. L’approbation se fait par adresse MAC. Le trafic entre appareils d’un même commutateur ou d’un même Wi-Fi ne passe pas par le pare-feu ; pour l’empêcher aussi, activez l’« isolation des clients » sur votre point d’accès.',
     edApprovalNotProtected: 'Ce réseau ne fait pas partie des réseaux protégés par Inversa Panel. Ajoutez-le d’abord dans Paramètres › Réseaux protégés.',
     netMain: 'Réseau principal', netDevCount: function (n) { return n > 1 ? n + ' appareils connectés' : n + ' appareil connecté'; },
-    isoRow: 'Autres réseaux', isoAlone: 'Isolé', isoWith: function (l) { return 'Isolé · communique avec ' + l; },
-    isoTitle: 'Isoler des autres réseaux', isoSub: 'Ce réseau ne peut pas communiquer avec les autres réseaux ; Internet reste accessible.',
-    isoReach: 'Réseaux qu’il joint quand même, dans les deux sens :',
+    inetTitle: 'Accès à Internet', inetSub: 'Désactivé, les appareils de ce réseau ne fonctionnent que sur le réseau local (idéal pour caméras, imprimantes, maison connectée).',
+    talkTitle: 'Réseaux avec lesquels il communique', talkSub: 'Les réseaux choisis peuvent communiquer avec lui dans les deux sens. Les autres en sont coupés.',
+    talkNoOthers: 'Il n’y a pas encore d’autre réseau.',
+    talkDefault: 'Pour l’instant, les règles propres d’OPNsense s’appliquent à ce réseau. Dès que vous faites un choix, Inversa Panel gère ses connexions avec les autres réseaux.', netInternet: 'Internet', netTalks: 'Communique avec', talksNone: 'Aucun', talksDefault: 'Règles OPNsense',
     limTitle: 'Limite de débit', limSub: 'Débit Internet total de ce réseau.', limDown: 'Réception', limUp: 'Envoi',
     edColor: 'Couleur', edColorN: function (n) { return 'Couleur ' + n; },
     edPort: 'Port :', edConnFixed: 'Le mode de raccordement d’un réseau ne peut plus être modifié après sa création.', edRange: 'Plage d’adresses',
@@ -248,6 +249,7 @@ window.InversaPanelI18n.fr = {
     accTitle: 'Accès entre réseaux', accSub: 'Le réseau de la ligne peut-il ouvrir une connexion vers celui de la colonne ? Cliquez sur une case pour la modifier.',
     accFrom: 'De ↓  Vers →', accState: { allow: 'Autorisé', deny: 'Bloqué', 'default': 'OPNsense' },
     accLegend: '« OPNsense » : Inversa Panel n’intervient pas, vos règles de pare-feu existantes s’appliquent.',
+    accAdv: 'Avancé : tableau d’accès entre réseaux', accAdvSub: 'Pour des autorisations à sens unique ; par exemple, le réseau de la maison peut joindre les objets connectés, mais pas l’inverse.',
     portsSubRo: 'Les ports réseau du pare-feu et l’usage de chacun. Choisissez le port Internet dans « Connexion Internet » et le port d’un réseau au moment de l’ajouter.',
     portWan: 'Internet (WAN)', portTrunkOnly: 'VLAN uniquement', portUnused: 'Inutilisé',
     pfTitle: 'Redirection de port', pfSub: 'Ouvrez un accès depuis Internet vers un appareil de votre réseau. La règle de pare-feu nécessaire est ajoutée automatiquement et fonctionne aussitôt.',
@@ -870,4 +872,5 @@ window.InversaPanelI18n.fr = {
     t.qIdTitle = function (n) { return n === 1 ? 'L’identité d’1 appareil a changé' : 'L’identité de ' + n + ' appareils a changé'; };
     t.qIdHint = 'Son adresse MAC a peut-être été copiée. Acceptez-le s’il est à vous, sinon refusez-le.';
     t.news['1.7.0'] = [['Surveillance de l’identité des appareils : un appareil à l’adresse MAC copiée est repéré ; vous êtes prévenu ou son autorisation est retirée (Paramètres, désactivée par défaut).', 'settings']];
+    t.news['1.8.0'] = [['Formulaire de réseau simplifié : accès à Internet activé ou non, et les réseaux avec lesquels il communique. Le tableau des autorisations à sens unique est sous « Avancé ».', 'nets'], ['Les règles réseau couvrent désormais IPv6 : un réseau en IPv6 ne peut plus contourner les blocages ni l’Internet coupé par IPv6.', 'nets'], ['Cliquez sur les chiffres de la vue d’ensemble : ils listent les appareils en ligne, les requêtes DNS bloquées et les alertes d’attaque.', '']];
 })(window.InversaPanelI18n.fr);

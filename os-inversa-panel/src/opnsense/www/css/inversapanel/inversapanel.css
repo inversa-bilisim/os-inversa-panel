@@ -200,6 +200,9 @@
 .inversapanel .k-info { display: inline-flex; align-items: center; gap: 6px; background: var(--k-bg); border-radius: 8px; padding: 6px 10px; font-size: 13px; color: var(--k-text-2); }
 .inversapanel .k-kpis { display: flex; flex-wrap: wrap; gap: 16px; }
 .inversapanel .k-kpi { flex: 1 1 220px; background: var(--k-card); border: 1px solid var(--k-line); border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+.inversapanel .k-kpi-go { font: inherit; color: inherit; text-align: left; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.inversapanel .k-kpi-go:hover { border-color: var(--k-accent); box-shadow: 0 2px 8px rgba(0, 0, 0, .06); }
+.inversapanel .k-kpi-go:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
 .inversapanel .k-kpi-label { font-size: 13px; color: var(--k-muted); font-weight: 500; }
 .inversapanel .k-kpi-value { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
 .inversapanel .k-kpi-unit { font-size: 14px; color: var(--k-muted); margin-left: 6px; font-weight: 400; letter-spacing: 0; }
@@ -451,6 +454,7 @@
 .inversapanel .k-nopt-text b { display: block; font-size: 13px; font-weight: 600; }
 .inversapanel .k-nopt-text .muted { display: block; }
 .inversapanel .k-nsub { flex: 1 1 100%; padding-left: 54px; }
+.inversapanel .k-ntalk { flex: 1 1 100%; }
 .inversapanel .k-nfoot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
 .inversapanel .k-btn.k-danger { color: #9A3B0A; border-color: var(--k-warn-line); margin-right: auto; }
 @media (max-width: 640px) { .inversapanel .k-ngrid { grid-template-columns: minmax(0, 1fr); } }

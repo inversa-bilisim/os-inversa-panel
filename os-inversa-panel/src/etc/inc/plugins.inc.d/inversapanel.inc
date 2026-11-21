@@ -204,7 +204,9 @@ function inversapanel_firewall_ipsec(\OPNsense\Firewall\Plugin $fw, $mdl, $mappi
 
 /**
  * Access between networks. Only pairs the user explicitly set exist in the model; everything
- * else keeps following the regular OPNsense rules ("unmanaged").
+ * else keeps following the regular OPNsense rules ("unmanaged"). IPv4 and IPv6 alike: a network
+ * with an IPv6 prefix must not get around a decision over IPv6 (OPNsense's own rules let the
+ * LAN out over IPv6). NDP and DHCPv6 are let through by OPNsense's rules before these.
  */
 function inversapanel_firewall_access(\OPNsense\Firewall\Plugin $fw, $mdl, $mapping)
 {
@@ -225,7 +227,7 @@ function inversapanel_firewall_access(\OPNsense\Firewall\Plugin $fw, $mdl, $mapp
             'type' => $allow ? 'pass' : 'block',
             'interface' => $from,
             'direction' => 'in',
-            'ipprotocol' => 'inet',
+            'ipprotocol' => 'inet46',
             'quick' => true,
             'from' => $from,
             'to' => $to,
@@ -239,7 +241,7 @@ function inversapanel_firewall_access(\OPNsense\Firewall\Plugin $fw, $mdl, $mapp
             'type' => $allow ? 'pass' : 'block',
             'interface' => $from,
             'direction' => 'in',
-            'ipprotocol' => 'inet',
+            'ipprotocol' => 'inet46',
             'quick' => true,
             'from' => $from,
             'to' => '(self)',

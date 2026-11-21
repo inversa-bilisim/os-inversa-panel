@@ -997,17 +997,19 @@
         var wait = waitingCount(), usage = ov.usage || null;
         var used = usage ? bytes(usage['in'] + usage.out) : null;
         var kpis = [
-            [t.kpiOnline, fmt(online), '', t.kpiOnlineSub(S.hosts.length) + (wait ? ' · ' + o.waiting(wait) : '')],
+            [t.kpiOnline, fmt(online), '', t.kpiOnlineSub(S.hosts.length) + (wait ? ' · ' + o.waiting(wait) : ''), 'online'],
             [o.kpiBlocked, hours ? fmt(blockedToday) : '—', '',
-                hours ? (totalToday ? t.kpiBlockedSub(fmt(blockedToday / totalToday * 100, 1)) : o.noQueries) : (S.ov ? t.kpiNoStats : '…')],
+                hours ? (totalToday ? t.kpiBlockedSub(fmt(blockedToday / totalToday * 100, 1)) : o.noQueries) : (S.ov ? t.kpiNoStats : '…'), 'dns'],
             [o.kpiAlerts, ips && ips.available && ips.enabled ? fmt(ips.today) + (ips.more ? '+' : '') : '—', '',
                 !ips ? '…' : (!ips.available || !ips.enabled ? o.ipsOff :
-                    (ips.today ? (ips.blocked === ips.today ? o.allBlocked : o.someBlocked(ips.blocked)) + ' · ' + o.lastAt(when(ips.last)) : o.noAlerts))]
+                    (ips.today ? (ips.blocked === ips.today ? o.allBlocked : o.someBlocked(ips.blocked)) + ' · ' + o.lastAt(when(ips.last)) : o.noAlerts)),
+                ips && ips.available && !ips.enabled ? 'ips' : 'attacks']
         ];
+        /* a number opens the list it was counted from */
         html += '<div class="k-kpis">' + kpis.map(function (k) {
-            return '<div class="k-kpi"><div class="k-kpi-label">' + esc(k[0]) + '</div>' +
-                '<div class="k-kpi-value">' + esc(k[1]) + (k[2] ? '<span class="k-kpi-unit">' + esc(k[2]) + '</span>' : '') + '</div>' +
-                '<div class="muted">' + esc(k[3]) + '</div></div>';
+            return '<button type="button" class="k-kpi k-kpi-go" data-act="kpi" data-v="' + k[4] + '"><span class="k-kpi-label">' + esc(k[0]) + '</span>' +
+                '<span class="k-kpi-value">' + esc(k[1]) + (k[2] ? '<span class="k-kpi-unit">' + esc(k[2]) + '</span>' : '') + '</span>' +
+                '<span class="muted">' + esc(k[3]) + '</span></button>';
         }).join('') +
             '<div class="k-kpi"><div class="k-kpi-label">' + esc(o.kpiSpeed) + '</div><div class="k-kpi-value k-ov-two">' +
             '<span>↓ ' + esc(rate ? fmt(rate.down, 1) : '—') + '</span><span>↑ ' + esc(rate ? fmt(rate.up, 1) : '—') + '</span>' +
@@ -2049,6 +2051,24 @@
             case 'netfilter':
                 S.ui.net = v ? { key: v, name: el.getAttribute('data-n') || v.toUpperCase() } : null;
                 S.ui.sel = null;
+                break;
+            case 'kpi':
+                /* the overview's numbers: the devices that are there now, today's blocked requests, today's attacks */
+                if (v === 'online') {
+                    S.ui.net = null;
+                    S.ui.filter = 'online';
+                    S.ui.search = '';
+                    S.ui.page = 0;
+                    v = 'devices';
+                } else if (v === 'dns') {
+                    if (VIEWS.history && VIEWS.history.preset) { VIEWS.history.preset({ result: 'block', hours: 24, q: '' }); }
+                    v = 'history';
+                } else if (v === 'attacks') {
+                    if (VIEWS.attacks && VIEWS.attacks.preset) { VIEWS.attacks.preset({ days: 1, kind: '', q: '' }); }
+                }
+                openTab(v);
+                if (history.replaceState) { history.replaceState(null, '', '#' + S.tab); }
+                full = true;
                 break;
             case 'filter-reset':
                 S.ui.net = null;

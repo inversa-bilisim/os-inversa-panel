@@ -31,7 +31,7 @@ Ekran görüntülerindeki veriler örnektir.
 
 **Ağ ve İnternet**
 - İnternet bağlantısı: PPPoE, sabit IP ya da modem arkasında; VLAN etiketi, IPv6, MAC adresi, MTU; kendiliğinden çalışan bağlantı testi.
-- Yerel ağlar: VLAN üzerinde ya da ayrı portta ağ ekleme; DHCP, renk, diğer ağlardan izolasyon, hız sınırı ve yeni cihaz onayı. Hangi ağın hangisine bağlantı başlatabileceğini erişim tablosu belirler.
+- Yerel ağlar: VLAN üzerinde ya da ayrı portta ağ ekleme; DHCP, renk, internet erişimi açık/kapalı, haberleşebileceği ağlar, hız sınırı ve yeni cihaz onayı. Tek yönlü izinler için hangi ağın hangisine bağlantı başlatabileceğini erişim tablosu belirler.
 - DNS: iç ağdaki cihazlar için yerel adlar ve güvenlik duvarının soracağı sunucular (otomatik, Cloudflare, Google, Quad9, AdGuard DNS ya da kendi adresleriniz), isteğe bağlı şifreli (DNS over TLS). Sunucular kullanılmadan önce denenir.
 - Port yönlendirme: tek satırda, yaygın servisler için önerilerle.
 
@@ -133,13 +133,14 @@ Türkçe, İngilizce, Almanca, Fransızca, İspanyolca ve İtalyanca. "Otomatik"
 
 ## Durum
 
-Sürüm 1.7.2. Sanal bir OPNsense 26.7.8 üzerinde geliştirildi ve denendi. Gerçek donanım ya da hat üzerinde henüz denenmeyenler:
+Sürüm 1.8.0. Sanal bir OPNsense 26.7.9 üzerinde geliştirildi ve denendi. Gerçek donanım ya da hat üzerinde henüz denenmeyenler:
 
 - PPPoE (test ortamında PPPoE sunucusu yok).
 - Gerçek bir telefon ya da bilgisayardan WireGuard bağlantısı; üretilen yapılandırma ve güvenlik duvarı kuralları doğrulandı.
 - Başka marka güvenlik duvarlarıyla IPsec; iki OPNsense kurulumu arasında denendi.
 - Saldırı önlemenin engelleme modu, VLAN'larda ve fiziksel ağ kartlarında.
 - UPnP.
+- Gerçek bir internet hattından gelen IPv6: ağ kuralları yerel IPv6 (ULA) adresleriyle doğrulandı.
 
 Sınırların tam listesi ve her sayfanın nereye ne yazdığı [başvuru belgesinde](docs/reference.tr.md).
 

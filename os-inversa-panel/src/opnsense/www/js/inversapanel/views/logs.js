@@ -379,6 +379,8 @@
             key: page,
             label: label,
             load: function () { L[page].page = 0; return load(page); },
+            /* opened from an overview number: with that number's filters */
+            preset: function (filters) { Object.assign(L[page], filters); },
             render: render,
             act: function (name, el) {
                 if (commonAct(page, name, el)) { return null; }

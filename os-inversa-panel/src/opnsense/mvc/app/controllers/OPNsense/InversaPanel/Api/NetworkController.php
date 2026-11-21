@@ -59,6 +59,10 @@ class NetworkController extends ApiControllerBase
             $reach = array_values(array_intersect(is_array($item['reach'] ?? null) ? $item['reach'] : [], $internal));
             $mdl->setIsolation($key, $flag($item['isolated']), $reach, $internal);
         }
+        /* may the network reach the internet at all; without it, only the networks it talks to */
+        if (isset($item['internet'])) {
+            $mdl->setAccess($key, 'wan', $flag($item['internet']));
+        }
     }
 
     public function getAction()
@@ -138,10 +142,10 @@ class NetworkController extends ApiControllerBase
                 $node = $mdl->networkNode($key, true);
                 $node->created->setValue('1');
                 $mdl->general->interfaces->setValue(implode(',', array_unique(array_merge($mdl->getProtectedInterfaces(), [$key]))));
-                /* a new network is kept apart from the others unless said otherwise; it always reaches the internet */
+                /* a new network is kept apart from the others and reaches the internet, unless said otherwise */
                 $item['isolated'] = $item['isolated'] ?? true;
+                $item['internet'] = $item['internet'] ?? true;
                 self::networkSettings($mdl, $key, $item, $internal);
-                $mdl->setAccess($key, 'wan', true);
                 $internal[] = $key;
             }
             foreach (is_array($update) ? $update : [] as $key => $item) {

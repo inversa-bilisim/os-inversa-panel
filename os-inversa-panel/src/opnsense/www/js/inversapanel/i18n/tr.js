@@ -133,6 +133,11 @@ window.InversaPanelI18n.tr = {
     newsTitle: function (v) { return 'Inversa Panel ' + v + ' sürümünde neler yeni'; }, newsSub: 'Panel güncellendi. Kısaca yenilikler:',
     newsOk: 'Tamam', newsGo: 'Göster', newsHeading: 'Neler yeni',
     news: {
+        '1.8.0': [
+            ['Yeni ağ formu sadeleşti: internet erişimi açık/kapalı ve haberleşebileceği ağlar. Tek yönlü izinler için tablo “Gelişmiş” altında.', 'nets'],
+            ['Ağ kuralları artık IPv6’yı da kapsar: IPv6 kullanan bir ağ, engelleri ve kapalı interneti IPv6 üzerinden aşamaz.', 'nets'],
+            ['Genel bakıştaki sayılara tıklayın: çevrimiçi cihazları, engellenen DNS isteklerini ve saldırı uyarılarını listeler.', '']
+        ],
         '1.7.0': [
             ['Cihaz kimliği takibi: MAC adresi kopyalanmış bir cihaz fark edilir; haber verilir ya da onayı geri alınır (Ayarlar, varsayılan kapalı).', 'settings']
         ],
@@ -411,9 +416,10 @@ window.InversaPanelI18n.tr = {
     edApprovalNote: 'Açtığınızda şu ana kadar görülen cihazlar onaylı sayılır; yalnızca sonradan bağlananlar bekler. Onay MAC adresine göre verilir. Aynı anahtara (switch) ya da Wi-Fi’ye bağlı cihazların birbirine doğrudan erişimi güvenlik duvarından geçmez; bunu da kesmek için erişim noktanızda “istemci yalıtımı”nı açın.',
     edApprovalNotProtected: 'Bu ağ Inversa Panel’in korunan ağları arasında değil. Önce Ayarlar › Korunan ağlar’dan ekleyin.',
     netMain: 'Ana ağ', netDevCount: function (n) { return n + ' cihaz bağlı'; },
-    isoRow: 'Diğer ağlar', isoAlone: 'İzole', isoWith: function (l) { return 'İzole · ' + l + ' ile konuşur'; },
-    isoTitle: 'Diğer ağlardan izole et', isoSub: 'Bu ağ diğer ağlarla konuşamaz; internet açık kalır.',
-    isoReach: 'Yine de karşılıklı erişebileceği ağlar:',
+    inetTitle: 'İnternet erişimi', inetSub: 'Kapalıysa bu ağdaki cihazlar yalnızca yerel ağda çalışır (kamera, yazıcı, akıllı ev için uygun).',
+    talkTitle: 'Haberleşebileceği ağlar', talkSub: 'Seçtiğiniz ağlarla karşılıklı bağlantı açılır. Seçmediğiniz ağlarla bu ağ arasında bağlantı kapalıdır.',
+    talkNoOthers: 'Henüz başka ağ yok.',
+    talkDefault: 'Şu an bu ağ için OPNsense’in kendi kuralları geçerli. Bir seçim yaptığınızda bu ağın diğer ağlarla bağlantısını Inversa Panel yönetir.', netInternet: 'İnternet', netTalks: 'Haberleştiği ağlar', talksNone: 'Hiçbiri', talksDefault: 'OPNsense kuralları',
     limTitle: 'Hız sınırı', limSub: 'Bu ağın toplam internet hızı.', limDown: 'İndirme', limUp: 'Yükleme',
     edColor: 'Renk', edColorN: function (n) { return 'Renk ' + n; },
     edPort: 'Port:', edConnFixed: 'Bağlantı şekli ağ oluşturulduktan sonra değişmez.', edRange: 'Dağıtım aralığı',
@@ -433,6 +439,7 @@ window.InversaPanelI18n.tr = {
     accTitle: 'Ağlar arası erişim', accSub: 'Satırdaki ağ, sütundaki yere bağlantı başlatabilir mi? Hücreye tıklayarak değiştirin.',
     accFrom: 'Kimden ↓  Kime →', accState: { allow: 'İzinli', deny: 'Engelli', 'default': 'OPNsense' },
     accLegend: '“OPNsense”: Inversa Panel karışmaz, mevcut güvenlik duvarı kurallarınız geçerlidir.',
+    accAdv: 'Gelişmiş: ağlar arası erişim tablosu', accAdvSub: 'Tek yönlü izinler için; örneğin ev ağı IoT cihazlarına erişsin ama IoT cihazları ev ağına erişemesin.',
     portsSubRo: 'Güvenlik duvarının ağ portları ve ne için kullanıldıkları. İnternet portunu “İnternet bağlantısı”ndan, ağların portunu ağ eklerken seçebilirsiniz.',
     portWan: 'İnternet (WAN)', portTrunkOnly: 'Sadece VLAN', portUnused: 'Kullanılmıyor',
     pfTitle: 'Port yönlendirme', pfSub: 'İnternetten ağınızdaki bir cihaza erişim açın. Gerekli güvenlik duvarı kuralı otomatik eklenir ve hemen geçerli olur.',

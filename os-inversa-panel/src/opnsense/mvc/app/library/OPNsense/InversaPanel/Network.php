@@ -225,10 +225,12 @@ class Network
             $port['vlans'] = $roles[$dev]['vlans'] ?? [];
         }
 
-        /* the networks an isolated one still talks to */
+        /* the networks one talks to (allowed both ways), and whether it reaches the internet */
         $keys = array_column($networks, 'key');
+        $access = $mdl->accessMap();
         foreach ($networks as &$entry) {
-            $entry['reach'] = $entry['isolated'] ? $mdl->reachOf($entry['key'], $keys) : [];
+            $entry['reach'] = $mdl->reachOf($entry['key'], $keys);
+            $entry['internet'] = ($access[$entry['key'] . '>wan'] ?? true) !== false;
         }
         unset($entry);
 

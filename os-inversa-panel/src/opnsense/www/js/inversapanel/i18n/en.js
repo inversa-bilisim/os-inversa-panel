@@ -133,6 +133,11 @@ window.InversaPanelI18n.en = {
     newsTitle: function (v) { return 'What is new in Inversa Panel ' + v; }, newsSub: 'The panel was updated. The news in short:',
     newsOk: 'Got it', newsGo: 'Show', newsHeading: 'What is new',
     news: {
+        '1.8.0': [
+            ['A simpler network form: internet access on or off, and the networks it talks to. The table for one-way permissions is under “Advanced”.', 'nets'],
+            ['Network rules now cover IPv6: a network with IPv6 can no longer get around blocks or internet off over IPv6.', 'nets'],
+            ['Click the numbers on the overview: they list online devices, blocked DNS requests and attack alerts.', '']
+        ],
         '1.7.0': [
             ['Device identity watch: a device with a copied MAC address is noticed; you are told or its approval is taken back (Settings, off by default).', 'settings']
         ],
@@ -413,9 +418,10 @@ window.InversaPanelI18n.en = {
     edApprovalNote: 'When you switch this on, the devices seen so far count as approved; only devices connecting later have to wait. Approval goes by MAC address. Traffic between devices on the same switch or Wi-Fi does not pass the firewall; to stop that as well, enable “client isolation” on your access point.',
     edApprovalNotProtected: 'This network is not one of the networks Inversa Panel protects. Add it under Settings › Protected networks first.',
     netMain: 'Main network', netDevCount: function (n) { return n === 1 ? '1 device connected' : n + ' devices connected'; },
-    isoRow: 'Other networks', isoAlone: 'Isolated', isoWith: function (l) { return 'Isolated · talks to ' + l; },
-    isoTitle: 'Isolate from other networks', isoSub: 'This network cannot talk to the other networks; the internet stays open.',
-    isoReach: 'Networks it still reaches, in both directions:',
+    inetTitle: 'Internet access', inetSub: 'When off, the devices on this network work on the local network only (good for cameras, printers, smart home).',
+    talkTitle: 'Networks it talks to', talkSub: 'The networks you pick can connect with it in both directions. The networks you do not pick are cut off from it.',
+    talkNoOthers: 'There are no other networks yet.',
+    talkDefault: 'Right now OPNsense’s own rules apply to this network. Once you make a choice, Inversa Panel manages how it connects to the other networks.', netInternet: 'Internet', netTalks: 'Talks to', talksNone: 'None', talksDefault: 'OPNsense rules',
     limTitle: 'Speed limit', limSub: 'Total internet speed of this network.', limDown: 'Download', limUp: 'Upload',
     edColor: 'Colour', edColorN: function (n) { return 'Colour ' + n; },
     edPort: 'Port:', edConnFixed: 'How a network is connected cannot be changed after it was created.', edRange: 'Address range',
@@ -435,6 +441,7 @@ window.InversaPanelI18n.en = {
     accTitle: 'Access between networks', accSub: 'Can the network in the row start a connection to the column? Click a cell to change it.',
     accFrom: 'From ↓  To →', accState: { allow: 'Allowed', deny: 'Blocked', 'default': 'OPNsense' },
     accLegend: '“OPNsense”: Inversa Panel stays out, your existing firewall rules apply.',
+    accAdv: 'Advanced: access table between networks', accAdvSub: 'For one-way permissions; for example the home network may reach the IoT devices, but the IoT devices may not reach the home network.',
     portsSubRo: 'The firewall’s network ports and what each is used for. Choose the internet port under “Internet connection” and a network’s port when adding it.',
     portWan: 'Internet (WAN)', portTrunkOnly: 'VLANs only', portUnused: 'Unused',
     pfTitle: 'Port forwarding', pfSub: 'Open access from the internet to a device on your network. The required firewall rule is added automatically and works at once.',

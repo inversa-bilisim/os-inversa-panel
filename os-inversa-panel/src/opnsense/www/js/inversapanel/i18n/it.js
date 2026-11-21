@@ -226,9 +226,10 @@ window.InversaPanelI18n.it = {
     edApprovalNote: 'Attivando questa opzione, i dispositivi visti finora risultano approvati; solo quelli che si collegano in seguito devono attendere. L’approvazione si basa sull’indirizzo MAC. Il traffico tra dispositivi sullo stesso switch o Wi-Fi non passa dal firewall; per fermare anche quello, attivare l’«isolamento dei client» sull’access point.',
     edApprovalNotProtected: 'Questa rete non è tra quelle protette da Inversa Panel. Aggiungerla prima in Impostazioni › Reti protette.',
     netMain: 'Rete principale', netDevCount: function (n) { return n === 1 ? '1 dispositivo connesso' : n + ' dispositivi connessi'; },
-    isoRow: 'Altre reti', isoAlone: 'Isolata', isoWith: function (l) { return 'Isolata · comunica con ' + l; },
-    isoTitle: 'Isola dalle altre reti', isoSub: 'Questa rete non può comunicare con le altre reti; Internet resta disponibile.',
-    isoReach: 'Reti che raggiunge comunque, in entrambe le direzioni:',
+    inetTitle: 'Accesso a Internet', inetSub: 'Se disattivato, i dispositivi di questa rete funzionano solo in rete locale (adatto a telecamere, stampanti, casa intelligente).',
+    talkTitle: 'Reti con cui comunica', talkSub: 'Le reti scelte possono comunicare con essa in entrambe le direzioni. Quelle non scelte restano escluse.',
+    talkNoOthers: 'Non ci sono ancora altre reti.',
+    talkDefault: 'Al momento per questa rete valgono le regole di OPNsense. Appena si fa una scelta, Inversa Panel gestisce i suoi collegamenti con le altre reti.', netInternet: 'Internet', netTalks: 'Comunica con', talksNone: 'Nessuna', talksDefault: 'Regole di OPNsense',
     limTitle: 'Limite di velocità', limSub: 'Velocità Internet totale di questa rete.', limDown: 'Download', limUp: 'Upload',
     edColor: 'Colore', edColorN: function (n) { return 'Colore ' + n; },
     edPort: 'Porta:', edConnFixed: 'Il modo in cui una rete è collegata non si può cambiare dopo la creazione.', edRange: 'Intervallo di indirizzi',
@@ -248,6 +249,7 @@ window.InversaPanelI18n.it = {
     accTitle: 'Accesso tra le reti', accSub: 'La rete nella riga può avviare una connessione verso la colonna? Fare clic su una cella per cambiarla.',
     accFrom: 'Da ↓  A →', accState: { allow: 'Consentito', deny: 'Bloccato', 'default': 'OPNsense' },
     accLegend: '«OPNsense»: Inversa Panel non interviene, valgono le regole del firewall esistenti.',
+    accAdv: 'Avanzate: tabella di accesso tra le reti', accAdvSub: 'Per permessi in una sola direzione; ad esempio la rete di casa raggiunge i dispositivi IoT, ma questi non raggiungono la rete di casa.',
     portsSubRo: 'Le porte di rete del firewall e a cosa serve ciascuna. La porta Internet si sceglie in «Connessione Internet», quella di una rete quando la si aggiunge.',
     portWan: 'Internet (WAN)', portTrunkOnly: 'Solo VLAN', portUnused: 'Non usata',
     pfTitle: 'Inoltro porte', pfSub: 'Apre l’accesso da Internet a un dispositivo della rete. La regola del firewall necessaria viene aggiunta automaticamente e funziona subito.',
@@ -762,4 +764,5 @@ window.InversaPanelI18n.it = {
     t.qIdTitle = function (n) { return n === 1 ? 'L’identità di 1 dispositivo è cambiata' : 'L’identità di ' + n + ' dispositivi è cambiata'; };
     t.qIdHint = 'Il suo indirizzo MAC potrebbe essere stato copiato. Accettalo se è tuo, altrimenti respingilo.';
     t.news['1.7.0'] = [['Controllo dell’identità dei dispositivi: un dispositivo con indirizzo MAC copiato viene notato; ricevi un avviso o la sua approvazione viene revocata (Impostazioni, disattivato per impostazione predefinita).', 'settings']];
+    t.news['1.8.0'] = [['Modulo di rete più semplice: accesso a Internet sì o no e le reti con cui comunica. La tabella dei permessi in una sola direzione è in «Avanzate».', 'nets'], ['Le regole di rete ora valgono anche per IPv6: una rete con IPv6 non può più aggirare i blocchi o Internet disattivato tramite IPv6.', 'nets'], ['Fare clic sui numeri della panoramica: elencano i dispositivi online, le richieste DNS bloccate e gli avvisi di attacco.', '']];
 })(window.InversaPanelI18n.it);
