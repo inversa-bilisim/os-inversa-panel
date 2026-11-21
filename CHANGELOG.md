@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.2 (2026-11-21)
+
+- **The top of the panel stays in sight.** The name, the menu and the pages of the open menu entry (and with them the bar of pending changes with "Apply") stick below OPNsense's own bar while a page scrolls. On a phone or a low window they scroll away as before, the page needs the room there.
+- **DNS › Local names: change a name in its row.** The pencil turns the row into fields (name, address, "subdomains too"); Enter or "Save" takes it, like every change on that page it waits for "Apply". A name that another record already has is refused.
+- DNS › Local names: the list is tighter (rows about a third of their former height).
+
 ## 1.9.1 (2026-11-21)
 
 - **"Enforce DNS" covers IPv6.** The redirect of plain DNS to the firewall's resolver was written for IPv4 only, so a device with an IPv6 DNS server typed in got around the DNS filter on a network with IPv6. Networks that have an IPv6 address now get the same redirect over IPv6 (UDP and TCP), to the network's own address: FreeBSD does not answer a redirect to `::1`. Networks without IPv6 are unchanged.

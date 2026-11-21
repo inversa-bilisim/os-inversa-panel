@@ -586,9 +586,10 @@
             return;
         }
         root.innerHTML =
-            '<div id="k-header"></div>' +
+            /* the name, the menu and the pages of the open entry stay in sight while the page scrolls */
+            '<div class="k-top" id="k-top"><div id="k-header"></div>' +
             '<nav class="k-tabs" id="k-tabs" aria-label="Inversa Panel"></nav>' +
-            '<div id="k-subtabs"></div>' +
+            '<div id="k-subtabs"></div></div>' +
             '<div id="k-confirm"></div>' +
             '<div id="k-main"></div>';
         renderHeader();
@@ -598,6 +599,15 @@
         renderBanners();
         renderMain();
         syncMenu();
+        stickTop();
+    }
+
+    /* the top of the panel sticks right below OPNsense's own bar, when that one stays in place */
+    function stickTop() {
+        var top = document.getElementById('k-top'), bar = document.querySelector('header.page-head, .page-head, header.navbar');
+        if (!top || !window.getComputedStyle) { return; }
+        var fixed = bar && ['fixed', 'sticky'].indexOf(window.getComputedStyle(bar).position) >= 0;
+        top.style.setProperty('--k-stick', (fixed ? bar.offsetHeight : 0) + 'px');
     }
 
     /* language dropdown, shared by header and settings; a UI preference that is saved at once */

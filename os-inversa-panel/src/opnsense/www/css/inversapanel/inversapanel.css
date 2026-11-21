@@ -58,6 +58,14 @@
 .inversapanel .k-half { flex: 1 1 420px; min-width: 0; }
 
 /* header */
+/* on a screen with room for it the top stays in sight; a phone needs the space for the page */
+@media (min-width: 992px) and (min-height: 620px) {
+    .inversapanel .k-top { position: sticky; top: var(--k-stick, 0px); z-index: 30; background: var(--k-bg); margin: -20px -20px 0; padding: 12px 20px 0; box-shadow: 0 8px 10px -10px rgba(24, 33, 47, .25); }
+    .inversapanel .k-top .k-header { min-height: 48px; margin-bottom: 8px; }
+    .inversapanel .k-top .k-tabs { margin-bottom: 12px; }
+    .inversapanel .k-top .k-subtabs { margin: 0 0 12px; }
+    .inversapanel .k-top + #k-main, .inversapanel #k-main { padding-top: 8px; }
+}
 .inversapanel .k-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; min-height: 64px; }
 .inversapanel .k-brand { display: flex; align-items: center; gap: 12px; }
 /* the mark already is a rounded tile in the accent colour (img/inversapanel/logo.png, 128 px for sharp high-density screens) */
@@ -537,6 +545,16 @@
 .inversapanel .k-dns-wild { flex: 1 1 260px; display: flex; align-items: center; gap: 6px; min-height: 44px; }
 .inversapanel .k-dns-wild b { font-weight: 600; font-size: 13px; }
 .inversapanel .k-dns-wild .muted { font-size: 12px; }
+/* the names: close rows, changed in the row itself */
+.inversapanel .k-dns-list .k-list-row { padding: 2px 0; gap: 10px; min-height: 36px; }
+.inversapanel .k-dns-list .k-icon-btn { width: 32px; height: 32px; background: transparent; }
+.inversapanel .k-dns-list .k-dns-acts { display: inline-flex; align-items: center; gap: 2px; }
+.inversapanel .k-dns-edit { flex-wrap: wrap; background: var(--k-bg); border-radius: 10px; padding: 6px 8px !important; }
+.inversapanel .k-dns-edit input { height: 34px; }
+.inversapanel .k-dns-edit .k-dns-ename { flex: 2 1 200px; min-width: 0; }
+.inversapanel .k-dns-edit .k-dns-eip { flex: 1 1 140px; min-width: 0; }
+.inversapanel .k-dns-edit label.k-dns-ewild { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--k-muted); margin: 0; font-weight: 400; }
+.inversapanel .k-dns-edit .k-dns-acts { gap: 6px; margin-left: auto; }
 .inversapanel .k-dns-to { display: inline-flex; align-items: center; gap: 8px; flex: 0 1 auto; min-width: 0; color: var(--k-text-2); }
 .inversapanel .k-dns-modes { display: flex; flex-wrap: wrap; gap: 10px; }
 .inversapanel .k-dns-modes .k-opt { flex: 1 1 180px; }

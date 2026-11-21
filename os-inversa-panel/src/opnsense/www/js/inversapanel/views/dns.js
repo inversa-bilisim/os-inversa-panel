@@ -11,12 +11,13 @@
     var h = window.InversaPanelApp.h;
     var ICON = 'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20';
     var TRASH = 'M4 7h16M10 11v6M14 11v6M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M9 7V4h6v3';
+    var PENCIL = 'M4 20h4L19 9l-4-4L4 16v4M13.5 6.5l4 4';
     var ARROW = 'M5 12h14M13 6l6 6-6 6';
     var MODES = ['auto', 'cloudflare', 'google', 'quad9', 'adguard', 'custom'];
     var NAME_RE = /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
     var IP4_RE = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
 
-    var D = { form: null, name: '', ip: '', wildcard: false, error: null };
+    var D = { form: null, name: '', ip: '', wildcard: false, error: null, edit: null };
 
     function dns() { return h.S().draft.dns; }
 
@@ -54,12 +55,44 @@
         }
     }
 
+    /* what a name must be to be taken: [name, ip] or the reason it is not */
+    function check(rawName, rawIp, except) {
+        var T = h.T(), name = cleanName(rawName), ip = String(rawIp || '').trim();
+        var taken = dns().records.concat(h.S().options.dns_foreign || []).some(function (r) { return r.name === name && r.name !== except; });
+        if (!NAME_RE.test(name)) { return T.dnsBadName; }
+        if (!isIp(ip)) { return T.dnsBadIp; }
+        if (taken) { return T.dnsTaken(name); }
+        return [name, ip];
+    }
+
+    /* the row being changed keeps its place in the list; like every change here it waits for "Apply" */
+    function saveEdit() {
+        var e = D.edit, ok = check(e.name, e.ip, e.orig);
+        if (typeof ok === 'string') { e.error = ok; return; }
+        dns().records = dns().records.map(function (r) { return r.name === e.orig ? { name: ok[0], ip: ok[1], wildcard: !!e.wildcard } : r; });
+        D.edit = null;
+    }
+
+    function editRow(r) {
+        var T = h.T(), e = D.edit;
+        return '<div class="k-list-row k-dns-edit">' +
+            '<input type="text" class="mono k-dns-ename" data-input="dns:e-name" value="' + h.esc(e.name) + '" aria-label="' + h.esc(T.dnsName) + '" autocomplete="off" autocapitalize="off" spellcheck="false">' +
+            h.icon(ARROW, 16) +
+            '<input type="text" class="mono k-dns-eip" data-input="dns:e-ip" value="' + h.esc(e.ip) + '" aria-label="' + h.esc(T.dnsIp) + '" list="k-dns-devices" autocomplete="off">' +
+            '<label class="k-dns-ewild" title="' + h.esc(T.dnsWildSub) + '">' + h.toggle(e.wildcard, 'data-act="dns:e-wild"', T.dnsWild) + h.esc(T.dnsWild) + '</label>' +
+            '<span class="k-dns-acts"><button type="button" class="k-btn small" data-act="dns:e-cancel">' + h.esc(T.discard) + '</button>' +
+            '<button type="button" class="k-btn small primary" data-act="dns:e-save">' + h.esc(T.save) + '</button></span>' +
+            (e.error ? '<div class="k-warn-text" style="flex:1 1 100%">' + h.esc(e.error) + '</div>' : '') + '</div>';
+    }
+
     function recordRow(r, own) {
         var T = h.T(), dev = deviceFor(r.ip);
+        if (own && D.edit && D.edit.orig === r.name) { return editRow(r); }
         return '<div class="k-list-row"><div class="k-grow-text"><span class="mono" style="font-weight:600">' + h.esc((r.wildcard ? '*.' : '') + r.name) + '</span>' +
             (r.wildcard ? ' <span class="k-badge" title="' + h.esc(T.dnsWildHint(r.name)) + '">' + h.esc(T.dnsWildShort) + '</span>' : '') + '</div>' +
             '<span class="k-dns-to">' + h.icon(ARROW, 16) + '<span class="mono">' + h.esc(r.ip) + '</span>' + (dev ? '<span class="muted">' + h.esc(dev) + '</span>' : '') + '</span>' +
-            (own ? '<button type="button" class="k-icon-btn" style="background:transparent" data-act="dns:del" data-v="' + h.esc(r.name) + '" aria-label="' + h.esc(T.removeAria(r.name)) + '">' + h.icon(TRASH, 18) + '</button>' :
+            (own ? '<span class="k-dns-acts"><button type="button" class="k-icon-btn" data-act="dns:edit" data-v="' + h.esc(r.name) + '" aria-label="' + h.esc(T.netEdit + ': ' + r.name) + '" title="' + h.esc(T.netEdit) + '">' + h.icon(PENCIL, 16) + '</button>' +
+                '<button type="button" class="k-icon-btn" data-act="dns:del" data-v="' + h.esc(r.name) + '" aria-label="' + h.esc(T.removeAria(r.name)) + '">' + h.icon(TRASH, 16) + '</button></span>' :
                 '<span class="k-badge" title="' + h.esc(T.dnsForeignHint) + '">' + h.esc(T.readonly) + '</span>') + '</div>';
     }
 
@@ -76,7 +109,7 @@
             '<button type="button" class="k-btn primary" data-act="dns:add">' + h.esc(T.add) + '</button></div>' +
             (D.error ? '<div class="k-warn-text">' + h.esc(D.error) + '</div>' : '');
         html += d.records.length || foreign.length ?
-            '<div>' + d.records.map(function (r) { return recordRow(r, true); }).join('') + foreign.map(function (r) { return recordRow(r, false); }).join('') + '</div>' :
+            '<div class="k-dns-list">' + d.records.map(function (r) { return recordRow(r, true); }).join('') + foreign.map(function (r) { return recordRow(r, false); }).join('') + '</div>' :
             '<div class="muted">' + h.esc(T.dnsRecEmpty) + '</div>';
         return html + '<div class="muted small">' + h.esc(T.dnsRecNote) + '</div></section>';
     }
@@ -122,6 +155,13 @@
                 case 'wild': D.wildcard = !D.wildcard; return 'main';
                 case 'add': addRecord(); return 'main';
                 case 'del': d.records = d.records.filter(function (r) { return r.name !== v; }); return 'main';
+                case 'edit':
+                    var rec = d.records.filter(function (r) { return r.name === v; })[0];
+                    D.edit = rec ? { orig: rec.name, name: rec.name, ip: rec.ip, wildcard: !!rec.wildcard, error: null } : null;
+                    return 'main';
+                case 'e-wild': if (D.edit) { D.edit.wildcard = !D.edit.wildcard; } return 'main';
+                case 'e-cancel': D.edit = null; return 'main';
+                case 'e-save': if (D.edit) { saveEdit(); } return 'main';
                 case 'mode': if (MODES.indexOf(v) >= 0) { d.upstream = v; } return 'main';
                 case 'dot': d.dot = !d.dot; return 'main';
             }
@@ -131,6 +171,7 @@
             var d = dns();
             if (name === 'name') { D.name = el.value; return null; }
             if (name === 'ip') { D.ip = el.value; return null; }
+            if ((name === 'e-name' || name === 'e-ip') && D.edit) { D.edit[name.slice(2)] = el.value; return null; }
             if (name === 'servers') {
                 d.servers = el.value.split(/[\s,;]+/).map(function (x) { return x.trim().toLowerCase(); }).filter(function (x, i, all) { return isIp(x) && all.indexOf(x) === i; });
                 return type === 'change' ? 'main' : 'pending';
@@ -144,6 +185,7 @@
         /* Enter in the form adds the name */
         enter: function (name) {
             if (name === 'name' || name === 'ip') { addRecord(); return 'main'; }
+            if ((name === 'e-name' || name === 'e-ip') && D.edit) { saveEdit(); return 'main'; }
             return null;
         },
         changes: function (add, d, s) {

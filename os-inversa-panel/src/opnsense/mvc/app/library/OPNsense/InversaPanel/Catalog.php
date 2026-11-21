@@ -13,7 +13,7 @@ namespace OPNsense\InversaPanel;
 class Catalog
 {
     /* the version shown on the About page (the same as PLUGIN_VERSION in the Makefile) */
-    const VERSION = '1.9.1';
+    const VERSION = '1.9.2';
 
     /* the page a user who asked for it gets after logging in (OPNsense's per-user "Landing page") */
     const LANDING = '/ui/inversapanel';
