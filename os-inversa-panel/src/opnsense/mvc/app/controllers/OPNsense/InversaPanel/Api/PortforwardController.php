@@ -46,10 +46,25 @@ class PortforwardController extends ApiControllerBase
         }
     }
 
+    public function setAction($uuid = null)
+    {
+        $this->guard();
+        try {
+            return ['status' => (new PortForward())->update((string)$uuid, $this->request->getPost()) ? 'ok' : 'failed'];
+        } catch (\InvalidArgumentException $e) {
+            return ['status' => 'failed', 'message' => $e->getMessage()];
+        }
+    }
+
     public function toggleAction($uuid = null)
     {
         $this->guard();
-        $ok = (new PortForward())->setEnabled((string)$uuid, !empty($this->request->getPost('enabled')));
+        $on = $this->request->getPost('enabled');
+        try {
+            $ok = (new PortForward())->setEnabled((string)$uuid, !empty($on) && $on !== 'false');
+        } catch (\InvalidArgumentException $e) {
+            return ['status' => 'failed', 'message' => $e->getMessage()];
+        }
         return ['status' => $ok ? 'ok' : 'failed'];
     }
 

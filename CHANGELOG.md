@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.0 (2026-11-21)
+
+- **Port forwarding: change a forward in its own row.** The pencil turns the row into fields (name, protocol, outer port, target, inner port); Enter or "Save" applies at once, Escape leaves. Whether the forward is on, its place in the list and everything else OPNsense keeps about the rule stay as they are. On a phone the row being changed is shown alone, its fields one below the other. Complex rules stay read-only.
+- **Port forwarding: an outer port is taken once.** Adding, changing or switching on a forward whose outer port a switched-on forward already takes for the same protocol (TCP+UDP meets both) is refused and names that forward; before, the second one silently never worked. A forward that is switched off takes no port.
+- Port forwarding: a device nobody named is shown by its maker ("Dahua (unnamed device)") in the list and in the target suggestions.
+
 ## 1.8.0 (2026-11-21)
 
 - **Network form, access part redone.** "Isolate from other networks" and its exceptions are replaced by two plain settings: **Internet access** (on/off) and **Networks it talks to** (the picked networks reach each other in both directions; the others are cut off). Internet off leaves the firewall itself (DHCP, DNS) and the picked networks. Access decisions are only written when that part of the form was changed, so renaming a network keeps its rules; a one-way permission made in the access table stays when the picked networks change. Network cards show "Internet" and "Talks to". The access table moved under **Advanced** (folded) and is meant for one-way permissions. The name field is twice as wide.

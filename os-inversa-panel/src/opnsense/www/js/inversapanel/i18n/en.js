@@ -133,6 +133,10 @@ window.InversaPanelI18n.en = {
     newsTitle: function (v) { return 'What is new in Inversa Panel ' + v; }, newsSub: 'The panel was updated. The news in short:',
     newsOk: 'Got it', newsGo: 'Show', newsHeading: 'What is new',
     news: {
+        '1.9.0': [
+            ['Port forwards are now changed in their own row (the pencil).', 'pf'],
+            ['A second forward on the same outer port is refused, and you are told which one has it.', 'pf']
+        ],
         '1.8.0': [
             ['A simpler network form: internet access on or off, and the networks it talks to. The table for one-way permissions is under “Advanced”.', 'nets'],
             ['Network rules now cover IPv6: a network with IPv6 can no longer get around blocks or internet off over IPv6.', 'nets'],
@@ -451,7 +455,7 @@ window.InversaPanelI18n.en = {
     pfExt: 'External port', pfInt: 'Internal port', pfTargetIp: 'Target IP', pfProto: 'Protocol', pfAdd: 'Add port forward',
     pfImmediate: 'Port forwards take effect immediately (no Apply needed).',
     pfRules: 'Port forwards', pfWanIs: function (ip) { return 'Your external IP: ' + ip; }, pfEmpty: 'No port forwards yet.',
-    pfDelConfirm: 'Delete this port forward?',
+    pfDelConfirm: 'Delete this port forward?', pfConflict: function (p, n) { return 'Outer port ' + p + ' is already used by the forward “' + n + '”. Two forwards cannot share an outer port.'; },
     upnpTitle: 'Automatic port opening (UPnP)', upnpDesc: 'Lets devices like game consoles open their own ports; managed on the os-upnp plugin page.',
     upnpMissing: 'Plugin not installed',
     vpnTitle: 'VPN connections', vpnSub: 'Secure remote access to your home/office network (WireGuard) and links between sites (WireGuard, or IPsec with firewalls of other vendors).',

@@ -52,11 +52,14 @@ class PortForward
         return $result;
     }
 
-    public function add(array $req)
+    /**
+     * what a forward is made of, checked: [protocol, outer port, inner port, target]
+     */
+    private static function fields(array $req)
     {
         $proto = (string)($req['protocol'] ?? 'tcp');
         $port = (string)($req['port'] ?? '');
-        $tport = (string)($req['target_port'] ?? $port);
+        $tport = (string)($req['target_port'] ?? '') ?: $port;
         $target = (string)($req['target'] ?? '');
         foreach ([$port, $tport] as $p) {
             if (!ctype_digit($p) || (int)$p < 1 || (int)$p > 65535) {
@@ -66,7 +69,41 @@ class PortForward
         if (!in_array($proto, ['tcp', 'udp', 'tcp/udp']) || !Util::isIpv4Address($target)) {
             throw new \InvalidArgumentException('invalid protocol or target');
         }
+        return [$proto, $port, $tport, $target];
+    }
+
+    /**
+     * Two forwards on one outer port: only the first would ever work. The name of the switched-on
+     * WAN forward that already takes this port for this protocol (TCP+UDP meets both), or null.
+     */
+    private static function taken(DNat $mdl, $proto, $port, $except = null)
+    {
+        foreach ($mdl->rule->iterateItems() as $uuid => $node) {
+            $other = (string)$node->protocol;
+            if (
+                $uuid !== $except && $node->disabled->isEmpty() && (string)$node->destination->port === (string)$port &&
+                in_array('wan', explode(',', (string)$node->interface)) &&
+                ($other === $proto || $other === 'tcp/udp' || $proto === 'tcp/udp')
+            ) {
+                return (string)$node->descr ?: (string)$port;
+            }
+        }
+        return null;
+    }
+
+    private static function refuseTaken(DNat $mdl, $proto, $port, $except = null)
+    {
+        $name = self::taken($mdl, $proto, $port, $except);
+        if ($name !== null) {
+            throw new \InvalidArgumentException("outer port $port is already used by the forward \"$name\"");
+        }
+    }
+
+    public function add(array $req)
+    {
+        list($proto, $port, $tport, $target) = self::fields($req);
         $mdl = new DNat();
+        self::refuseTaken($mdl, $proto, $port);
         $seq = 0;
         foreach ($mdl->rule->iterateItems() as $node) {
             $seq = max($seq, (int)(string)$node->sequence);
@@ -89,12 +126,43 @@ class PortForward
         return $node->getAttributes()['uuid'];
     }
 
+    /**
+     * change a simple forward in place: its ports, target, protocol and name; whether it is on,
+     * its place in the list and everything else OPNsense keeps about the rule stay as they are
+     */
+    public function update($uuid, array $req)
+    {
+        list($proto, $port, $tport, $target) = self::fields($req);
+        $mdl = new DNat();
+        $node = $mdl->getNodeByReference('rule.' . $uuid);
+        if ($node === null || !self::simple($node)) {
+            /* complex rules are only changed in OPNsense itself */
+            return false;
+        }
+        if ($node->disabled->isEmpty()) {
+            self::refuseTaken($mdl, $proto, $port, $uuid);
+        }
+        $node->protocol->setValue($proto);
+        $node->destination->port->setValue($port);
+        $node->target->setValue($target);
+        $node->{'local-port'}->setValue($tport);
+        $name = trim((string)($req['name'] ?? ''));
+        if ($name !== '') {
+            $node->descr->setValue(mb_substr($name, 0, 255));
+        }
+        $this->save($mdl);
+        return true;
+    }
+
     public function setEnabled($uuid, $on)
     {
         $mdl = new DNat();
         $node = $mdl->getNodeByReference('rule.' . $uuid);
         if ($node === null) {
             return false;
+        }
+        if ($on && !$node->disabled->isEmpty()) {
+            self::refuseTaken($mdl, (string)$node->protocol, (string)$node->destination->port, $uuid);
         }
         $node->disabled->setValue($on ? '0' : '1');
         $this->save($mdl);

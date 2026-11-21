@@ -133,6 +133,10 @@ window.InversaPanelI18n.tr = {
     newsTitle: function (v) { return 'Inversa Panel ' + v + ' sürümünde neler yeni'; }, newsSub: 'Panel güncellendi. Kısaca yenilikler:',
     newsOk: 'Tamam', newsGo: 'Göster', newsHeading: 'Neler yeni',
     news: {
+        '1.9.0': [
+            ['Port yönlendirmeleri artık kendi satırında düzenlenir (kalem düğmesi).', 'pf'],
+            ['Aynı dış portu kullanan ikinci yönlendirme reddedilir ve hangisiyle çakıştığı söylenir.', 'pf']
+        ],
         '1.8.0': [
             ['Yeni ağ formu sadeleşti: internet erişimi açık/kapalı ve haberleşebileceği ağlar. Tek yönlü izinler için tablo “Gelişmiş” altında.', 'nets'],
             ['Ağ kuralları artık IPv6’yı da kapsar: IPv6 kullanan bir ağ, engelleri ve kapalı interneti IPv6 üzerinden aşamaz.', 'nets'],
@@ -449,7 +453,7 @@ window.InversaPanelI18n.tr = {
     pfExt: 'Dış port', pfInt: 'İç port', pfTargetIp: 'Hedef IP', pfProto: 'Protokol', pfAdd: 'Yönlendirmeyi ekle',
     pfImmediate: 'Yönlendirmeler eklendiği anda geçerli olur (Uygula gerekmez).',
     pfRules: 'Yönlendirmeler', pfWanIs: function (ip) { return 'Dış IP adresiniz: ' + ip; }, pfEmpty: 'Henüz yönlendirme yok.',
-    pfDelConfirm: 'Bu yönlendirme silinsin mi?',
+    pfDelConfirm: 'Bu yönlendirme silinsin mi?', pfConflict: function (p, n) { return 'Dış port ' + p + ' zaten “' + n + '” yönlendirmesinde kullanılıyor. Aynı dış portu iki yönlendirme kullanamaz.'; },
     upnpTitle: 'Otomatik port açma (UPnP)', upnpDesc: 'Oyun konsolu gibi cihazların kendi portlarını açmasını sağlar; os-upnp eklentisinin sayfasından yönetilir.',
     upnpMissing: 'Eklenti kurulu değil',
     vpnTitle: 'VPN bağlantıları', vpnSub: 'Dışarıdan ev/ofis ağına güvenli erişim (WireGuard) ve şubeler arası bağlantı (WireGuard ya da başka marka güvenlik duvarlarıyla IPsec).',

@@ -259,7 +259,7 @@ window.InversaPanelI18n.it = {
     pfExt: 'Porta esterna', pfInt: 'Porta interna', pfTargetIp: 'IP di destinazione', pfProto: 'Protocollo', pfAdd: 'Aggiungi inoltro porta',
     pfImmediate: 'Gli inoltri delle porte hanno effetto subito (non serve Applica).',
     pfRules: 'Inoltri delle porte', pfWanIs: function (ip) { return 'IP esterno: ' + ip; }, pfEmpty: 'Ancora nessun inoltro porta.',
-    pfDelConfirm: 'Eliminare questo inoltro porta?',
+    pfDelConfirm: 'Eliminare questo inoltro porta?', pfConflict: function (p, n) { return 'La porta esterna ' + p + ' è già usata dall’inoltro «' + n + '». Due inoltri non possono condividere una porta esterna.'; },
     upnpTitle: 'Apertura automatica delle porte (UPnP)', upnpDesc: 'Permette a dispositivi come le console di gioco di aprire da soli le proprie porte; si gestisce nella pagina del plugin os-upnp.',
     upnpMissing: 'Plugin non installato',
     vpnTitle: 'Connessioni VPN', vpnSub: 'Accesso remoto sicuro alla rete di casa/ufficio (WireGuard) e collegamenti tra sedi (WireGuard, oppure IPsec con firewall di altri produttori).',
@@ -765,4 +765,5 @@ window.InversaPanelI18n.it = {
     t.qIdHint = 'Il suo indirizzo MAC potrebbe essere stato copiato. Accettalo se è tuo, altrimenti respingilo.';
     t.news['1.7.0'] = [['Controllo dell’identità dei dispositivi: un dispositivo con indirizzo MAC copiato viene notato; ricevi un avviso o la sua approvazione viene revocata (Impostazioni, disattivato per impostazione predefinita).', 'settings']];
     t.news['1.8.0'] = [['Modulo di rete più semplice: accesso a Internet sì o no e le reti con cui comunica. La tabella dei permessi in una sola direzione è in «Avanzate».', 'nets'], ['Le regole di rete ora valgono anche per IPv6: una rete con IPv6 non può più aggirare i blocchi o Internet disattivato tramite IPv6.', 'nets'], ['Fare clic sui numeri della panoramica: elencano i dispositivi online, le richieste DNS bloccate e gli avvisi di attacco.', '']];
+    t.news['1.9.0'] = [['Gli inoltri porta ora si modificano nella propria riga (la matita).', 'pf'], ['Un secondo inoltro sulla stessa porta esterna viene rifiutato, indicando quale la occupa.', 'pf']];
 })(window.InversaPanelI18n.it);

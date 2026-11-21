@@ -33,7 +33,7 @@ Screenshots show sample data.
 - Internet connection: PPPoE, static address or behind a modem; VLAN tag, IPv6, MAC address, MTU; a connection test that runs by itself.
 - Local networks: add a network on a VLAN or its own port, with DHCP, a colour, internet access on or off, the networks it talks to, a speed limit and approval of new devices. For one-way permissions, an access table decides which network may start connections to which.
 - DNS: local names for devices at home, and the servers the firewall asks (automatic, Cloudflare, Google, Quad9, AdGuard DNS or your own), optionally over TLS. Servers are tried before they are used.
-- Port forwarding in one line, with suggestions for common services.
+- Port forwarding in one line, with suggestions for common services; forwards are changed in their own row, and two forwards on one outer port are refused.
 
 **VPN**
 - Remote access with WireGuard: a QR code and `.conf` file per device, available again at any time.
@@ -133,7 +133,7 @@ Turkish, English, German, French, Spanish and Italian. "Automatic" follows OPNse
 
 ## Status
 
-Version 1.8.0. Developed and tested on a virtual OPNsense 26.7.9. Not yet tested on real hardware or lines:
+Version 1.9.0. Developed and tested on a virtual OPNsense 26.7.9. Not yet tested on real hardware or lines:
 
 - PPPoE (the test environment has no PPPoE server).
 - A WireGuard connection from a real phone or laptop; the generated configuration and the firewall rules were checked.

@@ -259,7 +259,7 @@ window.InversaPanelI18n.de = {
     pfExt: 'Externer Port', pfInt: 'Interner Port', pfTargetIp: 'Ziel-IP', pfProto: 'Protokoll', pfAdd: 'Portweiterleitung hinzufügen',
     pfImmediate: 'Portweiterleitungen wirken sofort (kein Übernehmen nötig).',
     pfRules: 'Portweiterleitungen', pfWanIs: function (ip) { return 'Ihre externe IP: ' + ip; }, pfEmpty: 'Noch keine Portweiterleitungen.',
-    pfDelConfirm: 'Diese Portweiterleitung löschen?',
+    pfDelConfirm: 'Diese Portweiterleitung löschen?', pfConflict: function (p, n) { return 'Der externe Port ' + p + ' wird bereits von der Weiterleitung „' + n + '“ verwendet. Zwei Weiterleitungen können sich keinen externen Port teilen.'; },
     upnpTitle: 'Automatische Portfreigabe (UPnP)', upnpDesc: 'Erlaubt Geräten wie Spielkonsolen, ihre Ports selbst zu öffnen; wird auf der Seite des Plugins os-upnp verwaltet.',
     upnpMissing: 'Plugin nicht installiert',
     vpnTitle: 'VPN-Verbindungen', vpnSub: 'Sicherer Fernzugriff auf Ihr Heim-/Büronetzwerk (WireGuard) und Verbindungen zwischen Standorten (WireGuard, oder IPsec mit Firewalls anderer Hersteller).',
@@ -894,4 +894,5 @@ window.InversaPanelI18n.de = {
     t.qIdHint = 'Die MAC-Adresse wurde vielleicht kopiert. Übernehmen Sie es, wenn es Ihres ist, sonst weisen Sie es ab.';
     t.news['1.7.0'] = [['Überwachung der Geräteidentität: Ein Gerät mit kopierter MAC-Adresse fällt auf; Sie werden benachrichtigt oder die Freigabe wird zurückgenommen (Einstellungen, standardmäßig aus).', 'settings']];
     t.news['1.8.0'] = [['Einfacheres Netzwerkformular: Internetzugang an oder aus und die Netzwerke, mit denen es kommuniziert. Die Tabelle für Freigaben in eine Richtung liegt unter „Erweitert“.', 'nets'], ['Netzwerkregeln gelten jetzt auch für IPv6: Ein Netzwerk mit IPv6 kann Sperren oder abgeschaltetes Internet nicht mehr über IPv6 umgehen.', 'nets'], ['Klicken Sie auf die Zahlen der Übersicht: Sie listen Online-Geräte, blockierte DNS-Anfragen und Angriffswarnungen auf.', '']];
+    t.news['1.9.0'] = [['Portweiterleitungen werden jetzt in ihrer eigenen Zeile geändert (Stift).', 'pf'], ['Eine zweite Weiterleitung auf demselben externen Port wird abgelehnt, mit Hinweis, welche ihn belegt.', 'pf']];
 })(window.InversaPanelI18n.de);

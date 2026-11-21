@@ -259,7 +259,7 @@ window.InversaPanelI18n.es = {
     pfExt: 'Puerto externo', pfInt: 'Puerto interno', pfTargetIp: 'IP de destino', pfProto: 'Protocolo', pfAdd: 'Añadir redirección',
     pfImmediate: 'Las redirecciones de puertos tienen efecto de inmediato (no hace falta Aplicar).',
     pfRules: 'Redirecciones de puertos', pfWanIs: function (ip) { return 'Su IP externa: ' + ip; }, pfEmpty: 'Aún no hay redirecciones de puertos.',
-    pfDelConfirm: '¿Eliminar esta redirección de puertos?',
+    pfDelConfirm: '¿Eliminar esta redirección de puertos?', pfConflict: function (p, n) { return 'El puerto externo ' + p + ' ya lo usa la redirección «' + n + '». Dos redirecciones no pueden compartir un puerto externo.'; },
     upnpTitle: 'Apertura automática de puertos (UPnP)', upnpDesc: 'Permite que dispositivos como las videoconsolas abran sus propios puertos; se gestiona en la página del complemento os-upnp.',
     upnpMissing: 'Complemento no instalado',
     vpnTitle: 'Conexiones VPN', vpnSub: 'Acceso remoto seguro a la red de su casa u oficina (WireGuard) y enlaces entre sedes (WireGuard, o IPsec con cortafuegos de otros fabricantes).',
@@ -876,4 +876,5 @@ window.InversaPanelI18n.es = {
     t.qIdHint = 'Puede que su dirección MAC se haya copiado. Acéptelo si es suyo; si no, recházelo.';
     t.news['1.7.0'] = [['Vigilancia de la identidad de los dispositivos: se detecta un dispositivo con una dirección MAC copiada; se le avisa o se retira su permiso (Ajustes, desactivada por defecto).', 'settings']];
     t.news['1.8.0'] = [['Formulario de red más sencillo: acceso a internet activado o desactivado y las redes con las que se comunica. La tabla de permisos en un solo sentido está en «Avanzado».', 'nets'], ['Las reglas de red ahora cubren IPv6: una red con IPv6 ya no puede saltarse los bloqueos ni el internet desactivado por IPv6.', 'nets'], ['Haga clic en las cifras del resumen: muestran los dispositivos en línea, las consultas DNS bloqueadas y las alertas de ataque.', '']];
+    t.news['1.9.0'] = [['Las redirecciones de puertos ahora se editan en su propia fila (el lápiz).', 'pf'], ['Una segunda redirección en el mismo puerto externo se rechaza y se indica cuál lo ocupa.', 'pf']];
 })(window.InversaPanelI18n.es);

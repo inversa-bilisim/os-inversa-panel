@@ -259,7 +259,7 @@ window.InversaPanelI18n.fr = {
     pfExt: 'Port externe', pfInt: 'Port interne', pfTargetIp: 'IP cible', pfProto: 'Protocole', pfAdd: 'Ajouter la redirection',
     pfImmediate: 'Les redirections de port prennent effet immédiatement (inutile d’appliquer).',
     pfRules: 'Redirections de port', pfWanIs: function (ip) { return 'Votre IP externe : ' + ip; }, pfEmpty: 'Aucune redirection de port pour l’instant.',
-    pfDelConfirm: 'Supprimer cette redirection de port ?',
+    pfDelConfirm: 'Supprimer cette redirection de port ?', pfConflict: function (p, n) { return 'Le port externe ' + p + ' est déjà utilisé par la redirection « ' + n + ' ». Deux redirections ne peuvent pas partager un port externe.'; },
     upnpTitle: 'Ouverture automatique des ports (UPnP)', upnpDesc: 'Permet à des appareils comme les consoles de jeux d’ouvrir eux-mêmes leurs ports ; se gère sur la page du plugin os-upnp.',
     upnpMissing: 'Plugin non installé',
     vpnTitle: 'Connexions VPN', vpnSub: 'Accès distant sécurisé au réseau de votre domicile ou bureau (WireGuard) et liaisons entre sites (WireGuard, ou IPsec avec les pare-feu d’autres marques).',
@@ -873,4 +873,5 @@ window.InversaPanelI18n.fr = {
     t.qIdHint = 'Son adresse MAC a peut-être été copiée. Acceptez-le s’il est à vous, sinon refusez-le.';
     t.news['1.7.0'] = [['Surveillance de l’identité des appareils : un appareil à l’adresse MAC copiée est repéré ; vous êtes prévenu ou son autorisation est retirée (Paramètres, désactivée par défaut).', 'settings']];
     t.news['1.8.0'] = [['Formulaire de réseau simplifié : accès à Internet activé ou non, et les réseaux avec lesquels il communique. Le tableau des autorisations à sens unique est sous « Avancé ».', 'nets'], ['Les règles réseau couvrent désormais IPv6 : un réseau en IPv6 ne peut plus contourner les blocages ni l’Internet coupé par IPv6.', 'nets'], ['Cliquez sur les chiffres de la vue d’ensemble : ils listent les appareils en ligne, les requêtes DNS bloquées et les alertes d’attaque.', '']];
+    t.news['1.9.0'] = [['Les redirections de port se modifient désormais dans leur propre ligne (le crayon).', 'pf'], ['Une seconde redirection sur le même port externe est refusée, en indiquant laquelle l’occupe.', 'pf']];
 })(window.InversaPanelI18n.fr);

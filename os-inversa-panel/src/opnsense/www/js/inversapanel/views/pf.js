@@ -2,8 +2,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  * Copyright (C) 2026 Inversa Bilişim
  *
- * Port forwarding on top of OPNsense's NAT port forward rules. Adding, switching and deleting
- * act immediately (like in Firewall > NAT); complex existing rules are listed read-only.
+ * Port forwarding on top of OPNsense's NAT port forward rules. Adding, changing (in the row itself),
+ * switching and deleting act immediately (like in Firewall > NAT); complex existing rules are listed
+ * read-only. An outer port that a switched-on forward already takes is refused.
  * The outer port suggests the ports people forward most and fills in name, inner port and protocol;
  * the target suggests the devices on the network. Both lists work with the arrow keys and Enter.
  */
@@ -11,12 +12,13 @@
     'use strict';
     var h = window.InversaPanelApp.h;
     var ICON = 'M4 7h11M11 3l4 4-4 4M20 17H9M13 13l-4 4 4 4';
+    var PENCIL = 'M4 20h4L19 9l-4-4L4 16v4M13.5 6.5l4 4';
     var TRASH = 'M4 7h16M10 11v6M14 11v6M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M9 7V4h6v3';
     /* ports people forward most; their names come from the language file (pfPorts), the rest from here */
     var KNOWN = [['443', 'tcp'], ['80', 'tcp'], ['22', 'tcp'], ['3389', 'tcp'], ['5900', 'tcp'], ['21', 'tcp'], ['25', 'tcp'], ['8080', 'tcp'], ['8123', 'tcp'],
         ['554', 'tcp'], ['32400', 'tcp'], ['25565', 'tcp'], ['27015', 'tcp/udp'], ['3074', 'tcp/udp'], ['1194', 'udp'], ['51820', 'udp']];
 
-    var P = { data: null, form: { name: '', autoName: '', protocol: 'tcp', port: '', target_port: '', target: '' }, open: false, hi: -1, busy: false, error: null };
+    var P = { data: null, form: { name: '', autoName: '', protocol: 'tcp', port: '', target_port: '', target: '' }, open: false, hi: -1, busy: false, error: null, edit: null };
 
     /* the known ports that start with what was typed */
     function suggestions() {
@@ -45,7 +47,7 @@
     function targets() {
         var typed = P.form.target.toLowerCase();
         return h.hosts().filter(function (x) { return x.ips.length && x.ips[0].indexOf(':') < 0; }).map(function (x) {
-            return { ip: x.ips[0], name: h.devName(x), online: !!x.online };
+            return { ip: x.ips[0], name: label(x), online: !!x.online };
         }).filter(function (o) {
             return !typed || o.ip.indexOf(typed) >= 0 || o.name.toLowerCase().indexOf(typed) >= 0;
         }).sort(function (a, b) { return (b.online - a.online) || a.name.localeCompare(b.name); });
@@ -129,6 +131,12 @@
             if (!field) { return; }
             var combo = field === 'port' || field === 'target';
             if (key === 'Escape' && P.open) { closeList(); return; }
+            if (field.indexOf('e-') === 0) {
+                var go = key === 'Enter' ? 'pf:e-save' : (key === 'Escape' ? 'pf:e-cancel' : '');
+                var btn = go && document.querySelector('.inversapanel [data-act="' + go + '"]');
+                if (btn) { event.preventDefault(); btn.click(); }
+                return;
+            }
             if (combo && (key === 'ArrowDown' || key === 'ArrowUp')) {
                 event.preventDefault();
                 if (P.open !== field || !items().length) { showList(field); if (key === 'ArrowUp') { return; } }
@@ -152,12 +160,48 @@
         return h.api('GET', '/api/inversapanel/portforward/list').then(function (data) { P.data = data; });
     }
 
+    /* a device nobody named is told by its maker: "Dahua (unnamed device)" */
+    function label(host) {
+        var T = h.T(), name = h.devName(host);
+        return name === T.unnamed && host.vendor ? host.vendor + ' (' + name.toLocaleLowerCase(T.locale) + ')' : name;
+    }
+
     function deviceFor(ip) {
         var hosts = h.hosts();
         for (var i = 0; i < hosts.length; i++) {
-            if (hosts[i].ips.indexOf(ip) >= 0) { return h.devName(hosts[i]); }
+            if (hosts[i].ips.indexOf(ip) >= 0) { return label(hosts[i]); }
         }
         return '';
+    }
+
+    /* the switched-on forward that already takes this outer port for this protocol (TCP+UDP meets both) */
+    function taken(proto, port, except) {
+        return P.data.rules.filter(function (r) {
+            return r.uuid !== except && r.enabled && String(r.port) === String(port) && (r.protocol === proto || r.protocol === 'tcp/udp' || proto === 'tcp/udp');
+        })[0] || null;
+    }
+
+    /* true when the port is free; otherwise says which forward has it */
+    function free(proto, port, except) {
+        var hit = taken(proto, port, except);
+        if (!hit) { return true; }
+        P.error = h.T().pfConflict(port, hit.name || port);
+        h.redraw('main');
+        return false;
+    }
+
+    /* a row of the list while it is being changed */
+    function editRow(r) {
+        var T = h.T(), e = P.edit;
+        return '<tr class="k-pfedit"><td><input type="text" maxlength="64" data-input="pf:e-name" value="' + h.esc(e.name) + '" aria-label="' + h.esc(T.colName) + '"></td>' +
+            '<td><span class="k-pfcell"><select data-input="pf:e-protocol" aria-label="' + h.esc(T.pfProto) + '">' + [['tcp', 'TCP'], ['udp', 'UDP'], ['tcp/udp', 'TCP+UDP']].map(function (o) {
+                return '<option value="' + o[0] + '"' + (e.protocol === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+            }).join('') + '</select><input type="text" inputmode="numeric" class="mono k-pfport" data-input="pf:e-port" value="' + h.esc(e.port) + '" aria-label="' + h.esc(T.pfExt) + '"></span></td>' +
+            '<td><span class="k-pfcell"><span class="muted">→</span><input type="text" class="mono k-pfip" autocomplete="off" spellcheck="false" data-input="pf:e-target" value="' + h.esc(e.target) + '" aria-label="' + h.esc(T.pfTargetIp) + '">' +
+            '<span class="muted">:</span><input type="text" inputmode="numeric" class="mono k-pfport" data-input="pf:e-target_port" value="' + h.esc(e.target_port) + '" aria-label="' + h.esc(T.pfInt) + '"></span></td>' +
+            '<td id="k-pf-edev">' + h.esc(deviceFor(e.target) || '—') + '</td>' +
+            '<td><span class="k-pfacts"><button type="button" class="k-btn small" data-act="pf:e-cancel">' + h.esc(T.discard) + '</button>' +
+            '<button type="button" class="k-btn small primary" data-act="pf:e-save"' + (P.busy ? ' disabled' : '') + '>' + h.esc(T.save) + '</button></span></td></tr>';
     }
 
     function call(url, payload) {
@@ -165,7 +209,7 @@
         P.error = null;
         h.redraw('main');
         return h.api('POST', url, payload || {}).then(function (res) {
-            if (res.status !== 'ok') { P.error = res.message || h.T().applyFailed; }
+            if (res.status !== 'ok') { P.error = res.message || h.T().applyFailed; } else { P.edit = null; }
             return load();
         }, function (err) {
             P.error = (err && err.errorMessage) || h.T().applyFailed;
@@ -206,12 +250,14 @@
             if (!P.data.rules.length) {
                 html += '<div class="muted">' + h.esc(T.pfEmpty) + '</div>';
             } else {
-                html += '<div style="overflow-x:auto"><table class="k-pftable"><thead><tr><th>' + h.esc(T.colName) + '</th><th>' + h.esc(T.pfExt) + '</th><th>' + h.esc(T.pfTo) + '</th><th>' + h.esc(T.colDevice) + '</th><th></th></tr></thead><tbody>' +
+                html += '<div style="overflow-x:auto"><table class="k-pftable' + (P.edit ? ' k-pfediting' : '') + '"><thead><tr><th>' + h.esc(T.colName) + '</th><th>' + h.esc(T.pfExt) + '</th><th>' + h.esc(T.pfTo) + '</th><th>' + h.esc(T.colDevice) + '</th><th></th></tr></thead><tbody>' +
                     P.data.rules.map(function (r) {
+                        if (P.edit && P.edit.uuid === r.uuid) { return editRow(r); }
                         return '<tr class="' + (r.enabled ? '' : 'dim') + '"><td><b>' + h.esc(r.name || '—') + '</b></td>' +
                             '<td class="mono">' + h.esc(r.protocol.toUpperCase().replace('/', '+') + ' ' + (r.port || '*')) + '</td>' +
                             '<td class="mono">→ ' + h.esc(r.target + ':' + r.target_port) + '</td><td>' + h.esc(deviceFor(r.target) || '—') + '</td>' +
-                            '<td><span class="k-pfacts">' + (r.simple ? '<button type="button" class="k-icon-btn" data-act="pf:del" data-v="' + r.uuid + '" aria-label="' + h.esc(T.removeAria(r.name)) + '"' + (P.busy ? ' disabled' : '') + '>' + h.icon(TRASH, 16) + '</button>' :
+                            '<td><span class="k-pfacts">' + (r.simple ? '<button type="button" class="k-icon-btn" data-act="pf:edit" data-v="' + r.uuid + '" aria-label="' + h.esc(T.netEdit + ': ' + r.name) + '" title="' + h.esc(T.netEdit) + '"' + (P.busy ? ' disabled' : '') + '>' + h.icon(PENCIL, 16) + '</button>' +
+                                '<button type="button" class="k-icon-btn" data-act="pf:del" data-v="' + r.uuid + '" aria-label="' + h.esc(T.removeAria(r.name)) + '"' + (P.busy ? ' disabled' : '') + '>' + h.icon(TRASH, 16) + '</button>' :
                                 '<span class="k-badge">' + h.esc(T.readonly) + '</span>') +
                             h.toggle(r.enabled, 'data-act="pf:toggle" data-v="' + r.uuid + '"' + (P.busy ? ' disabled' : ''), r.name) + '</span></td></tr>';
                     }).join('') + '</tbody></table></div>';
@@ -243,11 +289,29 @@
                 case 'add':
                     P.open = false;
                     P.hi = -1;
+                    if (!free(f.protocol, f.port, null)) { return null; }
                     call('/api/inversapanel/portforward/add', { name: f.name || 'Port ' + f.port, protocol: f.protocol, port: f.port, target: f.target, target_port: f.target_port || f.port });
                     return null;
                 case 'toggle':
                     var rule = P.data.rules.filter(function (r) { return r.uuid === v; })[0];
+                    /* switching one on that would share its outer port with another */
+                    if (!rule.enabled && !free(rule.protocol, rule.port, rule.uuid)) { return null; }
                     call('/api/inversapanel/portforward/toggle/' + v, { enabled: !rule.enabled });
+                    return null;
+                case 'edit':
+                    var r = P.data.rules.filter(function (x) { return x.uuid === v; })[0];
+                    P.error = null;
+                    P.edit = { uuid: r.uuid, enabled: r.enabled, name: r.name, protocol: r.protocol, port: String(r.port), target: r.target, target_port: String(r.target_port) };
+                    focusOn('[data-input="pf:e-port"]', true);
+                    return 'main';
+                case 'e-cancel': P.edit = null; P.error = null; return 'main';
+                case 'e-save':
+                    var e = P.edit;
+                    if (!e) { return null; }
+                    if (!e.port || !e.target) { P.error = h.T().applyFailed; return 'main'; }
+                    /* a forward that is switched off takes no port */
+                    if (e.enabled && !free(e.protocol, e.port, e.uuid)) { return null; }
+                    call('/api/inversapanel/portforward/set/' + e.uuid, { name: e.name, protocol: e.protocol, port: e.port, target: e.target, target_port: e.target_port || e.port });
                     return null;
                 case 'del':
                     if (window.confirm(h.T().pfDelConfirm)) { call('/api/inversapanel/portforward/del/' + v); }
@@ -256,6 +320,15 @@
             return null;
         },
         input: function (name, el, type) {
+            if (name.indexOf('e-') === 0 && P.edit) {
+                /* the row being changed: no redraw, the cursor stays where it is */
+                var key = name.slice(2);
+                if (['name', 'protocol', 'port', 'target_port', 'target'].indexOf(key) < 0) { return null; }
+                P.edit[key] = key === 'port' || key === 'target_port' ? el.value.replace(/[^0-9]/g, '').slice(0, 5) : el.value.trim();
+                var cell = document.getElementById('k-pf-edev');
+                if (cell) { cell.textContent = deviceFor(P.edit.target) || '—'; }
+                return null;
+            }
             if (['name', 'port', 'target_port', 'target'].indexOf(name) < 0) { return null; }
             P.form[name] = name === 'port' || name === 'target_port' ? el.value.replace(/[^0-9]/g, '').slice(0, 5) : el.value.trim();
             if (name === 'port') {
