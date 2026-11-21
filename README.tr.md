@@ -81,7 +81,7 @@ Telefonun girişten hemen sonra bu ekrana düşmesi için **Ayarlar › Girişte
 
 ## Güvenlik duvarınıza nasıl davranır
 
-- **Sorulmadan hiçbir şey açılmaz.** İlk açılışta bir kurulum sihirbazı korunacak ağları, korumaları, yeni cihaz onayını ve bildirimleri sorar; son adıma kadar güvenlik duvarına hiçbir şey yazılmaz, o zamana kadar panel yalnızca okur. Sihirbaz kapatılabilir ve Ayarlar'dan yeniden çalıştırılabilir.
+- **Sorulmadan hiçbir şey açılmaz.** İlk açılışta bir kurulum sihirbazı internet bağlantısını gösterir (çalışmıyorsa orada ayarlanır), korunacak ağları, korumaları, yeni cihaz onayını ve bildirimleri sorar; internet bağlantısı ve bildirimler kendi düğmeleriyle kaydedilir, bunların dışında son adıma kadar güvenlik duvarına hiçbir şey yazılmaz. Sihirbaz kapatılabilir ve Ayarlar'dan yeniden çalıştırılabilir.
 - **Yalnızca panelden değiştirdiğinize dokunur.** Mevcut güvenlik duvarı kuralları geçerli kalır; erişim tablosu yalnızca bir hücreyi izinli ya da engelli yaptığınızda kural ekler.
 - **Anlayamadığını salt okunur gösterir**: çoklu WAN, LAGG ya da köprü üyesi ağlar, takma ad kullanan port yönlendirmeleri, OPNsense'te kurulmuş DNS yönlendirme ya da saldırı tespiti.
 - **Riskli değişiklikler kendini geri alır.** Ağ değişiklikleri, "yalnızca bu ülkeler" kısıtının sıkılaşması ve DNS sunucusu değişikliği önce yedek alır. 90 saniye içinde onaylamazsanız OPNsense önceki yapılandırmayı geri yükler.

@@ -876,5 +876,7 @@ window.InversaPanelI18n.es = {
     t.qIdHint = 'Puede que su dirección MAC se haya copiado. Acéptelo si es suyo; si no, recházelo.';
     t.news['1.7.0'] = [['Vigilancia de la identidad de los dispositivos: se detecta un dispositivo con una dirección MAC copiada; se le avisa o se retira su permiso (Ajustes, desactivada por defecto).', 'settings']];
     t.news['1.8.0'] = [['Formulario de red más sencillo: acceso a internet activado o desactivado y las redes con las que se comunica. La tabla de permisos en un solo sentido está en «Avanzado».', 'nets'], ['Las reglas de red ahora cubren IPv6: una red con IPv6 ya no puede saltarse los bloqueos ni el internet desactivado por IPv6.', 'nets'], ['Haga clic en las cifras del resumen: muestran los dispositivos en línea, las consultas DNS bloqueadas y las alertas de ataque.', '']];
-    t.news['1.9.0'] = [['Las redirecciones de puertos ahora se editan en su propia fila (el lápiz).', 'pf'], ['Una segunda redirección en el mismo puerto externo se rechaza y se indica cuál lo ocupa.', 'pf']];
+    t.news['1.9.0'] = [['El asistente de configuración tiene un nuevo paso «Internet»: el tipo de conexión y sus ajustes (PPPoE, IP fija, detrás de un módem) se piden en la primera configuración.', 'wizard'], ['Las redirecciones de puertos ahora se editan en su propia fila (el lápiz).', 'pf'], ['Una segunda redirección en el mismo puerto externo se rechaza y se indica cuál lo ocupa.', 'pf']];
+    t.wiz.wan = ['Conexión a internet', 'Si su internet funciona, continúe sin cambiar nada. Si no, elija el tipo de conexión e introduzca sus datos; estos ajustes se aplican de inmediato con el botón de abajo y se deshacen si no los confirma en 90 segundos.'];
+    t.wizShort.wan = 'Internet';
 })(window.InversaPanelI18n.es);

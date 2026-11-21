@@ -134,6 +134,7 @@ window.InversaPanelI18n.en = {
     newsOk: 'Got it', newsGo: 'Show', newsHeading: 'What is new',
     news: {
         '1.9.0': [
+            ['The setup wizard has a new Internet step: the kind of connection and its settings (PPPoE, static IP, behind a modem) are asked on first setup.', 'wizard'],
             ['Port forwards are now changed in their own row (the pencil).', 'pf'],
             ['A second forward on the same outer port is refused, and you are told which one has it.', 'pf']
         ],
@@ -325,6 +326,7 @@ window.InversaPanelI18n.en = {
     allowMidnightShort: 'Midnight', allowPickShort: 'Pick time…', qFullShort: 'Full panel',
     wiz: {
         start: ['Welcome to Inversa Panel', 'Let us set up the basics in a few steps. Every step can be changed later in Settings.'],
+        wan: ['Internet connection', 'If your internet works, go on without changing anything. If it does not, choose the kind of connection and enter its details; these settings are applied at once with the button below and are taken back unless you confirm within 90 seconds.'],
         nets: ['Networks to protect', 'Blocking rules, the DNS filter and approval of new devices apply only to the networks you choose.'],
         protect: ['Protections', 'Choose what the firewall blocks through DNS.'],
         devices: ['New devices', 'On which networks should a new device wait until you let it in?'],
@@ -332,7 +334,7 @@ window.InversaPanelI18n.en = {
         done: ['Summary', 'Your choices are below. “Apply and finish” applies them in one go.']
     },
     wizKicker: 'Setup wizard',
-    wizShort: { start: 'Start', nets: 'Networks', protect: 'Protections', devices: 'New devices', notify: 'Notifications', done: 'Summary' },
+    wizShort: { start: 'Start', wan: 'Internet', nets: 'Networks', protect: 'Protections', devices: 'New devices', notify: 'Notifications', done: 'Summary' },
     wizNextTo: function (n) { return 'Next: ' + n + ' →'; },
     wizStep: function (n, m) { return 'Step ' + n + ' of ' + m; },
     wizClose: 'Close the wizard', wizBack: 'Back', wizNext: 'Next', wizFinish: 'Apply and finish',

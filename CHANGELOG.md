@@ -4,6 +4,7 @@
 
 - **Port forwarding: change a forward in its own row.** The pencil turns the row into fields (name, protocol, outer port, target, inner port); Enter or "Save" applies at once, Escape leaves. Whether the forward is on, its place in the list and everything else OPNsense keeps about the rule stay as they are. On a phone the row being changed is shown alone, its fields one below the other. Complex rules stay read-only.
 - **Port forwarding: an outer port is taken once.** Adding, changing or switching on a forward whose outer port a switched-on forward already takes for the same protocol (TCP+UDP meets both) is refused and names that forward; before, the second one silently never worked. A forward that is switched off takes no port.
+- **Setup wizard: an Internet step** right after the start (seven steps now). It shows the internet connection page itself: the connection as it is, and the kind of connection (PPPoE, static IP, behind a modem) with its settings for when the internet does not work yet. As on that page, a change is applied at once with its own button and taken back unless confirmed within 90 seconds; with a working connection one just goes on. The summary says how the connection is.
 - Port forwarding: a device nobody named is shown by its maker ("Dahua (unnamed device)") in the list and in the target suggestions.
 
 ## 1.8.0 (2026-11-21)

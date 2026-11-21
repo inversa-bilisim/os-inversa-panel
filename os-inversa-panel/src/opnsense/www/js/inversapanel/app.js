@@ -1655,10 +1655,10 @@
     /*
      * A few steps after the first installation. Nothing reaches the firewall before the last step: the
      * choices live in S.ui.wiz and go into the draft and one "Apply" at the end. Only the language, the
-     * page after logging in and the notifications (their own page, embedded) are stored right away, as
-     * they are everywhere else.
+     * page after logging in, the internet connection and the notifications (their own pages, embedded)
+     * are stored right away, as they are everywhere else.
      */
-    var WIZ_STEPS = ['start', 'nets', 'protect', 'devices', 'notify', 'done'];
+    var WIZ_STEPS = ['start', 'wan', 'nets', 'protect', 'devices', 'notify', 'done'];
     var WAND = 'M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M12.2 6.2l-1.4-1.4M3 21l9-9';
 
     function startWizard() {
@@ -1712,6 +1712,9 @@
                 '<div class="k-setting wrap"><div class="k-setting-text"><b>' + esc(t.langLabel) + '</b><span class="muted">' + esc(t.langSub) + '</span></div>' + langSelect() + '</div>' +
                 landingRow() + '</section>' +
                 '<div class="k-banner info" style="margin:0">' + icon(ICONS.info, 20) + '<span>' + esc(t.wizSafe) + '</span></div>';
+        } else if (step === 'wan') {
+            /* the internet connection page itself: its own "Apply", with the 90 seconds to confirm */
+            body = VIEWS.net ? '<div class="k-wiz-embed">' + VIEWS.net.render() + '</div>' : '';
         } else if (step === 'nets') {
             body = '<section class="k-card"><div class="k-chips">' + (S.options.interfaces || []).map(function (i) {
                 var on = w.ifaces.indexOf(i.key) >= 0;
@@ -1741,11 +1744,12 @@
         } else {
             var cats = CATS.filter(function (k) { return w.cats[k]; }).map(function (k) { return t.cats[k][0]; });
             var appr = w.ifaces.filter(function (k) { return w.approval[k]; }).map(wizNetName);
-            var rows = [
+            var wan = S.ov && S.ov.wan && S.ov.wan.exists !== false ? S.ov.wan : null;
+            var rows = (wan ? [[t.wiz.wan[0], (wan.address ? t.wanConnected : t.wanDown) + ' · ' + (t.wanVia[wan.type] || wan.type)]] : []).concat([
                 [t.wiz.nets[0], w.ifaces.map(wizNetName).join(', ') || '—'],
                 [t.wiz.protect[0], cats.join(', ') || t.wizNone],
                 [t.wiz.devices[0], appr.join(', ') || t.wizNone]
-            ];
+            ]);
             body = '<section class="k-card">' + rows.map(function (r) {
                 return '<div class="k-kv"><span class="muted">' + esc(r[0]) + '</span><span>' + esc(r[1]) + '</span></div>';
             }).join('') + '</section>' +
@@ -1760,16 +1764,25 @@
         return '<div class="k-stack k-wiz">' + head + body + foot + '</div>';
     }
 
+    /* the steps that show a page of the panel fetch what that page shows */
+    function wizLoad() {
+        var step = WIZ_STEPS[S.ui.wiz.step], view = VIEWS[{ wan: 'net', notify: 'notify' }[step]];
+        /* the summary says how the internet connection is */
+        if (step === 'done') { loadOverview().then(function () { if (S.ui.wiz) { redraw('main'); } }, function () {}); }
+        if (view && view.load) {
+            view.load().then(function () { if (S.ui.wiz && !inputFocused()) { redraw('main'); } }, function () {});
+        }
+    }
+
     function wizardAct(act, v) {
         var w = S.ui.wiz;
         if (!w) { return; }
         if (act === 'wiz-next' && w.step < WIZ_STEPS.length - 1) {
             w.step += 1;
-            if (WIZ_STEPS[w.step] === 'notify' && VIEWS.notify && VIEWS.notify.load) {
-                VIEWS.notify.load().then(function () { if (S.ui.wiz) { redraw('main'); } }, function () {});
-            }
+            wizLoad();
         } else if (act === 'wiz-back' && w.step > 0) {
             w.step -= 1;
+            wizLoad();
         } else if (act === 'wiz-iface') {
             w.ifaces = toggleInList(w.ifaces, v);
         } else if (act === 'wiz-cat') {

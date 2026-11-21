@@ -84,7 +84,7 @@
     function runTest() {
         N.testing = true;
         h.api('GET', '/api/inversapanel/network/test').then(function (r) { N.test = r; }, function () { N.test = { ok: false }; })
-            .then(function () { N.testing = false; if (h.S().tab === 'net') { h.redraw('main'); } });
+            .then(function () { N.testing = false; if (h.S().tab === 'net' || h.S().ui.wiz) { h.redraw('main'); } });
     }
 
     /* ------------------------------------------------------------------ rendering */
@@ -459,7 +459,7 @@
                 case 'speed':
                     N.speeding = true;
                     h.api('POST', '/api/inversapanel/network/speed', {}).then(function (r) { N.speed = r || { ok: false }; }, function () { N.speed = { ok: false }; })
-                        .then(function () { N.speeding = false; if (h.S().tab === 'net') { h.redraw('main'); } });
+                        .then(function () { N.speeding = false; if (h.S().tab === 'net' || h.S().ui.wiz) { h.redraw('main'); } });
                     return 'main';
                 case 'extip':
                     /* null: asked, no answer yet */

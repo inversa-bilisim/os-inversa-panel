@@ -134,6 +134,7 @@ window.InversaPanelI18n.tr = {
     newsOk: 'Tamam', newsGo: 'Göster', newsHeading: 'Neler yeni',
     news: {
         '1.9.0': [
+            ['Kurulum sihirbazında yeni İnternet adımı: bağlantı türü ve ayarları (PPPoE, sabit IP, modem arkası) ilk kurulumda sorulur.', 'wizard'],
             ['Port yönlendirmeleri artık kendi satırında düzenlenir (kalem düğmesi).', 'pf'],
             ['Aynı dış portu kullanan ikinci yönlendirme reddedilir ve hangisiyle çakıştığı söylenir.', 'pf']
         ],
@@ -323,6 +324,7 @@ window.InversaPanelI18n.tr = {
     allowMidnightShort: 'Gece yarısı', allowPickShort: 'Saat seç…', qFullShort: 'Tam panel',
     wiz: {
         start: ['Inversa Panel’e hoş geldiniz', 'Birkaç adımda temel ayarları yapalım. Her adımı sonra Ayarlar’dan değiştirebilirsiniz.'],
+        wan: ['İnternet bağlantısı', 'İnternetiniz çalışıyorsa hiçbir şeyi değiştirmeden İleri’ye basın. Çalışmıyorsa bağlantı türünü seçip bilgilerini girin; bu ayarlar aşağıdaki düğmeyle hemen uygulanır ve 90 saniye içinde onaylamazsanız geri alınır.'],
         nets: ['Korunacak ağlar', 'Engelleme kuralları, DNS filtresi ve yeni cihaz onayı yalnızca seçtiğiniz ağlarda geçerli olur.'],
         protect: ['Korumalar', 'Güvenlik duvarının DNS üzerinden neleri engelleyeceğini seçin.'],
         devices: ['Yeni cihazlar', 'Hangi ağda yeni bir cihaz, siz izin verene kadar beklesin?'],
@@ -330,7 +332,7 @@ window.InversaPanelI18n.tr = {
         done: ['Özet', 'Seçimleriniz aşağıda. “Uygula ve bitir” ile tek seferde uygulanır.']
     },
     wizKicker: 'Kurulum sihirbazı',
-    wizShort: { start: 'Başlangıç', nets: 'Ağlar', protect: 'Korumalar', devices: 'Yeni cihazlar', notify: 'Bildirimler', done: 'Özet' },
+    wizShort: { start: 'Başlangıç', wan: 'İnternet', nets: 'Ağlar', protect: 'Korumalar', devices: 'Yeni cihazlar', notify: 'Bildirimler', done: 'Özet' },
     wizNextTo: function (n) { return 'İleri: ' + n + ' →'; },
     wizStep: function (n, m) { return 'Adım ' + n + ' / ' + m; },
     wizClose: 'Sihirbazı kapat', wizBack: 'Geri', wizNext: 'İleri', wizFinish: 'Uygula ve bitir',
