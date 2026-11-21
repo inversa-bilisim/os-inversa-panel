@@ -245,7 +245,8 @@
 .inversapanel .k-legend { display: flex; gap: 16px; font-size: 13px; color: var(--k-text-2); }
 .inversapanel .k-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .inversapanel .k-legend i { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
-.inversapanel .k-legend-below { justify-content: center; margin-top: 2px; font-size: 12px; color: var(--k-muted); }
+/* the chart's head: title, what the two lines are in the middle, the networks to pick at the right */
+.inversapanel .k-legend-mid { flex: 1 1 auto; justify-content: center; align-self: center; }
 .inversapanel .k-chart-nets { justify-content: flex-end; flex: 0 1 auto; }
 .inversapanel .k-axis-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--k-muted); }
 

@@ -1056,19 +1056,19 @@
         html += '<div class="k-row stretch">' +
             '<section class="k-card k-grow"><div class="k-card-head"><div><h2>' + esc(t.chartTitle) + '</h2>' +
             '<div class="muted">' + esc(t.chartSub(Math.round(HISTORY * TRAFFIC_MS / 60000)).replace(/WAN$/, chartName)) + '</div></div>' +
+            '<div class="k-legend k-legend-mid"><span><i style="background:#1F4FC7"></i>' + esc(t.legendDown) + '</span>' +
+            '<span><i style="background:#D9822B"></i>' + esc(t.legendUp) + '</span></div>' +
             (chartNets.length ? '<div class="k-chips k-small k-chart-nets" role="group" aria-label="' + esc(t.chartTitle) + '">' +
                 [{ key: 'wan', name: 'WAN' }].concat(chartNets).map(function (n) {
                     var on = n.key === chartKey;
                     return '<button type="button" class="k-chip' + (on ? ' on' : '') + '" data-act="chart-net" data-v="' + esc(n.key) + '" aria-pressed="' + on + '">' +
                         (n.color ? '<span class="k-dot" style="background:' + esc(n.color) + '"></span>' : '') + esc(n.name) + '</button>';
-                }).join('') + '</div>' : '') + '</div>' +
+                }).join('') + '</div>' : '<span></span>') + '</div>' +
             '<div class="k-chart">' + chart.svg +
             '<div class="k-axis" style="top:4px">' + esc(fmt(chart.max)) + ' Mbit/s</div>' +
             '<div class="k-axis" style="top:92px">' + esc(fmt(chart.max / 2)) + ' Mbit/s</div>' +
             (chartHist.length < 2 ? '<div class="k-axis" style="top:150px;left:40%">' + esc(t.chartWaiting) + '</div>' : '') +
-            '</div><div class="k-axis-row"><span>' + esc(o.minAgo(10)) + '</span><span>' + esc(o.minAgo(5)) + '</span><span>' + esc(o.now) + '</span></div>' +
-            '<div class="k-legend k-legend-below"><span><i style="background:#1F4FC7"></i>' + esc(t.legendDown) + '</span>' +
-            '<span><i style="background:#D9822B"></i>' + esc(t.legendUp) + '</span></div></section>';
+            '</div><div class="k-axis-row"><span>' + esc(o.minAgo(10)) + '</span><span>' + esc(o.minAgo(5)) + '</span><span>' + esc(o.now) + '</span></div></section>';
         var ms = function (r) { return r && r.ok ? fmt(r.ms, r.ms < 10 ? 1 : 0) + ' ms' : (test ? o.noAnswer : '…'); };
         html += '<section class="k-card k-side k-ov-wan">' + (ov.wan && !ov.wan.exists ? '<div class="muted">' + esc(t.wanMissing) + '</div>' :
             '<div class="k-wan-head"><div class="k-ibox big ' + (!ov.wan || wanUp ? 'on' : 'cut') + '">' + icon(ICONS.globe, 22) + '</div>' +

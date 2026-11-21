@@ -3,7 +3,7 @@
 ## 1.9.3 (2026-11-21)
 
 - The top of the panel no longer moves when a page starts to scroll, and nothing of the page shows through above it: the panel now starts right below OPNsense's bar (the space OPNsense leaves above its pages is taken away while the top sticks).
-- **Overview: the traffic chart shows the network you pick.** WAN and every local network are offered at the top right of the chart; the legend moved below it. A network's line is what goes into it (its devices' downloads) and what comes out of it, gathered while the page is open like the WAN line.
+- **Overview: the traffic chart shows the network you pick.** WAN and every local network are offered at the top right of the chart; the legend sits in the middle of the chart's head. A network's line is what goes into it (its devices' downloads) and what comes out of it, gathered while the page is open like the WAN line.
 - **Network speeds and data use were nothing while attack protection blocks.** In blocking mode Suricata takes the network card over (netmap) and the system's own counters of that card stand still, so the overview showed 0 Mbit/s for that network. Where a counter stands at nothing, what the packet filter counted on the interface is used instead.
 - The pages of a menu entry (Internet connection, Local networks, ...) are a second, quieter menu row with the open page underlined, instead of a row of buttons; the sticky top is lower by it.
 
