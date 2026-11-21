@@ -133,7 +133,7 @@ Turkish, English, German, French, Spanish and Italian. "Automatic" follows OPNse
 
 ## Status
 
-Version 1.9.0. Developed and tested on a virtual OPNsense 26.7.9. PPPoE runs on a real fibre line at a user; the test environment itself has no PPPoE server. Not yet tested on real hardware or lines:
+Version 1.9.1. Developed and tested on a virtual OPNsense 26.7.9. PPPoE runs on a real fibre line at a user; the test environment itself has no PPPoE server. Not yet tested on real hardware or lines:
 
 - A WireGuard connection from a real phone or laptop; the generated configuration and the firewall rules were checked.
 - IPsec with other vendors' firewalls; it was tested between two OPNsense installations.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.1 (2026-11-21)
+
+- **"Enforce DNS" covers IPv6.** The redirect of plain DNS to the firewall's resolver was written for IPv4 only, so a device with an IPv6 DNS server typed in got around the DNS filter on a network with IPv6. Networks that have an IPv6 address now get the same redirect over IPv6 (UDP and TCP), to the network's own address: FreeBSD does not answer a redirect to `::1`. Networks without IPv6 are unchanged.
+
 ## 1.9.0 (2026-11-21)
 
 - **Port forwarding: change a forward in its own row.** The pencil turns the row into fields (name, protocol, outer port, target, inner port); Enter or "Save" applies at once, Escape leaves. Whether the forward is on, its place in the list and everything else OPNsense keeps about the rule stay as they are. On a phone the row being changed is shown alone, its fields one below the other. Complex rules stay read-only.

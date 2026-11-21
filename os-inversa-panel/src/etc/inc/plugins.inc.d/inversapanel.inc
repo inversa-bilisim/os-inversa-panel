@@ -75,20 +75,32 @@ function inversapanel_firewall(\OPNsense\Firewall\Plugin $fw)
         ]));
 
         if ($forcedns) {
-            /* redirect plain DNS that is not aimed at us to the local resolver */
-            $fw->registerForwardRule(500, [
-                'interface' => $intf,
-                'ipprotocol' => 'inet',
-                'protocol' => 'tcp/udp',
-                'to' => '(self)',
-                'to_not' => true,
-                'to_port' => '53',
-                'target' => '127.0.0.1',
-                'local-port' => '53',
-                /* "rdr pass": no separate filter rule needed (note: a literal true would loosely equal 'rule') */
-                'pass' => 'pass',
-                'descr' => 'Inversa Panel: enforce local DNS',
-            ]);
+            /*
+             * Redirect plain DNS that is not aimed at us to the local resolver. Over IPv6 as well, or a
+             * device with an IPv6 DNS server typed in would get around the DNS filter. There the target is
+             * the network's own address: FreeBSD drops IPv6 packets for ::1 that came in from outside, so
+             * a redirect to ::1 is never answered. A network without an IPv6 address routes none.
+             */
+            $resolvers = ['inet' => '127.0.0.1'];
+            list($own6) = interfaces_primary_address6($intf);
+            if (!empty($own6) && filter_var($own6, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                $resolvers['inet6'] = $own6;
+            }
+            foreach ($resolvers as $family => $resolver) {
+                $fw->registerForwardRule(500, [
+                    'interface' => $intf,
+                    'ipprotocol' => $family,
+                    'protocol' => 'tcp/udp',
+                    'to' => '(self)',
+                    'to_not' => true,
+                    'to_port' => '53',
+                    'target' => $resolver,
+                    'local-port' => '53',
+                    /* "rdr pass": no separate filter rule needed (note: a literal true would loosely equal 'rule') */
+                    'pass' => 'pass',
+                    'descr' => 'Inversa Panel: enforce local DNS',
+                ]);
+            }
         }
     }
 
