@@ -152,7 +152,7 @@
 /* the pages of the open menu entry */
 /* a second, quieter menu row: plain names, the open one underlined like in the row above */
 .inversapanel .k-subtabs { display: flex; flex-wrap: wrap; column-gap: 2px; align-items: center; margin: -12px 0 20px; border-bottom: 1px solid #E6EAEF; }
-.inversapanel .k-subtabs .k-chip { min-height: 38px; min-width: 0; padding: 0 11px; border: none; border-bottom: 2px solid transparent; border-radius: 0; margin-bottom: -1px; background: transparent; font-size: 13px; font-weight: 500; color: var(--k-muted); justify-content: center; }
+.inversapanel .k-subtabs .k-chip { min-height: 40px; min-width: 0; padding: 0 12px; border: none; border-bottom: 2px solid transparent; border-radius: 0; margin-bottom: -1px; background: transparent; font-size: 14px; font-weight: 500; color: var(--k-muted); justify-content: center; }
 .inversapanel .k-subtabs .k-chip:hover { color: var(--k-text); }
 .inversapanel .k-subtabs .k-chip.on { color: var(--k-accent); border-bottom-color: var(--k-accent); background: transparent; font-weight: 600; }
 .inversapanel .k-subtabs .k-chip:focus-visible { outline: 2px solid var(--k-accent); outline-offset: -2px; border-radius: 6px; }
@@ -835,7 +835,9 @@ header.page-content-head { display: none; }
 .inversapanel .k-news-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
 .inversapanel .k-news-list li { font-size: 14px; }
 .inversapanel .k-news-list li .k-link { min-height: 0; margin-left: 8px; display: inline; }
-.inversapanel .k-news-old { border-top: 1px solid var(--k-line); padding-top: 12px; }
+.inversapanel .k-news-old { border-top: 1px solid var(--k-line); padding-top: 8px; }
+.inversapanel .k-news-fold { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-weight: 600; }
+.inversapanel .k-news-ver { font-weight: 600; margin-top: 8px; }
 .inversapanel .k-badge.warn { color: #9A3B0A; background: var(--k-warn-soft); margin-left: 6px; font-weight: 600; }
 .inversapanel .k-qgrid.k-qid { grid-template-columns: 1fr 1fr; }
 .inversapanel .k-qcard .k-note { margin: 0; font-size: 13px; }

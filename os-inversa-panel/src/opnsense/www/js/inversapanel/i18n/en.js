@@ -133,6 +133,18 @@ window.InversaPanelI18n.en = {
     newsTitle: function (v) { return 'What is new in Inversa Panel ' + v; }, newsSub: 'The panel was updated. The news in short:',
     newsOk: 'Got it', newsGo: 'Show', newsHeading: 'What is new',
     news: {
+        '1.9.4': [['The release notes on Settings › Updates are folded under a heading; the versions in between are listed too.', 'updates']],
+        '1.9.3': [
+            ['The menu at the top stays in place while scrolling; sub pages are a second menu row.', ''],
+            ['The chart on the overview shows the network you pick (WAN and local networks).', ''],
+            ['Fixed: network speeds showed nothing while attack protection was in blocking mode.', '']
+        ],
+        '1.9.2': [
+            ['DNS › Local names are changed in their own row; the list is tighter.', 'dns']
+        ],
+        '1.9.1': [
+            ['“Enforce DNS” now also redirects DNS queries sent over IPv6.', 'filter']
+        ],
         '1.9.0': [
             ['The setup wizard has a new Internet step: the kind of connection and its settings (PPPoE, static IP, behind a modem) are asked on first setup.', 'wizard'],
             ['Port forwards are now changed in their own row (the pencil).', 'pf'],

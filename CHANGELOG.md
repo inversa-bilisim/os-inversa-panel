@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.4 (2026-11-22)
+
+- Settings › Updates: "What is new" is folded away and opens on a click; it lists every version up to the installed one (1.9.1 to 1.9.3 were missing, the list stopped at three versions).
+- Overview: the "what is new" card after an update shows everything since the version whose news were last seen, not only the news of the last step (an update from 1.8.0 to 1.9.3 showed nothing).
+- The second menu row (pages of a menu entry) has slightly larger text.
+
 ## 1.9.3 (2026-11-21)
 
 - The top of the panel no longer moves when a page starts to scroll, and nothing of the page shows through above it: the panel now starts right below OPNsense's bar (the space OPNsense leaves above its pages is taken away while the top sticks).

@@ -1679,13 +1679,32 @@
         }).join('');
     }
 
+    /* newest first; 0 when the same */
+    function versionCmp(a, b) {
+        var x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
+        for (var i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) { return (y[i] || 0) - (x[i] || 0); } }
+        return 0;
+    }
+
+    /* the versions that have news, newest first: after "since" (left out: all) up to the installed one */
+    function newsVersions(since) {
+        return Object.keys(T().news || {}).filter(function (v) {
+            return (!S.version || versionCmp(v, S.version) >= 0) && (!since || versionCmp(v, since) < 0);
+        }).sort(versionCmp);
+    }
+
+    /* after an update: everything since the version whose news were seen, not only the last step */
     function newsCard() {
-        var t = T(), v = S.version;
-        if (!v || !S.saved.general.welcomed || S.saved.general.news === v || !((t.news || {})[v] || []).length) { return ''; }
+        var t = T(), v = S.version, seen = S.saved.general.news;
+        if (!v || !S.saved.general.welcomed || seen === v) { return ''; }
+        var versions = newsVersions(seen).slice(0, 6);
+        if (!versions.length) { return ''; }
         return '<section class="k-card k-news"><div class="k-news-head"><div class="k-ibox big on">' + icon(ICONS.info, 22) + '</div>' +
             '<div style="flex:1 1 auto"><b>' + esc(t.newsTitle(v)) + '</b><div class="muted">' + esc(t.newsSub) + '</div></div>' +
             '<button type="button" class="k-btn small" data-act="news-ok">' + esc(t.newsOk) + '</button></div>' +
-            '<ul class="k-news-list">' + newsItems(v) + '</ul></section>';
+            versions.map(function (ver) {
+                return (versions.length > 1 ? '<div class="muted small k-news-ver">' + esc(ver) + '</div>' : '') + '<ul class="k-news-list">' + newsItems(ver) + '</ul>';
+            }).join('') + '</section>';
     }
 
     /* ------------------------------------------------------------------ view: setup wizard */
@@ -2466,7 +2485,7 @@
         redraw: redraw,
         notice: function (type, text, list, ms) { S.ui.notice = { type: type, text: text, list: list || [], ms: ms || 0 }; renderPending(); },
         hosts: function () { return S.hosts; },
-        newsItems: newsItems,
+        newsItems: newsItems, newsVersions: newsVersions,
         /* confirm-or-put-back countdown: the running one (or null), start one */
         countdown: function () { return S.ui.countdown; },
         startCountdown: startCountdown,

@@ -97,17 +97,14 @@
             '<button type="button" class="k-btn" data-act="updates:check"' + (U.checking ? ' disabled' : '') + '>' + h.esc(U.checking ? T.upChecking : T.upCheck) + '</button>' +
             (c && c.newer ? '<button type="button" class="k-btn primary" data-act="updates:install"' + (busy ? ' disabled' : '') + '>' + h.esc(T.upInstall(c.latest)) + '</button>' : '') +
             '</div>' + (c && c.newer && busy ? '<span class="muted small">' + h.esc(T.ugWaitOther) + '</span>' : '');
-        /* what is new in the last versions up to the installed one, newest first */
-        var cmp = function (a, b) {
-            var x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
-            for (var i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) { return (y[i] || 0) - (x[i] || 0); } }
-            return 0;
-        };
-        var versions = Object.keys(T.news || {}).filter(function (v) { return !A.version || cmp(v, A.version) >= 0; }).sort(cmp).slice(0, 3);
+        /* what is new, version by version up to the installed one; folded away, it is read once */
+        var versions = h.newsVersions().slice(0, 12);
         if (versions.length) {
-            html += '<div class="k-news-old"><b>' + h.esc(T.newsHeading) + '</b>' + versions.map(function (v) {
-                return '<div><div class="muted small" style="font-weight:600;margin-top:8px">' + h.esc(v) + '</div><ul class="k-news-list">' + h.newsItems(v) + '</ul></div>';
-            }).join('') + '</div>';
+            html += '<div class="k-news-old"><button type="button" class="k-link k-news-fold" data-act="updates:news" aria-expanded="' + !!U.newsOpen + '">' +
+                '<span class="k-vchev' + (U.newsOpen ? ' open' : '') + '">' + h.icon('M6 9l6 6 6-6', 16) + '</span>' + h.esc(T.newsHeading) + '</button>' +
+                (U.newsOpen ? versions.map(function (v) {
+                    return '<div><div class="muted small k-news-ver">' + h.esc(v) + '</div><ul class="k-news-list">' + h.newsItems(v) + '</ul></div>';
+                }).join('') : '') + '</div>';
         }
         return html + '</section>';
     }
@@ -251,6 +248,7 @@
         },
         act: function (name) {
             var T = h.T();
+            if (name === 'news') { U.newsOpen = !U.newsOpen; return 'main'; }
             if (name === 'check' && !U.checking) {
                 U.checking = true;
                 h.api('POST', '/api/inversapanel/update/check', {}).then(function (res) {

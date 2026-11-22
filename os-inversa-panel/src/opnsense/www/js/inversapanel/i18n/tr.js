@@ -133,6 +133,18 @@ window.InversaPanelI18n.tr = {
     newsTitle: function (v) { return 'Inversa Panel ' + v + ' sürümünde neler yeni'; }, newsSub: 'Panel güncellendi. Kısaca yenilikler:',
     newsOk: 'Tamam', newsGo: 'Göster', newsHeading: 'Neler yeni',
     news: {
+        '1.9.4': [['Sürüm notları Ayarlar › Güncellemeler’de açılır bir başlık altında; aradaki sürümler de listelenir.', 'updates']],
+        '1.9.3': [
+            ['Üst menü kaydırırken yerinde kalır; alt sayfalar ikinci bir menü satırı oldu.', ''],
+            ['Genel bakıştaki grafik seçtiğiniz ağı gösterir (WAN ve yerel ağlar).', ''],
+            ['Saldırı önleme engelleme modundayken ağ hızlarının sıfır görünmesi düzeltildi.', '']
+        ],
+        '1.9.2': [
+            ['DNS › Yerel alan adı kayıtları kendi satırında düzenlenir; liste sıkılaştı.', 'dns']
+        ],
+        '1.9.1': [
+            ['“DNS’i zorla” artık IPv6 üzerinden giden DNS sorgularını da yönlendirir.', 'filter']
+        ],
         '1.9.0': [
             ['Kurulum sihirbazında yeni İnternet adımı: bağlantı türü ve ayarları (PPPoE, sabit IP, modem arkası) ilk kurulumda sorulur.', 'wizard'],
             ['Port yönlendirmeleri artık kendi satırında düzenlenir (kalem düğmesi).', 'pf'],
